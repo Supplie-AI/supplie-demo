@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface PromptButtonsProps {
   onPrompt: (prompt: string) => void;

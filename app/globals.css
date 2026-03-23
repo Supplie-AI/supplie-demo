@@ -4,38 +4,72 @@
 
 /* ── Color system ─────────────────────────────────────── */
 :root {
-  --bg-primary:      #0f0f14;
-  --bg-secondary:    #18181f;
-  --bg-amber-panel:  #110f0a;
-  --bg-teal-panel:   #0a0f12;
+  --bg-primary: #0f0f14;
+  --bg-secondary: #18181f;
+  --bg-amber-panel: #110f0a;
+  --bg-teal-panel: #0a0f12;
 
-  --text-primary:    #f0f0f0;
-  --text-secondary:  #a0a0a0;
-  --text-muted:      #606070;
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --text-muted: #606070;
 
-  --accent-amber:    #f59e0b;
-  --accent-teal:     #14b8a6;
+  --accent-amber: #f59e0b;
+  --accent-teal: #14b8a6;
 }
 
 /* ── Animations ───────────────────────────────────────── */
 @keyframes slide-in {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  15%      { transform: translateX(-8px); }
-  30%      { transform: translateX(8px); }
-  45%      { transform: translateX(-6px); }
-  60%      { transform: translateX(6px); }
-  75%      { transform: translateX(-3px); }
-  90%      { transform: translateX(3px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-8px);
+  }
+  30% {
+    transform: translateX(8px);
+  }
+  45% {
+    transform: translateX(-6px);
+  }
+  60% {
+    transform: translateX(6px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+  90% {
+    transform: translateX(3px);
+  }
 }
 
-.animate-slide-in { animation: slide-in 0.2s ease-out both; }
-.animate-shake    { animation: shake 0.6s ease-in-out; }
+.animate-slide-in {
+  animation: slide-in 0.2s ease-out both;
+}
+.animate-shake {
+  animation: shake 0.6s ease-in-out;
+}
 
 /* ── Reset ────────────────────────────────────────────── */
-* { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; padding: 0; background: var(--bg-primary); color: var(--text-primary); }
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}

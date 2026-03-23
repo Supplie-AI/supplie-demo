@@ -9,11 +9,13 @@
 ## ✅ What's Done
 
 ### Repository
+
 - Created `Supplie-AI/supplie-demo` (public)
 - Initial code pushed to `main` branch
 - Description: "Supplie demo: same model, different capabilities (raw vs grounded tools)"
 
 ### GitHub Actions Secrets (all set)
+
 - `VERCEL_TOKEN` — Vercel CI/CD token
 - `OPENAI_API_KEY` — OpenAI API key for build tests
 - `DEMO_PASSWORD` — supplie2026
@@ -21,9 +23,11 @@
 - `VERCEL_PROJECT_ID` — prj_A3yTOSPmfVRHiLZ0tBfPuHlbt1Uz
 
 ### CI/CD Pipelines (files created, not pushed yet)
+
 **Location:** `~/workspace/supplie-demo/.github/workflows/` on raspi-4b
 
 **dev.yml** (PR + dev branch):
+
 - ESLint + Prettier
 - npm audit (moderate level)
 - TypeScript type check
@@ -32,6 +36,7 @@
 - PR comment with preview URL
 
 **prod.yml** (main branch):
+
 - Full lint + security checks (high audit level)
 - TypeScript validation
 - Next.js production build
@@ -43,17 +48,20 @@
 ## ⚠️ Action Required
 
 **GitHub token missing `workflow` scope:**
+
 ```
-error: refusing to allow an OAuth App to create or update workflow 
+error: refusing to allow an OAuth App to create or update workflow
 `.github/workflows/dev.yml` without `workflow` scope
 ```
 
 **Fix:**
+
 1. Go to https://github.com/settings/tokens
 2. Find the token used by `gh` CLI on raspi-4b (check `gh auth status`)
 3. Add `workflow` scope (allows modifying GitHub Actions workflows)
 4. Re-authenticate: `gh auth refresh -s workflow`
 5. Push workflows:
+
 ```bash
 cd ~/workspace/supplie-demo
 git push origin main
@@ -66,6 +74,7 @@ git push origin main
 ## 📋 Issue Management (TODO)
 
 ### Labels to create
+
 ```bash
 gh label create bug --color d73a4a --description "Something isn't working"
 gh label create enhancement --color a2eeef --description "New feature or request"
@@ -78,13 +87,17 @@ gh label create needs-review --color fbca04 --description "Ready for review"
 ```
 
 ### Issue templates
+
 Create `.github/ISSUE_TEMPLATE/` with:
+
 - `bug_report.md` — structured bug reports
 - `feature_request.md` — feature proposals
 - `security_vulnerability.md` — private security reports
 
 ### Branch protection
+
 Enable on `main`:
+
 - Require PR before merging
 - Require status checks (lint, build)
 - Require 1 approval (when team grows)
@@ -96,9 +109,11 @@ Enable on `main`:
 Both NeoClaw and DevBox agent (192.168.8.45) should have:
 
 ### `gh-workflow` skill (custom)
+
 **Purpose:** Manage GitHub issues, PRs, and CI status via `gh` CLI.
 
 **Core commands:**
+
 ```bash
 # Issues
 gh issue create --title "..." --body "..." --label bug
@@ -120,6 +135,7 @@ gh run watch  # Live tail
 ```
 
 **Integration with OpenClaw:**
+
 - Spawn subagent per issue: `sessions_spawn` with GitHub issue context
 - Update issue on completion: `gh issue comment` with results
 - Link PRs: `gh pr create --body "Closes #42"`
@@ -131,6 +147,7 @@ gh run watch  # Live tail
 ## 🔄 Recommended Dev Workflow
 
 ### For Jack (manual work)
+
 1. Create issue: `gh issue create --title "Fix empty state UI" --label ui/ux`
 2. Delegate to NeoClaw: "Fix issue #42"
 3. NeoClaw spawns subagent → creates branch → makes changes → opens PR
@@ -139,6 +156,7 @@ gh run watch  # Live tail
 6. prod.yml deploys to Vercel production, tags release
 
 ### For NeoClaw (orchestration)
+
 1. Read issue context
 2. Spawn subagent (DevBox agent or OpenClaw ACP harness)
 3. Subagent creates branch, commits, pushes
@@ -147,6 +165,7 @@ gh run watch  # Live tail
 6. Report back to Jack with PR URL
 
 ### For DevBox agent (hands-on work)
+
 - Make code changes on raspi-4b
 - Run tests locally
 - Commit + push to feature branch
