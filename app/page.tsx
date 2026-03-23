@@ -11,17 +11,13 @@ export default function Home() {
   const [provider, setProvider] = useState<'openai' | 'anthropic'>('openai');
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const [clearTrigger, setClearTrigger] = useState(0);
-  const [authed, setAuthed] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-  const promptVersion = useRef(0);
-
-  useEffect(() => {
+  const [authed, setAuthed] = useState(() => {
     if (typeof window !== 'undefined') {
-      const token = sessionStorage.getItem('demo_token');
-      if (token) setAuthed(true);
-      setAuthChecked(true);
+      return !!sessionStorage.getItem('demo_token');
     }
-  }, []);
+    return false;
+  });
+  const promptVersion = useRef(0);
 
   const handleAuth = useCallback((token: string) => {
     sessionStorage.setItem('demo_token', token);
@@ -36,6 +32,7 @@ export default function Home() {
   }, []);
 
   const handlePrompt = useCallback((prompt: string) => {
+    // eslint-disable-next-line react-hooks/refs
     promptVersion.current += 1;
     setPendingPrompt(`${promptVersion.current}::${prompt}`);
   }, []);
@@ -59,9 +56,7 @@ export default function Home() {
   };
 
   // Don't render anything until we've checked auth (avoids flash)
-  if (!authChecked) return null;
-
-  // Show password gate exclusively — no app behind it
+// Show password gate exclusively — no app behind it
   if (!authed) {
     return <PasswordGate onAuth={handleAuth} />;
   }
@@ -75,6 +70,7 @@ export default function Home() {
             <div className="w-2 h-2 rounded-full bg-teal-400" />
           </div>
           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Supplie.ai</span>
+          {/* eslint-disable-next-line react/jsx-no-comment-textnodes */}
           <span className="text-sm" style={{ color: 'var(--text-muted)' }}>//</span>
           <span className="text-xs uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Grounding Demo</span>
         </div>

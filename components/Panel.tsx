@@ -29,8 +29,31 @@ interface PanelProps {
 export function Panel({ title, badge, badgeColor, bgColor, borderColor, apiEndpoint, prompt, model, provider, clearTrigger, onAuthError }: PanelProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastPromptRef = useRef<string | null>(null);
-  const [outputFiles, setOutputFiles] = useState<OutputFile[]>([]);
+  const [lastPrompt, setLastPrompt] = useState<string | null>(null);
+  const [lastClearTrigger, setLastClearTrigger] = useState(clearTrigger);
+  const [promptGen, setPromptGen] = useState(0);
+  
+  // Update promptGen during render when clearTrigger changes (getDerivedStateFromProps pattern)
+  if (clearTrigger !== lastClearTrigger) {
+    setLastClearTrigger(clearTrigger);
+    setPromptGen(clearTrigger * 10000);
+    setLastPrompt(null);
+  }
+  
+  // Update promptGen and lastPrompt during render when prompt changes
+  if (prompt && prompt !== lastPrompt) {
+    setLastPrompt(prompt);
+    setPromptGen(g => g + 1);
+  }
+  
+  const [allOutputFiles, setAllOutputFiles] = useState<(OutputFile & { gen: number })[]>([]);
+
+  // Derive current output files from generation
+  const outputFiles = allOutputFiles.filter(f => f.gen === promptGen);
+  const setOutputFiles = (files: OutputFile[]) =>
+    setAllOutputFiles(prev => [...prev.filter(f => f.gen !== promptGen), ...files.map(f => ({ ...f, gen: promptGen }))]);
+  const addOutputFile = (file: OutputFile) =>
+    setAllOutputFiles(prev => [...prev, { ...file, gen: promptGen }]);
 
   const getToken = () => (typeof window !== 'undefined' ? sessionStorage.getItem('demo_token') ?? '' : '');
 
@@ -48,20 +71,17 @@ export function Panel({ title, badge, badgeColor, bgColor, borderColor, apiEndpo
   });
 
   useEffect(() => {
-    if (clearTrigger > 0) {
+    if (clearTrigger > 0 && clearTrigger !== lastClearTrigger) {
       setMessages([]);
-      setOutputFiles([]);
-      lastPromptRef.current = null;
     }
-  }, [clearTrigger, setMessages]);
+  }, [clearTrigger, lastClearTrigger, setMessages]);
 
+  // Effect to call append (external side effect) when prompt changes
   useEffect(() => {
-    if (prompt && prompt !== lastPromptRef.current) {
-      lastPromptRef.current = prompt;
-      setOutputFiles([]);
+    if (prompt && prompt === lastPrompt) {
       append({ role: 'user', content: prompt });
     }
-  }, [prompt, append]);
+  }, [prompt, lastPrompt, append]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
