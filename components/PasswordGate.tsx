@@ -83,7 +83,9 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
             {loading ? "Checking…" : "Enter"}
           </button>
           {error && (
-            <div className="text-red-400 text-xs sm:text-sm text-center mt-2">{error}</div>
+            <div className="text-red-400 text-xs sm:text-sm text-center mt-2">
+              {error}
+            </div>
           )}
         </form>
       </div>
