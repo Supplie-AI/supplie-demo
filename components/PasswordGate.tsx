@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 
 interface PasswordGateProps {
   onAuth: (token: string) => void;
 }
 
 export function PasswordGate({ onAuth }: PasswordGateProps) {
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -21,49 +21,56 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
     e.preventDefault();
     if (!password.trim() || loading) return;
     setLoading(true);
-    setError('');
+    setError("");
     try {
-      const res = await fetch('/api/auth/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
-        sessionStorage.setItem('demo_token', password);
+        sessionStorage.setItem("demo_token", password);
         onAuth(password);
       } else {
-        setError('Incorrect password');
+        setError("Incorrect password");
         setShake(true);
-        setPassword('');
+        setPassword("");
         setTimeout(() => setShake(false), 600);
         inputRef.current?.focus();
       }
     } catch {
-      setError('Connection error — try again');
+      setError("Connection error — try again");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: '#0a0a0f' }}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "#0a0a0f" }}
+    >
       <div className="flex flex-col items-center gap-8 w-full max-w-xs px-6">
         {/* Wordmark */}
         <div className="text-center">
-          <div className="text-3xl font-bold text-slate-100 tracking-tight">supplie<span className="text-teal-400">.</span></div>
-          <div className="text-xs text-slate-500 uppercase tracking-widest mt-1">Grounding Demo</div>
+          <div className="text-3xl font-bold text-slate-100 tracking-tight">
+            supplie<span className="text-teal-400">.</span>
+          </div>
+          <div className="text-xs text-slate-500 uppercase tracking-widest mt-1">
+            Grounding Demo
+          </div>
         </div>
 
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className={`w-full space-y-3 ${shake ? 'animate-shake' : ''}`}
+          className={`w-full space-y-3 ${shake ? "animate-shake" : ""}`}
         >
           <input
             ref={inputRef}
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter demo password"
             className="w-full bg-slate-900/80 text-slate-100 border border-slate-700/60 focus:border-teal-600/60 rounded-xl px-4 py-3 text-sm outline-none transition-colors placeholder-slate-600 text-center tracking-widest"
             autoComplete="current-password"
@@ -73,7 +80,7 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
             disabled={loading || !password.trim()}
             className="w-full bg-teal-600/80 hover:bg-teal-500/80 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl py-3 transition-colors"
           >
-            {loading ? 'Checking…' : 'Enter'}
+            {loading ? "Checking…" : "Enter"}
           </button>
           {error && (
             <div className="text-red-400 text-xs text-center">{error}</div>

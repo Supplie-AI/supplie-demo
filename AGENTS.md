@@ -9,7 +9,7 @@ This is a **tools comparison** demo, NOT a model comparison.
 - **RIGHT panel** — same model + all 6 grounded tools + code execution
 - Same prompt, same data, different capabilities
 
-The comparison shows: *ungrounded sandbox reasoning* vs *grounded tool-augmented reasoning*
+The comparison shows: _ungrounded sandbox reasoning_ vs _grounded tool-augmented reasoning_
 
 ## Providers
 
@@ -23,20 +23,22 @@ The comparison shows: *ungrounded sandbox reasoning* vs *grounded tool-augmented
 
 ## Env Vars
 
-| Var | Required | Notes |
-|-----|----------|-------|
-| OPENAI_API_KEY | ✓ | Always required |
-| DEMO_PASSWORD | ✓ | Auth gate |
-| ANTHROPIC_API_KEY | Optional | Claude models; 503 if missing |
-| OPENAI_CSV_FILE_ID | Optional | Pre-uploaded orders.csv; falls back to CSV-in-context |
+| Var                   | Required | Notes                                                 |
+| --------------------- | -------- | ----------------------------------------------------- |
+| OPENAI_API_KEY        | ✓        | Always required                                       |
+| DEMO_PASSWORD         | ✓        | Auth gate                                             |
+| ANTHROPIC_API_KEY     | Optional | Claude models; 503 if missing                         |
+| OPENAI_CSV_FILE_ID    | Optional | Pre-uploaded orders.csv; falls back to CSV-in-context |
 | ANTHROPIC_CSV_FILE_ID | Optional | Pre-uploaded orders.csv; falls back to CSV-in-context |
 
 ## File Upload (optional but recommended for production)
 
 Upload orders.csv once to get persistent file IDs:
+
 ```bash
 OPENAI_API_KEY=... ANTHROPIC_API_KEY=... npx tsx scripts/upload-files.ts
 ```
+
 Then set `OPENAI_CSV_FILE_ID` and `ANTHROPIC_CSV_FILE_ID` in Vercel dashboard.
 
 ## Auth

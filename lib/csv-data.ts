@@ -68,17 +68,42 @@ ORD-048,2026-03-21,Suspension King Pty Ltd,ZDR-002,Front Strut Kit (pair),Struts
 ORD-049,2026-03-22,AllTerrain Parts Ltd,ZDR-006,Complete Suspension Kit (4WD),Suspension Kits,Vietnam,1,890,198,0,Brisbane,12,55,processing
 ORD-050,2026-03-23,Suspension King Pty Ltd,ZDR-004,Lower Control Arm Bush Kit,Bushings,Australia,12,45,62,12,Melbourne,210,7,processing`;
 
-export const ORDERS: Order[] = CSV_STRING.split('\n').slice(1).filter(Boolean).map(line => {
-  const [order_id, date, customer_name, sku_id, sku_name, category, supplier_country, quantity, unit_price, freight_cost, rebate_pct, warehouse, current_stock, avg_lead_days, order_status] = line.split(',');
-  return {
-    order_id, date, customer_name, sku_id, sku_name, category, supplier_country,
-    quantity: Number(quantity),
-    unit_price: Number(unit_price),
-    freight_cost: Number(freight_cost),
-    rebate_pct: Number(rebate_pct),
-    warehouse,
-    current_stock: Number(current_stock),
-    avg_lead_days: Number(avg_lead_days),
-    order_status,
-  };
-});
+export const ORDERS: Order[] = CSV_STRING.split("\n")
+  .slice(1)
+  .filter(Boolean)
+  .map((line) => {
+    const [
+      order_id,
+      date,
+      customer_name,
+      sku_id,
+      sku_name,
+      category,
+      supplier_country,
+      quantity,
+      unit_price,
+      freight_cost,
+      rebate_pct,
+      warehouse,
+      current_stock,
+      avg_lead_days,
+      order_status,
+    ] = line.split(",");
+    return {
+      order_id,
+      date,
+      customer_name,
+      sku_id,
+      sku_name,
+      category,
+      supplier_country,
+      quantity: Number(quantity),
+      unit_price: Number(unit_price),
+      freight_cost: Number(freight_cost),
+      rebate_pct: Number(rebate_pct),
+      warehouse,
+      current_stock: Number(current_stock),
+      avg_lead_days: Number(avg_lead_days),
+      order_status,
+    };
+  });

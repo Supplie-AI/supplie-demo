@@ -27,7 +27,8 @@ function checkRateLimit(ip: string): boolean {
 const AGENT_SYSTEM = `You are a supply chain analyst with access to tools that query live order data. Always use the available tools to get accurate data — never estimate or compute from memory. Write code to loop over results when needed. Show your reasoning after each tool result.`;
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
   if (!checkRateLimit(ip)) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
@@ -35,46 +36,63 @@ export async function POST(req: Request) {
   const { prompt, model, provider } = await req.json();
   const startMs = Date.now();
 
-  console.log(JSON.stringify({
-    event: "request_start",
-    panel: "agent",
-    model,
-    provider,
-    timestamp: new Date().toISOString(),
-  }));
+  console.log(
+    JSON.stringify({
+      event: "request_start",
+      panel: "agent",
+      model,
+      provider,
+      timestamp: new Date().toISOString(),
+    }),
+  );
 
   if (provider === "anthropic" && !process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
-      { error: "Anthropic API key not configured. Please contact the demo administrator." },
-      { status: 503 }
+      {
+        error:
+          "Anthropic API key not configured. Please contact the demo administrator.",
+      },
+      { status: 503 },
     );
   }
 
   try {
     const result = streamText({
-      model: provider === "anthropic"
-        ? anthropic(model ?? "claude-sonnet-4-5")
-        : openai(model ?? "gpt-5.4-mini-2026-03-17"),
-      system: AGENT_SYSTEM + (provider === "anthropic"
-        ? `\n\nOrder data for reference:\n${CSV_STRING}`
-        : ""),
+      model:
+        provider === "anthropic"
+          ? anthropic(model ?? "claude-sonnet-4-5")
+          : openai(model ?? "gpt-5.4-mini-2026-03-17"),
+      system:
+        AGENT_SYSTEM +
+        (provider === "anthropic"
+          ? `\n\nOrder data for reference:\n${CSV_STRING}`
+          : ""),
       messages: [{ role: "user", content: prompt }],
       tools: groundedTools,
       onFinish: ({ usage }) => {
-        console.log(JSON.stringify({
-          event: "request_complete",
-          panel: "agent",
-          provider,
-          total_ms: Date.now() - startMs,
-          tokens: usage,
-        }));
+        console.log(
+          JSON.stringify({
+            event: "request_complete",
+            panel: "agent",
+            provider,
+            total_ms: Date.now() - startMs,
+            tokens: usage,
+          }),
+        );
       },
     });
 
     return result.toTextStreamResponse();
   } catch (err) {
     const error = err as Error;
-    console.log(JSON.stringify({ event: "error", panel: "agent", error_type: error.name, message: error.message }));
+    console.log(
+      JSON.stringify({
+        event: "error",
+        panel: "agent",
+        error_type: error.name,
+        message: error.message,
+      }),
+    );
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
