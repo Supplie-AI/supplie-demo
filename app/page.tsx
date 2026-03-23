@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Panel } from '@/components/Panel';
 import { PromptButtons } from '@/components/PromptButtons';
 import { ModelPicker } from '@/components/ModelPicker';
@@ -11,12 +11,8 @@ export default function Home() {
   const [provider, setProvider] = useState<'openai' | 'anthropic'>('openai');
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const [clearTrigger, setClearTrigger] = useState(0);
-  const [authed, setAuthed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !!sessionStorage.getItem('demo_token');
-    }
-    return false;
-  });
+  const [authed, setAuthed] = useState(() => typeof window !== 'undefined' && !!sessionStorage.getItem('demo_token'));
+  const authChecked = true;
   const promptVersion = useRef(0);
 
   const handleAuth = useCallback((token: string) => {
@@ -32,7 +28,6 @@ export default function Home() {
   }, []);
 
   const handlePrompt = useCallback((prompt: string) => {
-    // eslint-disable-next-line react-hooks/refs
     promptVersion.current += 1;
     setPendingPrompt(`${promptVersion.current}::${prompt}`);
   }, []);
@@ -56,7 +51,9 @@ export default function Home() {
   };
 
   // Don't render anything until we've checked auth (avoids flash)
-// Show password gate exclusively — no app behind it
+  if (!authChecked) return null;
+
+  // Show password gate exclusively — no app behind it
   if (!authed) {
     return <PasswordGate onAuth={handleAuth} />;
   }
@@ -70,8 +67,7 @@ export default function Home() {
             <div className="w-2 h-2 rounded-full bg-teal-400" />
           </div>
           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Supplie.ai</span>
-          {/* eslint-disable-next-line react/jsx-no-comment-textnodes */}
-          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>//</span>
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{'/'+'/'}</span>
           <span className="text-xs uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Grounding Demo</span>
         </div>
         <div className="ml-auto flex items-center gap-3">
