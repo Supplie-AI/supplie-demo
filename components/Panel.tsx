@@ -103,7 +103,15 @@ export function Panel({
         prompt,
         apiEndpoint,
       });
-      append({ role: "user", content: prompt });
+      if (!append || typeof append !== "function") {
+        console.error("[Panel] append is not a function:", typeof append);
+        return;
+      }
+      try {
+        append({ role: "user", content: prompt });
+      } catch (err) {
+        console.error("[Panel] append threw error:", err);
+      }
     }
   }, [prompt, lastPrompt, append]);
 
