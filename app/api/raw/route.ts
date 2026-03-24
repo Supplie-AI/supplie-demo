@@ -241,7 +241,7 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const prompt = body.prompt || (body.messages?.slice(-1)[0]?.content) || "";
+  const prompt = body.prompt || body.messages?.slice(-1)[0]?.content || "";
   const model = body.model;
   const provider = body.provider;
   console.log(
