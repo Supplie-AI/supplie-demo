@@ -99,6 +99,10 @@ export function Panel({
   // Effect to call append (external side effect) when prompt changes
   useEffect(() => {
     if (prompt && prompt === lastPrompt) {
+      console.log("[Panel] Calling append with:", {
+        prompt,
+        apiEndpoint,
+      });
       append({ role: "user", content: prompt });
     }
   }, [prompt, lastPrompt, append]);
