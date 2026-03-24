@@ -33,7 +33,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
-  const { prompt, model, provider } = await req.json();
+  const body = await req.json();
+  const prompt = body.prompt || (body.messages?.slice(-1)[0]?.content) || "";
+  const model = body.model;
+  const provider = body.provider;
   const startMs = Date.now();
 
   console.log(
