@@ -80,7 +80,7 @@ export function Panel({
   const { messages, append, setMessages, isLoading, error } = useChat({
     api: apiEndpoint,
     headers: () => ({ Authorization: `Bearer ${getToken()}` }),
-    body: { model, provider },
+    body: () => ({ model, provider }),
     onError: (err) => {
       const msg = err?.message ?? "";
       if (msg.includes("401") || msg.includes("Unauthorized")) {
