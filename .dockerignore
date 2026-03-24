@@ -1,0 +1,13 @@
+.git
+.gitignore
+node_modules
+.next
+*.md
+.env*
+!.env.example
+infra
+docs
+scripts
+.github
+Dockerfile*
+k8s

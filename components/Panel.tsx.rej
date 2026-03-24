@@ -1,0 +1,22 @@
+--- components/Panel.tsx
++++ components/Panel.tsx
+@@ -74,11 +74,13 @@ export function Panel({
+   const addOutputFile = (file: OutputFile) =>
+     setAllOutputFiles((prev) => [...prev, { ...file, gen: promptGen }]);
+ 
+-  const getToken = () =>
+-    typeof window !== "undefined"
+-      ? (sessionStorage.getItem("demo_token") ?? "")
+-      : "";
+-
++  // Use a function that's evaluated at request time, not component mount time
++  const getHeaders = useCallback(() => {
++    const token = typeof window !== "undefined" 
++      ? (sessionStorage.getItem("demo_token") ?? "")
++      : "";
++    return { Authorization: `Bearer ${token}` };
++  }, []);
++  
+   const { messages, append, setMessages, isLoading, error } = useChat({
+     api: apiEndpoint,
+-    headers: () => ({ Authorization: `Bearer ${getToken()}` }),

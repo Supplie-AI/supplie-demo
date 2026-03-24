@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supplie-demo
+  namespace: supplie
+  labels:
+    app: supplie-demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: supplie-demo
+  template:
+    metadata:
+      labels:
+        app: supplie-demo
+    spec:
+      containers:
+        - name: supplie-demo
+          image: SUPPLIE_IMAGE  # replaced by CI/CD
+          ports:
+            - containerPort: 3000
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: supplie-secrets
+                  key: OPENAI_API_KEY
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: supplie-secrets
+                  key: ANTHROPIC_API_KEY
+            - name: DEMO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: supplie-secrets
+                  key: DEMO_PASSWORD
+            - name: OPENAI_CSV_FILE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: supplie-secrets
+                  key: OPENAI_CSV_FILE_ID
+                  optional: true
+            - name: ANTHROPIC_CSV_FILE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: supplie-secrets
+                  key: ANTHROPIC_CSV_FILE_ID
+                  optional: true
+            - name: LITELLM_ENDPOINT
+              value: "http://litellm:4000"
+          readinessProbe:
+            httpGet:
+              path: /api/config
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/config
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supplie-demo
+  namespace: supplie
+spec:
+  selector:
+    app: supplie-demo
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP

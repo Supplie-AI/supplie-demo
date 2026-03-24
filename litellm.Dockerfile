@@ -1,0 +1,11 @@
+# LiteLLM proxy - minimal image
+FROM ghcr.io/berriai/litellm:main-latest
+
+WORKDIR /app
+
+# Copy LiteLLM config
+COPY litellm-config.yaml /app/config.yaml
+
+EXPOSE 4000
+
+CMD ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "4"]

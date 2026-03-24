@@ -1,7 +1,7 @@
 "use client";
 
+import { useChat } from "@ai-sdk/react";
 import { useEffect, useRef, useCallback, useState } from "react";
-import { useStreamingChat } from "@/hooks/useStreamingChat";
 import { ToolCallCard } from "./ToolCallCard";
 
 interface OutputFile {
@@ -43,60 +43,75 @@ export function Panel({
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastPrompt, setLastPrompt] = useState<string | null>(null);
   const [lastClearTrigger, setLastClearTrigger] = useState(clearTrigger);
+  const [promptGen, setPromptGen] = useState(0);
 
-  const getToken = useCallback(
-    () =>
-      typeof window !== "undefined"
-        ? (sessionStorage.getItem("demo_token") ?? "")
-        : "",
-    []
-  );
+  // Update promptGen during render when clearTrigger changes (getDerivedStateFromProps pattern)
+  if (clearTrigger !== lastClearTrigger) {
+    setLastClearTrigger(clearTrigger);
+    setPromptGen(clearTrigger * 10000);
+    setLastPrompt(null);
+  }
 
-  const handleError = useCallback(
-    (err: Error) => {
+  // Update promptGen and lastPrompt during render when prompt changes
+  if (prompt && prompt !== lastPrompt) {
+    setLastPrompt(prompt);
+    setPromptGen((g) => g + 1);
+  }
+
+  const [allOutputFiles, setAllOutputFiles] = useState<
+    (OutputFile & { gen: number })[]
+  >([]);
+
+  // Derive current output files from generation
+  const outputFiles = allOutputFiles.filter((f) => f.gen === promptGen);
+  const setOutputFiles = (files: OutputFile[]) =>
+    setAllOutputFiles((prev) => [
+      ...prev.filter((f) => f.gen !== promptGen),
+      ...files.map((f) => ({ ...f, gen: promptGen })),
+    ]);
+  const addOutputFile = (file: OutputFile) =>
+    setAllOutputFiles((prev) => [...prev, { ...file, gen: promptGen }]);
+
+  const getToken = () =>
+    typeof window !== "undefined"
+      ? (sessionStorage.getItem("demo_token") ?? "")
+      : "";
+
+  const { messages, append, setMessages, isLoading, error } = useChat({
+    api: apiEndpoint,
+    headers: () => ({ Authorization: `Bearer ${getToken()}` }),
+    body: { model, provider },
+    onError: (err) => {
       const msg = err?.message ?? "";
       if (msg.includes("401") || msg.includes("Unauthorized")) {
         sessionStorage.removeItem("demo_token");
         onAuthError();
       }
     },
-    [onAuthError]
-  );
-
-  const { messages, append, setMessages, isLoading, error } = useStreamingChat({
-    api: apiEndpoint,
-    headers: useCallback(
-      () => ({ Authorization: `Bearer ${getToken()}` }),
-      [getToken]
-    ),
-    body: { model, provider },
-    onError: handleError,
   });
 
-  // Clear on clearTrigger change
-  if (clearTrigger !== lastClearTrigger) {
-    setLastClearTrigger(clearTrigger);
-    setLastPrompt(null);
-    setMessages([]);
-  }
-
-  // Send prompt when it changes
   useEffect(() => {
-    if (prompt && prompt !== lastPrompt) {
-      setLastPrompt(prompt);
+    if (clearTrigger > 0 && clearTrigger !== lastClearTrigger) {
+      setMessages([]);
+    }
+  }, [clearTrigger, lastClearTrigger, setMessages]);
+
+  // Effect to call append (external side effect) when prompt changes
+  useEffect(() => {
+    if (prompt && prompt === lastPrompt) {
       append({ role: "user", content: prompt });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prompt]);
+  }, [prompt, lastPrompt, append]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleRetry = useCallback(() => {
-    const lastUser = [...messages].reverse().find((m) => m.role === "user");
-    if (lastUser) append({ role: "user", content: lastUser.content });
-  }, [messages, append]);
+    if (lastPromptRef.current) {
+      append({ role: "user", content: lastPromptRef.current });
+    }
+  }, [append]);
 
   const is429 =
     error?.message?.includes("429") || error?.message?.includes("Rate limit");
@@ -123,12 +138,6 @@ export function Panel({
     amber: "bg-amber-900/40 text-amber-300 border border-amber-700/40",
     teal: "bg-teal-900/40 text-teal-300 border border-teal-700/40",
   };
-
-  // Extract output files from tool invocations
-  const outputFiles: OutputFile[] = messages
-    .flatMap((m) => m.toolInvocations ?? [])
-    .filter((inv) => inv.toolName === "__output_file__")
-    .map((inv) => inv.result as OutputFile);
 
   const downloadFile = (f: OutputFile) => {
     const params = new URLSearchParams({
@@ -196,33 +205,27 @@ export function Panel({
             )}
             {msg.role === "assistant" && (
               <div className="space-y-2">
-                {msg.toolInvocations &&
-                  msg.toolInvocations.filter(
-                    (inv) => inv.toolName !== "__output_file__"
-                  ).length > 0 && (
-                    <div className="space-y-1">
-                      {msg.toolInvocations
-                        .filter((inv) => inv.toolName !== "__output_file__")
-                        .map((inv, i) => {
-                          const result =
-                            "result" in inv ? inv.result : undefined;
-                          const hasError =
-                            result &&
-                            typeof result === "object" &&
-                            "error" in result;
-                          return (
-                            <ToolCallCard
-                              key={inv.toolCallId}
-                              toolName={inv.toolName}
-                              args={inv.args}
-                              result={result}
-                              index={i}
-                              hasError={!!hasError}
-                            />
-                          );
-                        })}
-                    </div>
-                  )}
+                {msg.toolInvocations && msg.toolInvocations.length > 0 && (
+                  <div className="space-y-1">
+                    {msg.toolInvocations.map((inv, i) => {
+                      const result = "result" in inv ? inv.result : undefined;
+                      const hasError =
+                        result &&
+                        typeof result === "object" &&
+                        "error" in result;
+                      return (
+                        <ToolCallCard
+                          key={inv.toolCallId}
+                          toolName={inv.toolName}
+                          args={inv.args}
+                          result={result}
+                          index={i}
+                          hasError={!!hasError}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
                 {msg.content && (
                   <div className="text-slate-100 text-sm leading-relaxed whitespace-pre-wrap">
                     {msg.content}
@@ -246,7 +249,9 @@ export function Panel({
               >
                 <span className="text-base">📄</span>
                 <span className="text-sm text-slate-300 flex-1">{f.name}</span>
-                <span className="text-xs text-slate-500">Generated by agent</span>
+                <span className="text-xs text-slate-500">
+                  Generated by agent
+                </span>
                 <span className="text-xs text-teal-400 ml-2">Download ↓</span>
               </button>
             ))}

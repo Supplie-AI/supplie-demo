@@ -1,0 +1,132 @@
+name: Deploy to EKS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER: supplie-demo
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+jobs:
+  build-and-deploy:
+    name: Build → ECR → Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tags
+        id: tags
+        run: |
+          SHORT_SHA="${GITHUB_SHA::8}"
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "supplie_image=$ECR_REGISTRY/supplie-demo:$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "litellm_image=$ECR_REGISTRY/supplie-litellm:$SHORT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Build & push supplie-demo image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.supplie_image }}
+            ${{ env.ECR_REGISTRY }}/supplie-demo:latest
+          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/supplie-demo:latest
+          cache-to: type=inline
+
+      - name: Build & push litellm image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: litellm.Dockerfile
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.litellm_image }}
+            ${{ env.ECR_REGISTRY }}/supplie-litellm:latest
+          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/supplie-litellm:latest
+          cache-to: type=inline
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name ${{ env.EKS_CLUSTER }}
+
+      - name: Apply namespace & secrets (if not exists)
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+
+          # Create secret from GitHub Secrets (idempotent)
+          kubectl create secret generic supplie-secrets \
+            --namespace=supplie \
+            --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+            --from-literal=ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
+            --from-literal=DEMO_PASSWORD="${{ secrets.DEMO_PASSWORD }}" \
+            --from-literal=LITELLM_MASTER_KEY="${{ secrets.LITELLM_MASTER_KEY }}" \
+            --from-literal=OPENAI_CSV_FILE_ID="${{ secrets.OPENAI_CSV_FILE_ID }}" \
+            --from-literal=ANTHROPIC_CSV_FILE_ID="${{ secrets.ANTHROPIC_CSV_FILE_ID }}" \
+            --save-config \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy LiteLLM
+        run: |
+          sed "s|LITELLM_IMAGE|${{ steps.tags.outputs.litellm_image }}|g" \
+            k8s/litellm-deployment.yaml | kubectl apply -f -
+          kubectl rollout status deployment/litellm -n supplie --timeout=120s
+
+      - name: Deploy supplie-demo
+        run: |
+          sed "s|SUPPLIE_IMAGE|${{ steps.tags.outputs.supplie_image }}|g" \
+            k8s/supplie-deployment.yaml | kubectl apply -f -
+          kubectl rollout status deployment/supplie-demo -n supplie --timeout=120s
+
+      - name: Apply ingress
+        run: |
+          # Substitute ACM cert ARN if provided
+          if [ -n "${{ secrets.ACM_CERT_ARN }}" ]; then
+            sed "s|ACM_CERT_ARN|${{ secrets.ACM_CERT_ARN }}|g" \
+              k8s/ingress.yaml | kubectl apply -f -
+          else
+            kubectl apply -f k8s/ingress.yaml
+          fi
+
+      - name: Get ALB hostname
+        run: |
+          echo "Waiting for ALB address..."
+          for i in $(seq 1 12); do
+            HOST=$(kubectl get ingress supplie-demo -n supplie \
+              -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+            if [ -n "$HOST" ]; then
+              echo "✅ ALB: https://$HOST"
+              break
+            fi
+            sleep 10
+          done
+
+      - name: Summary
+        run: |
+          echo "## Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **supplie-demo image:** \`${{ steps.tags.outputs.supplie_image }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **litellm image:** \`${{ steps.tags.outputs.litellm_image }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL:** https://demo.supplie.ai" >> $GITHUB_STEP_SUMMARY
