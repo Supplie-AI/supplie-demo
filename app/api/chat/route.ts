@@ -1,6 +1,7 @@
 import { AIMessageChunk } from "@langchain/core/messages";
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import { getGroundedAgent } from "@/lib/server/grounded-agent";
 import {
   encodeDone,
   encodeError,
@@ -9,9 +10,9 @@ import {
 } from "@/lib/server/stream-protocol";
 import {
   assertProviderIsConfigured,
-  DemoProvider,
   getUngroundedAgent,
 } from "@/lib/server/ungrounded-agent";
+import { DEMO_PANEL_CONFIGS, type DemoAgentMode, type DemoProvider } from "@/lib/server/demo-config";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -20,6 +21,7 @@ interface ChatRequestBody {
   prompt?: string;
   model?: string;
   provider?: DemoProvider;
+  agentMode?: DemoAgentMode;
   messages?: Array<{
     role?: string;
     content?: string;
@@ -105,6 +107,7 @@ export async function POST(req: Request) {
   const body = (await req.json()) as ChatRequestBody;
   const model = body.model ?? "gpt-5.4-mini-2026-03-17";
   const provider = body.provider ?? "openai";
+  const agentMode = body.agentMode ?? "ungrounded";
   const messages = normalizeMessages(body);
 
   if (messages.length === 0) {
@@ -123,13 +126,18 @@ export async function POST(req: Request) {
   }
 
   const startMs = Date.now();
-  const agent = getUngroundedAgent({ model, provider });
+  const agent =
+    agentMode === "grounded"
+      ? getGroundedAgent({ model, provider })
+      : getUngroundedAgent({ model, provider });
+  const backendLabel = DEMO_PANEL_CONFIGS[agentMode].backendLabel;
 
   console.log(
     JSON.stringify({
       event: "request_start",
       route: "chat",
-      backend: "langchain-ungrounded-agent",
+      backend: backendLabel,
+      agent_mode: agentMode,
       provider,
       model,
       timestamp: new Date().toISOString(),
@@ -195,7 +203,8 @@ export async function POST(req: Request) {
           JSON.stringify({
             event: "request_complete",
             route: "chat",
-            backend: "langchain-ungrounded-agent",
+            backend: backendLabel,
+            agent_mode: agentMode,
             provider,
             model,
             total_ms: Date.now() - startMs,
@@ -210,7 +219,8 @@ export async function POST(req: Request) {
           JSON.stringify({
             event: "request_error",
             route: "chat",
-            backend: "langchain-ungrounded-agent",
+            backend: backendLabel,
+            agent_mode: agentMode,
             provider,
             model,
             message,

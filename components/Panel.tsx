@@ -10,6 +10,9 @@ interface PanelProps {
   badgeColor: "amber" | "teal";
   bgColor: string;
   borderColor: string;
+  note: string;
+  emptyStateTitle: string;
+  emptyStateDetail: string;
   messages: ChatMessage[];
   isLoading: boolean;
   error: Error | null;
@@ -22,6 +25,9 @@ export function Panel({
   badgeColor,
   bgColor,
   borderColor,
+  note,
+  emptyStateTitle,
+  emptyStateDetail,
   messages,
   isLoading,
   error,
@@ -72,20 +78,28 @@ export function Panel({
           </div>
         )}
       </div>
+      <div className="px-4 py-2 border-b border-white/5 bg-black/10">
+        <p className="text-xs leading-relaxed text-slate-400">{note}</p>
+      </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && !error && (
           <div className="flex items-center justify-center h-full">
-            <p
-              className="text-sm text-center"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Start a prompt above to stream the shared agent here
+            <div className="text-center">
+              <p
+                className="text-sm"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {emptyStateTitle}
+              </p>
               <br />
-              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                both panels mirror the same backend response in this slice
+              <span
+                className="text-xs"
+                style={{ color: "var(--text-muted)" }}
+              >
+                {emptyStateDetail}
               </span>
-            </p>
+            </div>
           </div>
         )}
 

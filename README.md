@@ -1,16 +1,17 @@
 # Supplie Demo
 
-This repo is a Next.js demo frontend with a single LangChain-backed backend agent.
+This repo is a Next.js demo frontend with two LangChain-backed demo agents.
 
 ## Current Slice
 
 - The UI keeps the two-panel side-by-side demo layout.
-- Both panels mirror the same shared backend session.
-- The backend is an **ungrounded** LangChain agent.
-- Streaming text is supported.
-- Native web search, code sandbox, and file access are **not wired yet**.
+- The left panel is an **ungrounded / raw** LangChain agent.
+- The right panel is a **grounded Supplie** agent backed by built-in demo tools.
+- Streaming text is supported on both sides.
+- The grounded side uses a static bundled Supplie demo snapshot, not live production data.
+- Native web search, code sandbox, live ERP access, and file access are **not wired yet**.
 
-The agent is instructed to say when required data or capabilities are missing instead of pretending they exist.
+Both agents are instructed to say when required data or capabilities are missing instead of pretending they exist.
 
 ## Local Development
 
