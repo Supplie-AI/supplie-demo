@@ -1,15 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
-import { useStreamingChat } from "@/hooks/useStreamingChat";
+import { useEffect, useRef } from "react";
+import type { ChatMessage } from "@/hooks/useStreamingChat";
 import { ToolCallCard } from "./ToolCallCard";
-
-interface OutputFile {
-  fileId: string;
-  containerId?: string;
-  name: string;
-  provider: "openai" | "anthropic";
-}
 
 interface PanelProps {
   title: string;
@@ -17,13 +10,10 @@ interface PanelProps {
   badgeColor: "amber" | "teal";
   bgColor: string;
   borderColor: string;
-  apiEndpoint: string;
-  prompt: string | null;
-  model: string;
-  provider: "openai" | "anthropic";
-  onClear: () => void;
-  clearTrigger: number;
-  onAuthError: () => void;
+  messages: ChatMessage[];
+  isLoading: boolean;
+  error: Error | null;
+  onRetry: () => void;
 }
 
 export function Panel({
@@ -32,111 +22,25 @@ export function Panel({
   badgeColor,
   bgColor,
   borderColor,
-  apiEndpoint,
-  prompt,
-  model,
-  provider,
-  clearTrigger,
-  onAuthError,
+  messages,
+  isLoading,
+  error,
+  onRetry,
 }: PanelProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
-  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [lastPrompt, setLastPrompt] = useState<string | null>(null);
-  const [lastClearTrigger, setLastClearTrigger] = useState(clearTrigger);
-
-  const getToken = useCallback(
-    () =>
-      typeof window !== "undefined"
-        ? (sessionStorage.getItem("demo_token") ?? "")
-        : "",
-    []
-  );
-
-  const handleError = useCallback(
-    (err: Error) => {
-      const msg = err?.message ?? "";
-      if (msg.includes("401") || msg.includes("Unauthorized")) {
-        sessionStorage.removeItem("demo_token");
-        onAuthError();
-      }
-    },
-    [onAuthError]
-  );
-
-  const { messages, append, setMessages, isLoading, error } = useStreamingChat({
-    api: apiEndpoint,
-    headers: useCallback(
-      () => ({ Authorization: `Bearer ${getToken()}` }),
-      [getToken]
-    ),
-    body: { model, provider },
-    onError: handleError,
-  });
-
-  // Clear on clearTrigger change
-  if (clearTrigger !== lastClearTrigger) {
-    setLastClearTrigger(clearTrigger);
-    setLastPrompt(null);
-    setMessages([]);
-  }
-
-  // Send prompt when it changes
-  useEffect(() => {
-    if (prompt && prompt !== lastPrompt) {
-      setLastPrompt(prompt);
-      append({ role: "user", content: prompt });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prompt]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  const handleRetry = useCallback(() => {
-    const lastUser = [...messages].reverse().find((m) => m.role === "user");
-    if (lastUser) append({ role: "user", content: lastUser.content });
-  }, [messages, append]);
 
   const is429 =
     error?.message?.includes("429") || error?.message?.includes("Rate limit");
   const is401 =
     error?.message?.includes("401") || error?.message?.includes("Unauthorized");
 
-  useEffect(() => {
-    if (is429) {
-      retryTimerRef.current = setTimeout(() => handleRetry(), 10000);
-    }
-    return () => {
-      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-    };
-  }, [is429, handleRetry]);
-
-  useEffect(() => {
-    if (is401) {
-      sessionStorage.removeItem("demo_token");
-      onAuthError();
-    }
-  }, [is401, onAuthError]);
-
   const badgeStyles = {
     amber: "bg-amber-900/40 text-amber-300 border border-amber-700/40",
     teal: "bg-teal-900/40 text-teal-300 border border-teal-700/40",
-  };
-
-  // Extract output files from tool invocations
-  const outputFiles: OutputFile[] = messages
-    .flatMap((m) => m.toolInvocations ?? [])
-    .filter((inv) => inv.toolName === "__output_file__")
-    .map((inv) => inv.result as OutputFile);
-
-  const downloadFile = (f: OutputFile) => {
-    const params = new URLSearchParams({
-      provider: f.provider,
-      fileId: f.fileId,
-    });
-    if (f.containerId) params.set("containerId", f.containerId);
-    window.open(`/api/files/download?${params}`, "_blank");
   };
 
   return (
@@ -176,10 +80,10 @@ export function Panel({
               className="text-sm text-center"
               style={{ color: "var(--text-secondary)" }}
             >
-              Select a prompt above to begin
+              Start a prompt above to stream the shared agent here
               <br />
               <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                or type your own question
+                both panels mirror the same backend response in this slice
               </span>
             </p>
           </div>
@@ -233,41 +137,10 @@ export function Panel({
           </div>
         ))}
 
-        {outputFiles.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-white/5">
-            <div className="text-xs text-slate-500 uppercase tracking-wider">
-              Output files
-            </div>
-            {outputFiles.map((f, i) => (
-              <button
-                key={i}
-                onClick={() => downloadFile(f)}
-                className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/40 hover:border-slate-500/50 transition-all"
-              >
-                <span className="text-base">📄</span>
-                <span className="text-sm text-slate-300 flex-1">{f.name}</span>
-                <span className="text-xs text-slate-500">Generated by agent</span>
-                <span className="text-xs text-teal-400 ml-2">Download ↓</span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {error && !is429 && !is401 && badgeColor === "amber" && (
-          <div className="border border-amber-700/50 bg-amber-950/30 rounded-lg p-4 space-y-1">
-            <div className="text-amber-400 text-sm font-semibold">
-              ⚠ Model Error
-            </div>
-            <div className="text-amber-200/80 text-sm">{error.message}</div>
-            <div className="text-amber-600 text-xs mt-2 italic">
-              This is what happens without grounding.
-            </div>
-          </div>
-        )}
-        {error && !is429 && !is401 && badgeColor === "teal" && (
+        {error && !is429 && !is401 && (
           <div className="flex items-center gap-2">
             <button
-              onClick={handleRetry}
+              onClick={onRetry}
               className="text-xs text-teal-400 border border-teal-800/50 hover:border-teal-600/50 rounded-full px-3 py-1 transition-colors"
             >
               ↺ Retry
@@ -276,8 +149,13 @@ export function Panel({
           </div>
         )}
         {is429 && (
-          <div className="text-slate-400 text-xs animate-pulse">
-            Rate limit — retrying in 10s…
+          <div className="text-slate-400 text-xs">
+            Rate limit exceeded. Retry when the minute window resets.
+          </div>
+        )}
+        {is401 && (
+          <div className="text-slate-400 text-xs">
+            Session expired. Refresh and authenticate again.
           </div>
         )}
 

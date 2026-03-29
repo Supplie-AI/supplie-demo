@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Supplie Demo
 
-## Getting Started
+This repo is a Next.js demo frontend with a single LangChain-backed backend agent.
 
-First, run the development server:
+## Current Slice
+
+- The UI keeps the two-panel side-by-side demo layout.
+- Both panels mirror the same shared backend session.
+- The backend is an **ungrounded** LangChain agent.
+- Streaming text is supported.
+- Native web search, code sandbox, and file access are **not wired yet**.
+
+The agent is instructed to say when required data or capabilities are missing instead of pretending they exist.
+
+## Local Development
 
 ```bash
+npm install
+export DEMO_PASSWORD=local-demo-password
+export OPENAI_API_KEY=sk-...
+# optional
+export ANTHROPIC_API_KEY=sk-ant-...
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quality Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
 
-## Learn More
+## AWS EKS Deployment
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Dev CI/CD: [`.github/workflows/dev.yml`](/home/jack/workspace/supplie-demo/.github/workflows/dev.yml)
+- Main/prod EKS deploy: [`.github/workflows/deploy-eks.yml`](/home/jack/workspace/supplie-demo/.github/workflows/deploy-eks.yml)
+- Kubernetes manifests: [`k8s/`](/home/jack/workspace/supplie-demo/k8s)
+- Notes: [`docs/AWS_DEPLOYMENT.md`](/home/jack/workspace/supplie-demo/docs/AWS_DEPLOYMENT.md)

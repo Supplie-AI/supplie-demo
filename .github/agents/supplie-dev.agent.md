@@ -31,7 +31,7 @@ When Jack delegates an issue:
 
 - TypeScript strict mode
 - Next.js 16 App Router conventions
-- Vercel AI SDK v6 (no maxSteps, no onStepFinish)
+- LangChain-based backend with streamed API responses
 - Tailwind CSS for styling
 - All API routes in app/api/
 - All components in components/

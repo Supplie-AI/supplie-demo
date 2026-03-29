@@ -1,22 +1,34 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Panel } from "@/components/Panel";
 import { PromptButtons } from "@/components/PromptButtons";
 import { ModelPicker } from "@/components/ModelPicker";
 import { PasswordGate } from "@/components/PasswordGate";
+import { useStreamingChat } from "@/hooks/useStreamingChat";
+
+interface DemoConfig {
+  anthropicAvailable: boolean;
+  backendLabel: string;
+  sharedAcrossPanels: boolean;
+  capabilities: Array<{
+    id: string;
+    label: string;
+    enabled: boolean;
+    availability: "available" | "planned";
+    description: string;
+  }>;
+}
 
 export default function Home() {
   const [model, setModel] = useState("gpt-5.4-mini-2026-03-17");
   const [provider, setProvider] = useState<"openai" | "anthropic">("openai");
-  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
-  const [clearTrigger, setClearTrigger] = useState(0);
+  const [config, setConfig] = useState<DemoConfig | null>(null);
   const [authed, setAuthed] = useState(
     () =>
       typeof window !== "undefined" && !!sessionStorage.getItem("demo_token"),
   );
   const authChecked = true;
-  const promptVersion = useRef(0);
 
   const handleAuth = useCallback((token: string) => {
     sessionStorage.setItem("demo_token", token);
@@ -26,35 +38,94 @@ export default function Home() {
   const handleAuthError = useCallback(() => {
     sessionStorage.removeItem("demo_token");
     setAuthed(false);
-    setClearTrigger((t) => t + 1);
-    setPendingPrompt(null);
   }, []);
 
-  const handlePrompt = useCallback((prompt: string) => {
-    promptVersion.current += 1;
-    setPendingPrompt(`${promptVersion.current}::${prompt}`);
-  }, []);
+  const getToken = useCallback(
+    () =>
+      typeof window !== "undefined"
+        ? (sessionStorage.getItem("demo_token") ?? "")
+        : "",
+    [],
+  );
+
+  const handleChatError = useCallback(
+    (error: Error) => {
+      if (
+        error.message.includes("401") ||
+        error.message.includes("Unauthorized")
+      ) {
+        handleAuthError();
+      }
+    },
+    [handleAuthError],
+  );
+
+  const { messages, append, setMessages, isLoading, error } = useStreamingChat({
+    api: "/api/chat",
+    body: { model, provider },
+    headers: useCallback(
+      () => ({ Authorization: `Bearer ${getToken()}` }),
+      [getToken],
+    ),
+    onError: handleChatError,
+  });
 
   const handleClear = useCallback(() => {
-    setPendingPrompt(null);
-    setClearTrigger((t) => t + 1);
-  }, []);
+    setMessages([]);
+  }, [setMessages]);
 
   const handleModelChange = useCallback(
     (modelId: string, newProvider: "openai" | "anthropic") => {
       setModel(modelId);
       setProvider(newProvider);
-      setClearTrigger((t) => t + 1);
-      setPendingPrompt(null);
+      setMessages([]);
     },
-    [],
+    [setMessages],
   );
 
-  const extractPrompt = (raw: string | null) => {
-    if (!raw) return null;
-    const idx = raw.indexOf("::");
-    return idx >= 0 ? raw.slice(idx + 2) : raw;
-  };
+  const handlePrompt = useCallback(
+    (prompt: string) => {
+      append({ role: "user", content: prompt });
+    },
+    [append],
+  );
+
+  useEffect(() => {
+    fetch("/api/config")
+      .then((response) => response.json())
+      .then((data: DemoConfig) => setConfig(data))
+      .catch(() => setConfig(null));
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    const lastUser = [...messages]
+      .reverse()
+      .find((message) => message.role === "user");
+    if (lastUser) {
+      append({ role: "user", content: lastUser.content });
+    }
+  }, [append, messages]);
+
+  const currentSliceMessage = useMemo(() => {
+    const availableCapabilities =
+      config?.capabilities.filter((capability) => capability.enabled) ?? [];
+    const plannedCapabilities =
+      config?.capabilities.filter((capability) => !capability.enabled) ?? [];
+
+    const availableText =
+      availableCapabilities.length > 0
+        ? availableCapabilities.map((capability) => capability.label).join(", ")
+        : "No runtime capabilities are enabled.";
+    const plannedText =
+      plannedCapabilities.length > 0
+        ? plannedCapabilities.map((capability) => capability.label).join(", ")
+        : "No planned capabilities listed.";
+
+    return {
+      availableText,
+      plannedText,
+    };
+  }, [config]);
 
   // Don't render anything until we've checked auth (avoids flash)
   if (!authChecked) return null;
@@ -109,38 +180,50 @@ export default function Home() {
       {/* Prompt buttons */}
       <PromptButtons onPrompt={handlePrompt} />
 
+      <div className="px-5 py-3 border-b border-white/5 bg-slate-950/30">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+          Current Slice
+        </div>
+        <div className="mt-1 text-sm text-slate-200">
+          Both panels mirror the same{" "}
+          {config?.backendLabel ?? "LangChain ungrounded agent"} for now.
+          Streaming text is live, but the comparison UI is intentionally backed
+          by one shared session until grounded capabilities are implemented.
+        </div>
+        <div className="mt-2 text-xs text-slate-400">
+          Available now: {currentSliceMessage.availableText}
+        </div>
+        <div className="mt-1 text-xs text-slate-500">
+          Not wired yet: {currentSliceMessage.plannedText}
+        </div>
+      </div>
+
       {/* Two panels */}
       <div className="flex flex-1 overflow-hidden">
         <div className="w-1/2">
           <Panel
-            title="Code Execution Only"
-            badge="⚠ Raw Model — Code Execution Only"
+            title="Ungrounded Agent"
+            badge="Shared backend"
             badgeColor="amber"
             bgColor="var(--bg-amber-panel)"
             borderColor="border-amber-900/30"
-            apiEndpoint="/api/raw"
-            prompt={extractPrompt(pendingPrompt)}
-            model={model}
-            provider={provider}
-            onClear={handleClear}
-            clearTrigger={clearTrigger}
-            onAuthError={handleAuthError}
+            messages={messages}
+            isLoading={isLoading}
+            error={error}
+            onRetry={handleRetry}
           />
         </div>
         <div className="w-1/2">
           <Panel
-            title="Supplie Agent"
-            badge="✓ Supplie Agent — Grounded Tools + Code"
+            title="Ungrounded Agent Mirror"
+            badge="Shared backend"
             badgeColor="teal"
             bgColor="var(--bg-teal-panel)"
             borderColor="border-teal-900/30"
-            apiEndpoint="/api/agent"
-            prompt={extractPrompt(pendingPrompt)}
-            model={model}
-            provider={provider}
-            onClear={handleClear}
-            clearTrigger={clearTrigger}
-            onAuthError={handleAuthError}
+            messages={messages}
+            isLoading={isLoading}
+            error={error}
+            onRetry={handleRetry}
           />
         </div>
       </div>

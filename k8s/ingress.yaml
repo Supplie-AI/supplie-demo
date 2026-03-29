@@ -2,21 +2,21 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: supplie-demo
-  namespace: supplie
+  namespace: SUPPLIE_NAMESPACE
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/certificate-arn: ACM_CERT_ARN   # set in CI or manually
+    alb.ingress.kubernetes.io/certificate-arn: ACM_CERT_ARN
     alb.ingress.kubernetes.io/healthcheck-path: /api/config
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
     alb.ingress.kubernetes.io/healthy-threshold-count: "2"
     alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
 spec:
   rules:
-    - host: demo.supplie.ai
+    - host: SUPPLIE_HOST
       http:
         paths:
           - path: /

@@ -17,7 +17,7 @@ export const MODELS: ModelOption[] = [
   },
   { label: "GPT-5.4 — Full", modelId: "gpt-5.4", provider: "openai" },
   {
-    label: "Claude Sonnet 4.6 ✦",
+    label: "Claude Sonnet 4.5 ✦",
     modelId: "claude-sonnet-4-5",
     provider: "anthropic",
     requiresKey: true,
