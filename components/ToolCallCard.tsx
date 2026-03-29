@@ -5,7 +5,7 @@ import { ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
 
 interface ToolCallCardProps {
   toolName: string;
-  args: Record<string, unknown>;
+  args: unknown;
   result: unknown;
   index: number;
   hasError?: boolean;

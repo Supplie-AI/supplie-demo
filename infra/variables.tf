@@ -3,7 +3,7 @@ variable "aws_region" {
 }
 
 variable "cluster_name" {
-  default = "supplie-demo"
+  default = "supplie-demo-dev"
 }
 
 variable "cluster_version" {
@@ -11,13 +11,13 @@ variable "cluster_version" {
 }
 
 variable "node_instance_type" {
-  default = "t3.medium"
+  default = "t3.small"
 }
 
 variable "node_count" {
-  default = 2
+  default = 1
 }
 
 variable "environment" {
-  default = "demo"
+  default = "dev"
 }

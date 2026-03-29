@@ -16,6 +16,29 @@ export interface ToolInvocation {
   result?: unknown;
 }
 
+interface ToolStartMetadata {
+  type: "tool-start";
+  toolCallId: string;
+  toolName: string;
+  args: unknown;
+}
+
+interface ToolEndMetadata {
+  type: "tool-end";
+  toolCallId: string;
+  toolName: string;
+  result: unknown;
+}
+
+interface ToolErrorMetadata {
+  type: "tool-error";
+  toolCallId: string;
+  toolName: string;
+  error: string;
+}
+
+type StreamMetadata = ToolStartMetadata | ToolEndMetadata | ToolErrorMetadata;
+
 interface UseStreamingChatOptions {
   api: string;
   body?: Record<string, unknown>;
@@ -39,6 +62,59 @@ export function useStreamingChat({
   const [error, setError] = useState<Error | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const upsertToolInvocation = useCallback(
+    (assistantId: string, metadata: StreamMetadata) => {
+      setMessages((prev) =>
+        prev.map((message) => {
+          if (message.id !== assistantId) {
+            return message;
+          }
+
+          const existing = message.toolInvocations ?? [];
+          const index = existing.findIndex(
+            (invocation) => invocation.toolCallId === metadata.toolCallId,
+          );
+
+          const nextInvocation: ToolInvocation =
+            metadata.type === "tool-start"
+              ? {
+                  toolCallId: metadata.toolCallId,
+                  toolName: metadata.toolName,
+                  args: metadata.args,
+                }
+              : {
+                  toolCallId: metadata.toolCallId,
+                  toolName: metadata.toolName,
+                  args: index >= 0 ? existing[index].args : {},
+                  result:
+                    metadata.type === "tool-end"
+                      ? metadata.result
+                      : { error: metadata.error },
+                };
+
+          if (index < 0) {
+            return {
+              ...message,
+              toolInvocations: [...existing, nextInvocation],
+            };
+          }
+
+          const updated = [...existing];
+          updated[index] = {
+            ...updated[index],
+            ...nextInvocation,
+          };
+
+          return {
+            ...message,
+            toolInvocations: updated,
+          };
+        }),
+      );
+    },
+    [],
+  );
+
   const setMessagesExported = useCallback(
     (msgs: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
       setMessages(msgs);
@@ -48,6 +124,14 @@ export function useStreamingChat({
 
   const append = useCallback(
     async (msg: { role: "user"; content: string }) => {
+      const requestMessages = [
+        ...messages.map((message) => ({
+          role: message.role,
+          content: message.content,
+        })),
+        { role: "user" as const, content: msg.content },
+      ];
+
       const userMsg: ChatMessage = {
         id: genId(),
         role: "user",
@@ -78,7 +162,7 @@ export function useStreamingChat({
           },
           body: JSON.stringify({
             prompt: msg.content,
-            messages: [{ role: "user", content: msg.content }],
+            messages: requestMessages,
             ...body,
           }),
           signal: controller.signal,
@@ -101,14 +185,14 @@ export function useStreamingChat({
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
 
-          // Process line by line (Vercel AI SDK data stream format)
+          // Process line by line using the app's lightweight text stream protocol.
           const lines = buffer.split("\n");
           buffer = lines.pop() ?? "";
 
           for (const line of lines) {
             if (!line.trim()) continue;
 
-            // Vercel AI SDK data stream: "0:..." text delta, "8:..." metadata, "d:..." done
+            // Stream protocol: "0:..." text delta, "8:..." metadata, "3:..." error, "d:..." done
             if (line.startsWith("0:")) {
               try {
                 const delta = JSON.parse(line.slice(2)) as string;
@@ -131,34 +215,52 @@ export function useStreamingChat({
                 if (e instanceof Error && e.message !== line.slice(2)) throw e;
               }
             } else if (line.startsWith("8:")) {
-              // metadata (output files, etc) — store in message
               try {
-                const meta = JSON.parse(line.slice(2)) as unknown[];
+                const meta = JSON.parse(line.slice(2)) as unknown;
+
+                if (
+                  meta &&
+                  typeof meta === "object" &&
+                  "type" in meta &&
+                  typeof meta.type === "string"
+                ) {
+                  upsertToolInvocation(assistantId, meta as StreamMetadata);
+                  continue;
+                }
+
+                if (!Array.isArray(meta)) {
+                  continue;
+                }
+
                 for (const item of meta) {
-                  if (typeof item === "string") {
-                    const parsed = JSON.parse(item) as {
-                      outputFiles?: unknown[];
-                    };
-                    if (parsed.outputFiles) {
-                      setMessages((prev) =>
-                        prev.map((m) =>
-                          m.id === assistantId
-                            ? {
-                                ...m,
-                                toolInvocations: parsed.outputFiles?.map(
-                                  (f, i) => ({
-                                    toolCallId: `file-${i}`,
-                                    toolName: "__output_file__",
-                                    args: {},
-                                    result: f,
-                                  })
-                                ) as ToolInvocation[],
-                              }
-                            : m
-                        )
-                      );
-                    }
+                  if (typeof item !== "string") {
+                    continue;
                   }
+
+                  const parsed = JSON.parse(item) as {
+                    outputFiles?: unknown[];
+                  };
+
+                  const outputFiles = parsed.outputFiles;
+                  if (!outputFiles) {
+                    continue;
+                  }
+
+                  setMessages((prev) =>
+                    prev.map((message) =>
+                      message.id === assistantId
+                        ? {
+                            ...message,
+                            toolInvocations: outputFiles.map((file, i) => ({
+                              toolCallId: `file-${i}`,
+                              toolName: "__output_file__",
+                              args: {},
+                              result: file,
+                            })),
+                          }
+                        : message,
+                    ),
+                  );
                 }
               } catch {
                 // ignore
@@ -212,7 +314,7 @@ export function useStreamingChat({
         setIsLoading(false);
       }
     },
-    [api, body, headers, onError]
+    [api, body, headers, messages, onError, upsertToolInvocation]
   );
 
   const stop = useCallback(() => {
@@ -220,5 +322,12 @@ export function useStreamingChat({
     setIsLoading(false);
   }, []);
 
-  return { messages, append, setMessages: setMessagesExported, isLoading, error, stop };
+  return {
+    messages,
+    append,
+    setMessages: setMessagesExported,
+    isLoading,
+    error,
+    stop,
+  };
 }

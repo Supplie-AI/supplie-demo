@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
     pathname.startsWith("/api/") &&
     !pathname.startsWith("/api/auth/") &&
-    !pathname.startsWith("/api/config") &&
-    !pathname.startsWith("/api/files/")
+    !pathname.startsWith("/api/config")
   ) {
     const auth = request.headers.get("authorization") ?? "";
     const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
