@@ -6,6 +6,7 @@ import {
   getCapabilitySummaryLines,
 } from "./demo-capabilities";
 import type { DemoProvider } from "./demo-config";
+import { getChatModel } from "./chat-model";
 
 interface GroundedAgentOptions {
   model: string;
@@ -304,10 +305,6 @@ const groundedTools = [
 
 const agentCache = new Map<string, ReturnType<typeof createAgent>>();
 
-function buildModelRef({ model, provider }: GroundedAgentOptions): string {
-  return `${provider}:${model}`;
-}
-
 function buildSystemPrompt(): string {
   return [
     "You are the grounded Supplie demo agent for a supply-chain comparison demo.",
@@ -330,7 +327,7 @@ export function getGroundedAgent(options: GroundedAgentOptions) {
   }
 
   const agent = createAgent({
-    model: buildModelRef(options),
+    model: getChatModel(options),
     tools: groundedTools,
     systemPrompt: buildSystemPrompt(),
   });
