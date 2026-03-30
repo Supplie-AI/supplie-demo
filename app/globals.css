@@ -1,21 +1,29 @@
 @import "tailwindcss";
 
-/* ── Color system ─────────────────────────────────────── */
 :root {
-  --bg-primary: #0f0f14;
-  --bg-secondary: #18181f;
-  --bg-amber-panel: #110f0a;
-  --bg-teal-panel: #0a0f12;
+  --bg-primary: #08121b;
+  --bg-shell: rgba(7, 12, 18, 0.84);
+  --bg-shell-strong: rgba(10, 16, 24, 0.96);
+  --bg-secondary: #101922;
+  --bg-tertiary: #172231;
+  --bg-amber-panel: linear-gradient(180deg, #1d1710 0%, #100d09 100%);
+  --bg-teal-panel: linear-gradient(180deg, #0f1d1f 0%, #081215 100%);
 
-  --text-primary: #f0f0f0;
-  --text-secondary: #a0a0a0;
-  --text-muted: #606070;
+  --text-primary: #f3f7fb;
+  --text-secondary: #b1bfd1;
+  --text-muted: #738298;
 
-  --accent-amber: #f59e0b;
-  --accent-teal: #14b8a6;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --shadow-panel: 0 24px 80px rgba(2, 6, 14, 0.42);
+
+  --accent-amber: #f3a63b;
+  --accent-amber-soft: rgba(243, 166, 59, 0.16);
+  --accent-teal: #2ed3c4;
+  --accent-teal-soft: rgba(46, 211, 196, 0.16);
+  --accent-sky: #72a8ff;
 }
 
-/* ── Animations ───────────────────────────────────────── */
 @keyframes slide-in {
   from {
     opacity: 0;
@@ -52,22 +60,64 @@
   }
 }
 
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -14px, 0) scale(1.04);
+  }
+}
+
 .animate-slide-in {
   animation: slide-in 0.2s ease-out both;
 }
 .animate-shake {
   animation: shake 0.6s ease-in-out;
 }
+.animate-float-slow {
+  animation: float 12s ease-in-out infinite;
+}
+.animate-float-slower {
+  animation: float 16s ease-in-out infinite reverse;
+}
 
-/* ── Reset ────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
 }
+
 html,
 body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: var(--bg-primary);
+  background:
+    radial-gradient(circle at top left, rgba(46, 211, 196, 0.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(114, 168, 255, 0.18), transparent 26%),
+    linear-gradient(180deg, #061018 0%, #08111a 42%, #070c12 100%);
   color: var(--text-primary);
+  font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+}
+
+body::selection {
+  background: rgba(46, 211, 196, 0.3);
+}
+
+a {
+  color: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(115, 130, 152, 0.45);
+  border-radius: 999px;
 }

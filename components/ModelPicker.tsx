@@ -43,7 +43,9 @@ export function ModelPicker({ value, onChange }: ModelPickerProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-slate-500">Model:</span>
+      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+        Model
+      </span>
       <div className="relative">
         <select
           value={value}
@@ -51,7 +53,7 @@ export function ModelPicker({ value, onChange }: ModelPickerProps) {
             const m = MODELS.find((m) => m.modelId === e.target.value)!;
             onChange(m.modelId, m.provider);
           }}
-          className="text-xs bg-slate-800/60 text-slate-300 border border-slate-700/50 rounded-lg pl-3 pr-8 py-1.5 focus:outline-none focus:border-teal-600/50 cursor-pointer appearance-none"
+          className="cursor-pointer appearance-none rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(20,29,42,0.9),rgba(10,15,24,0.9))] py-2 pl-3 pr-8 text-xs text-slate-200 outline-none transition-colors focus:border-teal-400/50"
         >
           {MODELS.map((m) => (
             <option key={m.modelId} value={m.modelId}>
@@ -64,7 +66,7 @@ export function ModelPicker({ value, onChange }: ModelPickerProps) {
         </select>
         <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
           <svg
-            className="w-3 h-3 text-slate-500"
+            className="h-3 w-3 text-slate-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
