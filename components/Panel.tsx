@@ -47,57 +47,93 @@ export function Panel({
     error?.message?.includes("401") || error?.message?.includes("Unauthorized");
 
   const badgeStyles = {
-    amber: "bg-amber-900/40 text-amber-300 border border-amber-700/40",
-    teal: "bg-teal-900/40 text-teal-300 border border-teal-700/40",
+    amber:
+      "border border-[rgba(243,166,59,0.18)] bg-[rgba(243,166,59,0.12)] text-amber-200",
+    teal:
+      "border border-[rgba(46,211,196,0.18)] bg-[rgba(46,211,196,0.12)] text-teal-200",
   };
+  const accentStyles = {
+    amber: {
+      orb: "bg-amber-300/80",
+      ring: "border-[rgba(243,166,59,0.2)] bg-[rgba(243,166,59,0.06)]",
+      note: "from-amber-500/10 to-transparent",
+      message:
+        "border-[rgba(243,166,59,0.14)] bg-[rgba(243,166,59,0.08)]",
+      userMessage: "border-slate-600/50 bg-[linear-gradient(180deg,rgba(33,44,61,0.92),rgba(25,34,49,0.92))]",
+      retry:
+        "border-[rgba(243,166,59,0.3)] text-amber-200 hover:border-[rgba(243,166,59,0.6)]",
+    },
+    teal: {
+      orb: "bg-teal-300/80",
+      ring: "border-[rgba(46,211,196,0.2)] bg-[rgba(46,211,196,0.06)]",
+      note: "from-teal-400/10 to-transparent",
+      message:
+        "border-[rgba(46,211,196,0.14)] bg-[rgba(46,211,196,0.08)]",
+      userMessage: "border-slate-600/50 bg-[linear-gradient(180deg,rgba(33,44,61,0.92),rgba(25,34,49,0.92))]",
+      retry:
+        "border-[rgba(46,211,196,0.3)] text-teal-200 hover:border-[rgba(46,211,196,0.6)]",
+    },
+  };
+  const accent = accentStyles[badgeColor];
 
   return (
     <div
       data-testid={`panel-${panelId}`}
-      className={`flex flex-col h-full border-r ${borderColor} overflow-hidden`}
+      className={`flex h-full flex-col overflow-hidden rounded-[28px] border ${borderColor} shadow-[0_24px_60px_rgba(3,8,16,0.28)]`}
       style={{ background: bgColor }}
     >
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
+      <div className="border-b border-white/8 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className={`h-2.5 w-2.5 rounded-full ${accent.orb} shadow-lg`} />
+          <span
+            className="text-[15px] font-semibold tracking-[-0.02em]"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {title}
+          </span>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] uppercase tracking-[0.18em] ${badgeStyles[badgeColor]}`}
+          >
+            {badge}
+          </span>
+          {isLoading && (
+            <div className="ml-auto flex gap-1.5">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 w-1.5 rounded-full ${badgeColor === "teal" ? "bg-teal-300" : "bg-amber-300"} animate-bounce`}
+                  style={{ animationDelay: `${i * 150}ms` }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
         <span
-          className="text-sm font-semibold"
-          style={{ color: "var(--text-primary)" }}
+          className={`mt-3 block rounded-2xl border border-white/8 bg-gradient-to-r px-4 py-3 text-xs leading-relaxed text-slate-300 ${accent.note}`}
         >
-          {title}
+          {note}
         </span>
-        <span
-          className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeStyles[badgeColor]}`}
-        >
-          {badge}
-        </span>
-        {isLoading && (
-          <div className="ml-auto flex gap-1">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full ${badgeColor === "teal" ? "bg-teal-400" : "bg-amber-400"} animate-bounce`}
-                style={{ animationDelay: `${i * 150}ms` }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-      <div className="px-4 py-2 border-b border-white/5 bg-black/10">
-        <p className="text-xs leading-relaxed text-slate-400">{note}</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto p-5">
         {messages.length === 0 && !error && (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
+          <div className="flex h-full items-center justify-center">
+            <div
+              className={`max-w-sm rounded-[28px] border p-8 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${accent.ring}`}
+            >
+              <div
+                className={`mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 ${accent.message}`}
+              >
+                <div className={`h-3 w-3 rounded-full ${accent.orb}`} />
+              </div>
               <p
-                className="text-sm"
+                className="text-base font-medium"
                 style={{ color: "var(--text-secondary)" }}
               >
                 {emptyStateTitle}
               </p>
-              <br />
               <span
-                className="text-xs"
+                className="mt-3 block text-sm leading-6"
                 style={{ color: "var(--text-muted)" }}
               >
                 {emptyStateDetail}
@@ -110,13 +146,17 @@ export function Panel({
           <div key={msg.id} className="space-y-2">
             {msg.role === "user" && (
               <div className="flex justify-end">
-                <div className="bg-slate-800/60 text-slate-100 text-sm rounded-lg px-3 py-2 max-w-xs">
+                <div
+                  className={`max-w-xs rounded-2xl border px-4 py-3 text-sm text-slate-100 shadow-[0_12px_30px_rgba(3,8,16,0.22)] ${accent.userMessage}`}
+                >
                   {msg.content}
                 </div>
               </div>
             )}
             {msg.role === "assistant" && (
-              <div className="space-y-2">
+              <div
+                className={`space-y-3 rounded-[24px] border px-4 py-4 ${accent.message}`}
+              >
                 {msg.toolInvocations &&
                   msg.toolInvocations.filter(
                     (inv) => inv.toolName !== "__output_file__"
@@ -143,9 +183,9 @@ export function Panel({
                           );
                         })}
                     </div>
-                  )}
+                )}
                 {msg.content && (
-                  <div className="text-slate-100 text-sm leading-relaxed whitespace-pre-wrap">
+                  <div className="whitespace-pre-wrap text-sm leading-7 text-slate-100">
                     {msg.content}
                   </div>
                 )}
@@ -158,7 +198,7 @@ export function Panel({
           <div className="flex items-center gap-2">
             <button
               onClick={onRetry}
-              className="text-xs text-teal-400 border border-teal-800/50 hover:border-teal-600/50 rounded-full px-3 py-1 transition-colors"
+              className={`rounded-full border px-3 py-1 text-xs transition-colors ${accent.retry}`}
             >
               ↺ Retry
             </button>

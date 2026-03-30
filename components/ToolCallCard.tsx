@@ -51,48 +51,48 @@ export function ToolCallCard({
 
   return (
     <div
-      className={`border-l-2 ${hasError ? "border-red-600" : "border-teal-500"} ${hasError ? "bg-red-950/20" : "bg-teal-950/20"} rounded-r-lg mb-2 overflow-hidden animate-slide-in`}
+      className={`mb-2 overflow-hidden rounded-2xl border ${hasError ? "border-red-500/25 bg-red-500/10" : "border-teal-400/20 bg-[linear-gradient(180deg,rgba(11,42,43,0.42),rgba(5,18,22,0.55))]"} animate-slide-in shadow-[0_12px_32px_rgba(0,0,0,0.18)]`}
       style={{ animationDelay: `${index * 50}ms` }}
     >
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-teal-950/30 transition-colors text-left"
+        className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-white/4"
       >
         {expanded ? (
-          <ChevronDown className="w-3 h-3 text-teal-400 flex-shrink-0" />
+          <ChevronDown className="h-3 w-3 flex-shrink-0 text-teal-300" />
         ) : (
-          <ChevronRight className="w-3 h-3 text-teal-400 flex-shrink-0" />
+          <ChevronRight className="h-3 w-3 flex-shrink-0 text-teal-300" />
         )}
         {hasError && (
-          <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />
+          <AlertTriangle className="h-3 w-3 flex-shrink-0 text-red-400" />
         )}
-        <span className="text-teal-300 font-mono text-xs font-semibold">
+        <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-mono text-[11px] font-semibold text-teal-200">
           {toolName}
         </span>
         <span
-          className={`font-mono text-xs ml-auto ${hasError ? "text-red-400" : "text-slate-400"}`}
+          className={`ml-auto font-mono text-[11px] ${hasError ? "text-red-300" : "text-slate-400"}`}
         >
           {getResultSummary()}
         </span>
       </button>
 
       {expanded && (
-        <div className="px-3 pb-3 space-y-2">
+        <div className="space-y-3 px-4 pb-4">
           <div>
-            <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+            <div className="mb-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">
               Inputs
             </div>
-            <pre className="text-xs text-slate-300 font-mono bg-black/30 rounded p-2 overflow-x-auto whitespace-pre-wrap">
+            <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-white/6 bg-black/25 p-3 font-mono text-xs text-slate-300">
               {formatValue(args)}
             </pre>
           </div>
           {result !== undefined && (
             <div>
-              <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+              <div className="mb-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">
                 Result
               </div>
               <pre
-                className={`text-xs font-mono bg-black/30 rounded p-2 overflow-x-auto whitespace-pre-wrap max-h-48 ${hasError ? "text-red-300" : "text-teal-200"}`}
+                className={`max-h-48 overflow-x-auto whitespace-pre-wrap rounded-xl border border-white/6 bg-black/25 p-3 font-mono text-xs ${hasError ? "text-red-200" : "text-teal-100"}`}
               >
                 {formatValue(result)}
               </pre>

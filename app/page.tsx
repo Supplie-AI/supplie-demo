@@ -279,78 +279,89 @@ export default function Home() {
   return (
     <div
       data-testid="demo-app"
-      className="flex flex-col h-screen"
+      className="min-h-screen px-4 py-4 sm:px-5"
       style={{
-        background: "var(--bg-primary)",
-        fontFamily: "Inter, system-ui, sans-serif",
+        background: "transparent",
+        fontFamily: '"Space Grotesk", "Avenir Next", "Segoe UI", sans-serif',
       }}
     >
-      <div className="flex items-center gap-4 px-5 py-3 border-b border-white/5 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-teal-500/20 flex items-center justify-center">
-            <div className="w-2 h-2 rounded-full bg-teal-400" />
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-[1540px] flex-col rounded-[32px] border border-white/10 bg-[var(--bg-shell)] p-3 shadow-[0_32px_120px_rgba(2,6,14,0.5)] backdrop-blur-xl">
+        <div className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(11,17,25,0.92),rgba(8,13,20,0.92))] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-teal-300/20 bg-[linear-gradient(135deg,rgba(20,184,166,0.22),rgba(56,189,248,0.18))] shadow-[0_12px_30px_rgba(20,184,166,0.18)]">
+                <div className="h-3 w-3 rounded-full bg-teal-300" />
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="text-sm font-semibold"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    Supplie.ai
+                  </span>
+                  <span
+                    className="text-[11px] uppercase tracking-[0.24em]"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Grounding Demo
+                  </span>
+                </div>
+                <div className="text-sm text-slate-400">
+                  Demo-quality side-by-side review of raw reasoning vs grounded
+                  Supplie output.
+                </div>
+              </div>
+            </div>
+            <div className="ml-auto flex items-center gap-3">
+              <ModelPicker value={model} onChange={handleModelChange} />
+              <button
+                onClick={handleClear}
+                className="rounded-xl border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300 transition-all hover:border-white/20 hover:text-white"
+              >
+                Clear
+              </button>
+            </div>
           </div>
-          <span
-            className="text-sm font-semibold"
-            style={{ color: "var(--text-primary)" }}
-          >
-            Supplie.ai
-          </span>
-          <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-            {"/" + "/"}
-          </span>
-          <span
-            className="text-xs uppercase tracking-wider"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Grounding Demo
-          </span>
-        </div>
-        <div className="ml-auto flex items-center gap-3">
-          <ModelPicker value={model} onChange={handleModelChange} />
-          <button
-            onClick={handleClear}
-            className="text-xs border border-slate-700/50 hover:border-slate-500/50 rounded-lg px-3 py-1.5 transition-all"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Clear
-          </button>
-        </div>
-      </div>
 
-      <PromptButtons
-        onPrompt={handlePrompt}
-        disabled={ungroundedChat.isLoading || groundedChat.isLoading}
-      />
+          <div className="mt-4 grid gap-3 xl:grid-cols-[1.25fr_0.9fr]">
+            <PromptButtons
+              onPrompt={handlePrompt}
+              disabled={ungroundedChat.isLoading || groundedChat.isLoading}
+            />
 
-      <div className="px-5 py-3 border-b border-white/5 bg-slate-950/30">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-          Live Comparison
+            <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(9,14,22,0.86),rgba(9,13,20,0.74))] px-4 py-4">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                Live Comparison
+              </div>
+              <div className="mt-2 text-sm leading-6 text-slate-100">
+                Left panel stays raw on {ungroundedPanel.backendLabel}. Right
+                panel runs {groundedPanel.backendLabel} with bundled Supplie
+                snapshot tools.
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                <span className="rounded-full border border-[rgba(243,166,59,0.18)] bg-[rgba(243,166,59,0.08)] px-3 py-1 text-amber-200">
+                  Raw: {comparisonMessage.ungroundedCapabilities}
+                </span>
+                <span className="rounded-full border border-[rgba(46,211,196,0.18)] bg-[rgba(46,211,196,0.08)] px-3 py-1 text-teal-200">
+                  Grounded: {comparisonMessage.groundedCapabilities}
+                </span>
+              </div>
+              <div className="mt-3 text-xs leading-5 text-slate-400">
+                Shared limits: {comparisonMessage.sharedLimitations}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="mt-1 text-sm text-slate-200">
-          Left panel stays raw on {ungroundedPanel.backendLabel}. Right panel
-          runs {groundedPanel.backendLabel} with bundled Supplie snapshot tools.
-        </div>
-        <div className="mt-2 text-xs text-slate-400">
-          Raw panel: {comparisonMessage.ungroundedCapabilities}
-        </div>
-        <div className="mt-1 text-xs text-teal-300">
-          Grounded panel: {comparisonMessage.groundedCapabilities}
-        </div>
-        <div className="mt-1 text-xs text-slate-500">
-          Shared limits: {comparisonMessage.sharedLimitations}
-        </div>
-      </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-1/2">
+        <div className="mt-3 grid min-h-0 flex-1 gap-3 lg:grid-cols-2">
           <Panel
             panelId="ungrounded"
             title={ungroundedPanel.title}
             badge={ungroundedPanel.badge}
             badgeColor={ungroundedPanel.badgeColor}
             bgColor="var(--bg-amber-panel)"
-            borderColor="border-amber-900/30"
+            borderColor="border-amber-300/14"
             note={ungroundedPanel.description}
             emptyStateTitle={ungroundedPanel.emptyStateTitle}
             emptyStateDetail={ungroundedPanel.emptyStateDetail}
@@ -359,15 +370,13 @@ export default function Home() {
             error={ungroundedChat.error}
             onRetry={handleRetryUngrounded}
           />
-        </div>
-        <div className="w-1/2">
           <Panel
             panelId="grounded"
             title={groundedPanel.title}
             badge={groundedPanel.badge}
             badgeColor={groundedPanel.badgeColor}
             bgColor="var(--bg-teal-panel)"
-            borderColor="border-teal-900/30"
+            borderColor="border-teal-300/14"
             note={groundedPanel.description}
             emptyStateTitle={groundedPanel.emptyStateTitle}
             emptyStateDetail={groundedPanel.emptyStateDetail}
