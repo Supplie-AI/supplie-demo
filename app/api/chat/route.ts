@@ -1,6 +1,6 @@
-import { AIMessageChunk } from "@langchain/core/messages";
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import type { DemoAgentEvent } from "@/lib/server/demo-agent-runner";
 import { getGroundedAgent } from "@/lib/server/grounded-agent";
 import {
   createPlaywrightMockChatResponse,
@@ -17,6 +17,7 @@ import {
   getUngroundedAgent,
 } from "@/lib/server/ungrounded-agent";
 import { DEMO_PANEL_CONFIGS, type DemoAgentMode, type DemoProvider } from "@/lib/server/demo-config";
+import type { DemoRequestMessage } from "@/lib/server/demo-agent-runner";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -33,7 +34,7 @@ interface ChatRequestBody {
 }
 
 function normalizeMessages(body: ChatRequestBody) {
-  const normalized =
+  const normalized: DemoRequestMessage[] =
     body.messages
       ?.filter(
         (message): message is { role: string; content: string } =>
@@ -55,41 +56,6 @@ function normalizeMessages(body: ChatRequestBody) {
   }
 
   return normalized;
-}
-
-function extractTextDelta(chunk: unknown): string {
-  if (!AIMessageChunk.isInstance(chunk)) {
-    return "";
-  }
-
-  if (typeof chunk.content === "string") {
-    return chunk.content;
-  }
-
-  if (!Array.isArray(chunk.content)) {
-    return "";
-  }
-
-  return chunk.content
-    .map((block) => {
-      if (typeof block === "string") {
-        return block;
-      }
-
-      if (
-        typeof block === "object" &&
-        block !== null &&
-        "type" in block &&
-        block.type === "text" &&
-        "text" in block &&
-        typeof block.text === "string"
-      ) {
-        return block.text;
-      }
-
-      return "";
-    })
-    .join("");
 }
 
 function formatToolError(error: unknown): string {
@@ -158,54 +124,13 @@ export async function POST(req: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const eventStream = agent.streamEvents(
-          { messages },
-          {
-            signal: req.signal,
-            version: "v2",
-          },
-        );
+        const eventStream = agent.streamResponse({
+          messages,
+          signal: req.signal,
+        });
 
         for await (const event of eventStream) {
-          if (event.event === "on_chat_model_stream") {
-            const delta = extractTextDelta(event.data?.chunk);
-            if (delta) {
-              controller.enqueue(encodeTextDelta(delta));
-            }
-          }
-
-          if (event.event === "on_tool_start") {
-            controller.enqueue(
-              encodeMetadata({
-                type: "tool-start",
-                toolCallId: event.run_id,
-                toolName: event.name,
-                args: event.data?.input ?? {},
-              }),
-            );
-          }
-
-          if (event.event === "on_tool_end") {
-            controller.enqueue(
-              encodeMetadata({
-                type: "tool-end",
-                toolCallId: event.run_id,
-                toolName: event.name,
-                result: event.data?.output,
-              }),
-            );
-          }
-
-          if (event.event === "on_tool_error") {
-            controller.enqueue(
-              encodeMetadata({
-                type: "tool-error",
-                toolCallId: event.run_id,
-                toolName: event.name,
-                error: formatToolError(event.data?.error),
-              }),
-            );
-          }
+          handleAgentEvent(controller, event);
         }
 
         controller.enqueue(encodeDone());
@@ -250,4 +175,47 @@ export async function POST(req: Request) {
       "X-Vercel-AI-Data-Stream": "v1",
     },
   });
+}
+
+function handleAgentEvent(
+  controller: ReadableStreamDefaultController<Uint8Array>,
+  event: DemoAgentEvent,
+) {
+  if (event.type === "text-delta") {
+    controller.enqueue(encodeTextDelta(event.delta));
+    return;
+  }
+
+  if (event.type === "tool-start") {
+    controller.enqueue(
+      encodeMetadata({
+        type: "tool-start",
+        toolCallId: event.toolCallId,
+        toolName: event.toolName,
+        args: event.args ?? {},
+      }),
+    );
+    return;
+  }
+
+  if (event.type === "tool-end") {
+    controller.enqueue(
+      encodeMetadata({
+        type: "tool-end",
+        toolCallId: event.toolCallId,
+        toolName: event.toolName,
+        result: event.result,
+      }),
+    );
+    return;
+  }
+
+  controller.enqueue(
+    encodeMetadata({
+      type: "tool-error",
+      toolCallId: event.toolCallId,
+      toolName: event.toolName,
+      error: formatToolError(event.error),
+    }),
+  );
 }

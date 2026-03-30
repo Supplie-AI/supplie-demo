@@ -1,17 +1,20 @@
-import { createAgent } from "langchain";
 import {
   UNGROUNDED_CAPABILITIES,
   getCapabilitySummaryLines,
 } from "./demo-capabilities";
 import type { DemoProvider } from "./demo-config";
 import { getChatModel } from "./chat-model";
+import { createStreamingTextAgent } from "./demo-agent-runner";
 
 interface UngroundedAgentOptions {
   model: string;
   provider: DemoProvider;
 }
 
-const agentCache = new Map<string, ReturnType<typeof createAgent>>();
+const agentCache = new Map<
+  string,
+  ReturnType<typeof createStreamingTextAgent>
+>();
 
 function buildSystemPrompt(): string {
   return [
@@ -47,9 +50,8 @@ export function getUngroundedAgent(options: UngroundedAgentOptions) {
     return cached;
   }
 
-  const agent = createAgent({
+  const agent = createStreamingTextAgent({
     model: getChatModel(options),
-    tools: [],
     systemPrompt: buildSystemPrompt(),
   });
 
