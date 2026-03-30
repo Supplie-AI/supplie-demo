@@ -4,6 +4,7 @@ import {
   getCapabilitySummaryLines,
 } from "./demo-capabilities";
 import type { DemoProvider } from "./demo-config";
+import { getChatModel } from "./chat-model";
 
 interface UngroundedAgentOptions {
   model: string;
@@ -11,10 +12,6 @@ interface UngroundedAgentOptions {
 }
 
 const agentCache = new Map<string, ReturnType<typeof createAgent>>();
-
-function buildModelRef({ model, provider }: UngroundedAgentOptions): string {
-  return `${provider}:${model}`;
-}
 
 function buildSystemPrompt(): string {
   return [
@@ -51,7 +48,7 @@ export function getUngroundedAgent(options: UngroundedAgentOptions) {
   }
 
   const agent = createAgent({
-    model: buildModelRef(options),
+    model: getChatModel(options),
     tools: [],
     systemPrompt: buildSystemPrompt(),
   });
