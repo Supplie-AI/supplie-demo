@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPublicDemoConfig } from "@/lib/server/ungrounded-agent";
+import { getPublicDemoConfig } from "@/lib/server/demo-config";
 
 export const runtime = "nodejs";
 

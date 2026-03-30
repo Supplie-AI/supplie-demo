@@ -1,7 +1,9 @@
 import { createAgent } from "langchain";
-import { DEMO_CAPABILITIES, getAgentTools, getCapabilitySummaryLines } from "./demo-capabilities";
-
-export type DemoProvider = "openai" | "anthropic";
+import {
+  UNGROUNDED_CAPABILITIES,
+  getCapabilitySummaryLines,
+} from "./demo-capabilities";
+import type { DemoProvider } from "./demo-config";
 
 interface UngroundedAgentOptions {
   model: string;
@@ -23,7 +25,7 @@ function buildSystemPrompt(): string {
     "Keep answers direct and useful, but be explicit about capability limits.",
     "",
     "Current runtime capability status:",
-    ...getCapabilitySummaryLines(),
+    ...getCapabilitySummaryLines(UNGROUNDED_CAPABILITIES),
   ].join("\n");
 }
 
@@ -50,19 +52,10 @@ export function getUngroundedAgent(options: UngroundedAgentOptions) {
 
   const agent = createAgent({
     model: buildModelRef(options),
-    tools: getAgentTools(),
+    tools: [],
     systemPrompt: buildSystemPrompt(),
   });
 
   agentCache.set(cacheKey, agent);
   return agent;
-}
-
-export function getPublicDemoConfig() {
-  return {
-    backendId: "langchain-ungrounded-agent",
-    backendLabel: "LangChain ungrounded agent",
-    sharedAcrossPanels: true,
-    capabilities: DEMO_CAPABILITIES,
-  };
 }

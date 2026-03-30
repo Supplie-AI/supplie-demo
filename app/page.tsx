@@ -9,15 +9,132 @@ import { useStreamingChat } from "@/hooks/useStreamingChat";
 
 interface DemoConfig {
   anthropicAvailable: boolean;
-  backendLabel: string;
-  sharedAcrossPanels: boolean;
-  capabilities: Array<{
-    id: string;
-    label: string;
-    enabled: boolean;
-    availability: "available" | "planned";
+  comparisonMode: string;
+  sharedLimitations: string[];
+  panels: Array<{
+    id: "ungrounded" | "grounded";
+    title: string;
+    badge: string;
+    badgeColor: "amber" | "teal";
+    backendLabel: string;
     description: string;
+    emptyStateTitle: string;
+    emptyStateDetail: string;
+    capabilities: Array<{
+      id: string;
+      label: string;
+      enabled: boolean;
+      availability: "available" | "planned";
+      description: string;
+    }>;
   }>;
+}
+
+const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
+  comparisonMode: "dual-agent",
+  sharedLimitations: [
+    "No live ERP or warehouse connectivity.",
+    "No native web search.",
+    "No code sandbox.",
+    "No file access or downloads.",
+  ],
+  panels: [
+    {
+      id: "ungrounded",
+      title: "Ungrounded / Raw Agent",
+      badge: "Reasoning only",
+      badgeColor: "amber",
+      backendLabel: "LangChain ungrounded agent",
+      description:
+        "Answers from general reasoning only. No grounded Supplie data tools are available on this side.",
+      emptyStateTitle: "Raw reasoning appears here",
+      emptyStateDetail:
+        "This panel stays ungrounded and should disclose when a question needs real data or tools.",
+      capabilities: [
+        {
+          id: "streaming_text",
+          label: "Streaming responses",
+          enabled: true,
+          availability: "available",
+          description: "LangChain agent text streaming is live in this slice.",
+        },
+      ],
+    },
+    {
+      id: "grounded",
+      title: "Grounded Supplie Agent",
+      badge: "Supplie tools",
+      badgeColor: "teal",
+      backendLabel: "Supplie grounded demo agent",
+      description:
+        "Uses built-in Supplie demo tools against a static bundled snapshot. No live ERP, browsing, code execution, or file access.",
+      emptyStateTitle: "Grounded tool-backed answers appear here",
+      emptyStateDetail:
+        "This panel can query the bundled Supplie demo snapshot and should say when a question falls outside that data.",
+      capabilities: [
+        {
+          id: "streaming_text",
+          label: "Streaming responses",
+          enabled: true,
+          availability: "available",
+          description: "LangChain agent text streaming is live in this slice.",
+        },
+        {
+          id: "supplie_demo_tools",
+          label: "Supplie demo snapshot tools",
+          enabled: true,
+          availability: "available",
+          description:
+            "The grounded panel can query built-in Supplie demo data tools against a static snapshot bundled with this app.",
+        },
+      ],
+    },
+  ],
+};
+
+interface DemoCapability {
+  id: string;
+  label: string;
+  enabled: boolean;
+  availability: "available" | "planned";
+  description: string;
+}
+
+interface DemoPanelConfig {
+  id: "ungrounded" | "grounded";
+  title: string;
+  badge: string;
+  badgeColor: "amber" | "teal";
+  backendLabel: string;
+  description: string;
+  emptyStateTitle: string;
+  emptyStateDetail: string;
+  capabilities: DemoCapability[];
+}
+
+function formatCapabilityList(capabilities: DemoCapability[]) {
+  const enabled = capabilities.filter((capability) => capability.enabled);
+  return enabled.length > 0
+    ? enabled.map((capability) => capability.label).join(", ")
+    : "No runtime capabilities are enabled.";
+}
+
+function findPanelConfig(
+  config: DemoConfig | null,
+  panelId: DemoPanelConfig["id"],
+): DemoPanelConfig {
+  return (
+    config?.panels.find((panel) => panel.id === panelId) ??
+    DEFAULT_CONFIG.panels.find((panel) => panel.id === panelId)!
+  );
+}
+
+function getLastUserMessageContent(
+  messages: ReturnType<typeof useStreamingChat>["messages"],
+) {
+  return [...messages]
+    .reverse()
+    .find((message) => message.role === "user")?.content;
 }
 
 export default function Home() {
@@ -60,9 +177,19 @@ export default function Home() {
     [handleAuthError],
   );
 
-  const { messages, append, setMessages, isLoading, error } = useStreamingChat({
+  const ungroundedChat = useStreamingChat({
     api: "/api/chat",
-    body: { model, provider },
+    body: { model, provider, agentMode: "ungrounded" },
+    headers: useCallback(
+      () => ({ Authorization: `Bearer ${getToken()}` }),
+      [getToken],
+    ),
+    onError: handleChatError,
+  });
+
+  const groundedChat = useStreamingChat({
+    api: "/api/chat",
+    body: { model, provider, agentMode: "grounded" },
     headers: useCallback(
       () => ({ Authorization: `Bearer ${getToken()}` }),
       [getToken],
@@ -71,23 +198,32 @@ export default function Home() {
   });
 
   const handleClear = useCallback(() => {
-    setMessages([]);
-  }, [setMessages]);
+    ungroundedChat.stop();
+    groundedChat.stop();
+    ungroundedChat.setMessages([]);
+    groundedChat.setMessages([]);
+  }, [groundedChat, ungroundedChat]);
 
   const handleModelChange = useCallback(
     (modelId: string, newProvider: "openai" | "anthropic") => {
+      ungroundedChat.stop();
+      groundedChat.stop();
       setModel(modelId);
       setProvider(newProvider);
-      setMessages([]);
+      ungroundedChat.setMessages([]);
+      groundedChat.setMessages([]);
     },
-    [setMessages],
+    [groundedChat, ungroundedChat],
   );
 
   const handlePrompt = useCallback(
     (prompt: string) => {
-      append({ role: "user", content: prompt });
+      void Promise.allSettled([
+        ungroundedChat.append({ role: "user", content: prompt }),
+        groundedChat.append({ role: "user", content: prompt }),
+      ]);
     },
-    [append],
+    [groundedChat, ungroundedChat],
   );
 
   useEffect(() => {
@@ -97,40 +233,45 @@ export default function Home() {
       .catch(() => setConfig(null));
   }, []);
 
-  const handleRetry = useCallback(() => {
-    const lastUser = [...messages]
-      .reverse()
-      .find((message) => message.role === "user");
-    if (lastUser) {
-      append({ role: "user", content: lastUser.content });
-    }
-  }, [append, messages]);
+  const ungroundedPanel = useMemo(
+    () => findPanelConfig(config, "ungrounded"),
+    [config],
+  );
+  const groundedPanel = useMemo(
+    () => findPanelConfig(config, "grounded"),
+    [config],
+  );
 
-  const currentSliceMessage = useMemo(() => {
-    const availableCapabilities =
-      config?.capabilities.filter((capability) => capability.enabled) ?? [];
-    const plannedCapabilities =
-      config?.capabilities.filter((capability) => !capability.enabled) ?? [];
-
-    const availableText =
-      availableCapabilities.length > 0
-        ? availableCapabilities.map((capability) => capability.label).join(", ")
-        : "No runtime capabilities are enabled.";
-    const plannedText =
-      plannedCapabilities.length > 0
-        ? plannedCapabilities.map((capability) => capability.label).join(", ")
-        : "No planned capabilities listed.";
+  const comparisonMessage = useMemo(() => {
+    const sharedLimitations = (
+      config?.sharedLimitations ?? DEFAULT_CONFIG.sharedLimitations
+    ).join(" ");
 
     return {
-      availableText,
-      plannedText,
+      ungroundedCapabilities: formatCapabilityList(
+        ungroundedPanel.capabilities,
+      ),
+      groundedCapabilities: formatCapabilityList(groundedPanel.capabilities),
+      sharedLimitations,
     };
-  }, [config]);
+  }, [config, groundedPanel.capabilities, ungroundedPanel.capabilities]);
 
-  // Don't render anything until we've checked auth (avoids flash)
+  const handleRetryUngrounded = useCallback(() => {
+    const lastUser = getLastUserMessageContent(ungroundedChat.messages);
+    if (lastUser) {
+      void ungroundedChat.append({ role: "user", content: lastUser });
+    }
+  }, [ungroundedChat]);
+
+  const handleRetryGrounded = useCallback(() => {
+    const lastUser = getLastUserMessageContent(groundedChat.messages);
+    if (lastUser) {
+      void groundedChat.append({ role: "user", content: lastUser });
+    }
+  }, [groundedChat]);
+
   if (!authChecked) return null;
 
-  // Show password gate exclusively — no app behind it
   if (!authed) {
     return <PasswordGate onAuth={handleAuth} />;
   }
@@ -143,7 +284,6 @@ export default function Home() {
         fontFamily: "Inter, system-ui, sans-serif",
       }}
     >
-      {/* Top bar */}
       <div className="flex items-center gap-4 px-5 py-3 border-b border-white/5 flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded bg-teal-500/20 flex items-center justify-center">
@@ -177,53 +317,61 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Prompt buttons */}
-      <PromptButtons onPrompt={handlePrompt} />
+      <PromptButtons
+        onPrompt={handlePrompt}
+        disabled={ungroundedChat.isLoading || groundedChat.isLoading}
+      />
 
       <div className="px-5 py-3 border-b border-white/5 bg-slate-950/30">
         <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-          Current Slice
+          Live Comparison
         </div>
         <div className="mt-1 text-sm text-slate-200">
-          Both panels mirror the same{" "}
-          {config?.backendLabel ?? "LangChain ungrounded agent"} for now.
-          Streaming text is live, but the comparison UI is intentionally backed
-          by one shared session until grounded capabilities are implemented.
+          Left panel stays raw on {ungroundedPanel.backendLabel}. Right panel
+          runs {groundedPanel.backendLabel} with bundled Supplie snapshot tools.
         </div>
         <div className="mt-2 text-xs text-slate-400">
-          Available now: {currentSliceMessage.availableText}
+          Raw panel: {comparisonMessage.ungroundedCapabilities}
+        </div>
+        <div className="mt-1 text-xs text-teal-300">
+          Grounded panel: {comparisonMessage.groundedCapabilities}
         </div>
         <div className="mt-1 text-xs text-slate-500">
-          Not wired yet: {currentSliceMessage.plannedText}
+          Shared limits: {comparisonMessage.sharedLimitations}
         </div>
       </div>
 
-      {/* Two panels */}
       <div className="flex flex-1 overflow-hidden">
         <div className="w-1/2">
           <Panel
-            title="Ungrounded Agent"
-            badge="Shared backend"
-            badgeColor="amber"
+            title={ungroundedPanel.title}
+            badge={ungroundedPanel.badge}
+            badgeColor={ungroundedPanel.badgeColor}
             bgColor="var(--bg-amber-panel)"
             borderColor="border-amber-900/30"
-            messages={messages}
-            isLoading={isLoading}
-            error={error}
-            onRetry={handleRetry}
+            note={ungroundedPanel.description}
+            emptyStateTitle={ungroundedPanel.emptyStateTitle}
+            emptyStateDetail={ungroundedPanel.emptyStateDetail}
+            messages={ungroundedChat.messages}
+            isLoading={ungroundedChat.isLoading}
+            error={ungroundedChat.error}
+            onRetry={handleRetryUngrounded}
           />
         </div>
         <div className="w-1/2">
           <Panel
-            title="Ungrounded Agent Mirror"
-            badge="Shared backend"
-            badgeColor="teal"
+            title={groundedPanel.title}
+            badge={groundedPanel.badge}
+            badgeColor={groundedPanel.badgeColor}
             bgColor="var(--bg-teal-panel)"
             borderColor="border-teal-900/30"
-            messages={messages}
-            isLoading={isLoading}
-            error={error}
-            onRetry={handleRetry}
+            note={groundedPanel.description}
+            emptyStateTitle={groundedPanel.emptyStateTitle}
+            emptyStateDetail={groundedPanel.emptyStateDetail}
+            messages={groundedChat.messages}
+            isLoading={groundedChat.isLoading}
+            error={groundedChat.error}
+            onRetry={handleRetryGrounded}
           />
         </div>
       </div>
