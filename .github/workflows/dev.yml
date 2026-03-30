@@ -67,6 +67,15 @@ jobs:
       - name: Run Playwright tests
         run: npm run test:e2e
 
+      - name: Upload visual review inputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-review-inputs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/visual-review-inputs
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -85,10 +94,49 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  visual-review:
+    name: GPT-5.4 Visual Review
+    runs-on: ubuntu-latest
+    needs: e2e
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download visual review inputs
+        uses: actions/download-artifact@v4
+        with:
+          name: visual-review-inputs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/visual-review-inputs
+
+      - name: Run GPT-5.4 visual review gate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          VISUAL_REVIEW_INPUT_DIR: artifacts/visual-review-inputs
+          VISUAL_REVIEW_OUTPUT_DIR: artifacts/visual-review-output
+          VISUAL_REVIEW_MODEL: gpt-5.4
+        run: npm run visual:review
+
+      - name: Upload visual review outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-review-output-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/visual-review-output
+          if-no-files-found: error
+          retention-days: 14
+
   deploy-eks-dev:
     name: Deploy to EKS Dev
     runs-on: ubuntu-latest
-    needs: [verify, e2e]
+    needs: [verify, e2e, visual-review]
     if: github.event_name != 'pull_request'
     environment: development
     steps:
