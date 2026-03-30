@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "visual:review": "node scripts/run-visual-review.mjs",
+    "visual:review:mock": "VISUAL_REVIEW_MOCK=1 node scripts/run-visual-review.mjs"
   },
   "dependencies": {
     "@langchain/anthropic": "^1.3.25",
@@ -25,12 +27,12 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
-    "@playwright/test": "^1.55.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.1",
+    "openai": "^6.33.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
