@@ -5,6 +5,7 @@ import type { ChatMessage } from "@/hooks/useStreamingChat";
 import { ToolCallCard } from "./ToolCallCard";
 
 interface PanelProps {
+  panelId: "ungrounded" | "grounded";
   title: string;
   badge: string;
   badgeColor: "amber" | "teal";
@@ -20,6 +21,7 @@ interface PanelProps {
 }
 
 export function Panel({
+  panelId,
   title,
   badge,
   badgeColor,
@@ -51,6 +53,7 @@ export function Panel({
 
   return (
     <div
+      data-testid={`panel-${panelId}`}
       className={`flex flex-col h-full border-r ${borderColor} overflow-hidden`}
       style={{ background: bgColor }}
     >
