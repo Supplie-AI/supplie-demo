@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { getGroundedAgent } from "@/lib/server/grounded-agent";
 import {
+  createPlaywrightMockChatResponse,
+  isPlaywrightTestMode,
+} from "@/lib/server/playwright-mock-chat";
+import {
   encodeDone,
   encodeError,
   encodeMetadata,
@@ -115,6 +119,13 @@ export async function POST(req: Request) {
       { error: "A prompt is required." },
       { status: 400 },
     );
+  }
+
+  if (isPlaywrightTestMode()) {
+    return createPlaywrightMockChatResponse({
+      agentMode,
+      prompt: messages.at(-1)?.content ?? body.prompt ?? "",
+    });
   }
 
   try {

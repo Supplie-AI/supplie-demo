@@ -47,6 +47,7 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
 
   return (
     <div
+      data-testid="password-gate"
       className="fixed inset-0 z-50 flex flex-col items-center justify-center"
       style={{ background: "#0a0a0f" }}
     >
@@ -67,6 +68,7 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
           className={`w-full space-y-3 ${shake ? "animate-shake" : ""}`}
         >
           <input
+            data-testid="password-input"
             ref={inputRef}
             type="password"
             value={password}
@@ -76,6 +78,7 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
             autoComplete="current-password"
           />
           <button
+            data-testid="password-submit"
             type="submit"
             disabled={loading || !password.trim()}
             className="w-full bg-teal-600/80 hover:bg-teal-500/80 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm sm:text-base font-medium rounded-xl py-3.5 sm:py-3 transition-colors"
@@ -83,7 +86,10 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
             {loading ? "Checking…" : "Enter"}
           </button>
           {error && (
-            <div className="text-red-400 text-xs sm:text-sm text-center mt-2">
+            <div
+              data-testid="password-error"
+              className="text-red-400 text-xs sm:text-sm text-center mt-2"
+            >
               {error}
             </div>
           )}

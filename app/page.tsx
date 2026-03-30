@@ -278,6 +278,7 @@ export default function Home() {
 
   return (
     <div
+      data-testid="demo-app"
       className="flex flex-col h-screen"
       style={{
         background: "var(--bg-primary)",
@@ -344,6 +345,7 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
         <div className="w-1/2">
           <Panel
+            panelId="ungrounded"
             title={ungroundedPanel.title}
             badge={ungroundedPanel.badge}
             badgeColor={ungroundedPanel.badgeColor}
@@ -360,6 +362,7 @@ export default function Home() {
         </div>
         <div className="w-1/2">
           <Panel
+            panelId="grounded"
             title={groundedPanel.title}
             badge={groundedPanel.badge}
             badgeColor={groundedPanel.badgeColor}
