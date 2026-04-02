@@ -1,10 +1,11 @@
 import {
-  UNGROUNDED_CAPABILITIES,
   getCapabilitySummaryLines,
+  getUngroundedCapabilities,
 } from "./demo-capabilities";
 import type { DemoProvider } from "./demo-config";
 import { getChatModel } from "./chat-model";
 import { createStreamingTextAgent } from "./demo-agent-runner";
+import { createOpenAINativeUngroundedAgent } from "./openai-native-ungrounded-agent";
 
 interface UngroundedAgentOptions {
   model: string;
@@ -25,7 +26,7 @@ function buildSystemPrompt(): string {
     "Keep answers direct and useful, but be explicit about capability limits.",
     "",
     "Current runtime capability status:",
-    ...getCapabilitySummaryLines(UNGROUNDED_CAPABILITIES),
+    ...getCapabilitySummaryLines(getUngroundedCapabilities("anthropic")),
   ].join("\n");
 }
 
@@ -50,10 +51,13 @@ export function getUngroundedAgent(options: UngroundedAgentOptions) {
     return cached;
   }
 
-  const agent = createStreamingTextAgent({
-    model: getChatModel(options),
-    systemPrompt: buildSystemPrompt(),
-  });
+  const agent =
+    options.provider === "openai"
+      ? createOpenAINativeUngroundedAgent(options.model)
+      : createStreamingTextAgent({
+          model: getChatModel(options),
+          systemPrompt: buildSystemPrompt(),
+        });
 
   agentCache.set(cacheKey, agent);
   return agent;

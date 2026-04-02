@@ -9,6 +9,7 @@ import { useStreamingChat } from "@/hooks/useStreamingChat";
 
 interface DemoConfig {
   anthropicAvailable: boolean;
+  openaiAvailable?: boolean;
   comparisonMode: string;
   sharedLimitations: string[];
   panels: Array<{
@@ -34,29 +35,52 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
   comparisonMode: "dual-agent",
   sharedLimitations: [
     "No live ERP or warehouse connectivity.",
-    "No native web search.",
-    "No code sandbox.",
-    "No file access or downloads.",
+    "The grounded panel is limited to the bundled Supplie snapshot and does not browse, execute code, or use OpenAI file workflows.",
+    "The raw panel never has live Supplie systems or grounded Supplie snapshot tools.",
   ],
   panels: [
     {
       id: "ungrounded",
       title: "Ungrounded / Raw Agent",
-      badge: "Reasoning only",
+      badge: "OpenAI native tools",
       badgeColor: "amber",
-      backendLabel: "LangChain ungrounded agent",
+      backendLabel: "OpenAI Responses raw agent",
       description:
-        "Answers from general reasoning only. No grounded Supplie data tools are available on this side.",
-      emptyStateTitle: "Raw reasoning appears here",
+        "Ungrounded relative to Supplie data, but the raw panel can use native OpenAI web search, bundled file workflows, and a sandboxed code interpreter.",
+      emptyStateTitle: "Raw comparison output appears here",
       emptyStateDetail:
-        "This panel stays ungrounded and should disclose when a question needs real data or tools.",
+        "With an OpenAI model selected, this panel can show native web, file, and code tool use while staying ungrounded relative to Supplie data.",
       capabilities: [
         {
           id: "streaming_text",
           label: "Streaming responses",
           enabled: true,
           availability: "available",
-          description: "LangChain agent text streaming is live in this slice.",
+          description: "OpenAI Responses output is streamed from the raw panel.",
+        },
+        {
+          id: "native_web_search",
+          label: "Native web search",
+          enabled: true,
+          availability: "available",
+          description:
+            "OpenAI web search is wired for the raw panel when an OpenAI model is selected.",
+        },
+        {
+          id: "code_sandbox",
+          label: "Code sandbox",
+          enabled: true,
+          availability: "available",
+          description:
+            "OpenAI code interpreter is wired with a sandboxed container and outbound network disabled.",
+        },
+        {
+          id: "file_access",
+          label: "Bundled file workflows",
+          enabled: true,
+          availability: "available",
+          description:
+            "OpenAI file search and code interpreter can read a small bundled demo file set. This is not arbitrary local filesystem access or a user upload flow.",
         },
       ],
     },
@@ -227,11 +251,11 @@ export default function Home() {
   );
 
   useEffect(() => {
-    fetch("/api/config")
+    fetch(`/api/config?provider=${provider}`)
       .then((response) => response.json())
       .then((data: DemoConfig) => setConfig(data))
       .catch(() => setConfig(null));
-  }, []);
+  }, [provider]);
 
   const ungroundedPanel = useMemo(
     () => findPanelConfig(config, "ungrounded"),

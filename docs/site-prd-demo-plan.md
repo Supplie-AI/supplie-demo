@@ -7,7 +7,7 @@ into a deterministic checklist that GPT-5.4 can evaluate against screenshots.
 ## Product Intent
 
 - The demo must present a trustworthy side-by-side comparison between two agents.
-- The left panel is the ungrounded / raw agent and must stay reasoning-only.
+- The left panel is the ungrounded / raw agent and must stay ungrounded relative to Supplie data.
 - The right panel is the grounded Supplie agent and must show Supplie snapshot
   tooling behavior.
 - The UI must disclose capabilities and limitations truthfully instead of
@@ -39,7 +39,7 @@ into a deterministic checklist that GPT-5.4 can evaluate against screenshots.
 ### 3. Post-Prompt Response
 
 - The same user prompt appears in both panels.
-- The left panel response is visibly framed as ungrounded reasoning.
+- The left panel response is visibly framed as ungrounded relative to Supplie data.
 - The right panel response is visibly framed as grounded Supplie output.
 - The grounded panel includes tool evidence for the Supplie snapshot lookup.
 - The grounded result references the snapshot finding for `Suspension King`.
@@ -51,7 +51,8 @@ into a deterministic checklist that GPT-5.4 can evaluate against screenshots.
 - `comparison_layout`: the desktop layout clearly communicates a left-vs-right
   comparison without clipped, overlapping, or collapsed regions.
 - `truthful_disclosure`: labels, explainer copy, and panel notes do not
-  overclaim live ERP, browsing, file access, or other missing capabilities.
+  overclaim live ERP, Supplie grounding, arbitrary filesystem access, or other
+  missing capabilities.
 - `grounded_evidence_visibility`: the grounded panel makes its tool-backed
   evidence visually distinct from the raw panel.
 - `readability_and_polish`: text is readable, contrast is acceptable, spacing is

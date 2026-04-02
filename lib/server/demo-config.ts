@@ -1,7 +1,7 @@
 import type { DemoCapability } from "./demo-capabilities";
 import {
   GROUNDED_CAPABILITIES,
-  UNGROUNDED_CAPABILITIES,
+  getUngroundedCapabilities,
 } from "./demo-capabilities";
 
 export type DemoProvider = "openai" | "anthropic";
@@ -20,47 +20,63 @@ export interface DemoPanelConfig {
   capabilities: DemoCapability[];
 }
 
-export const DEMO_PANEL_CONFIGS: Record<DemoAgentMode, DemoPanelConfig> = {
-  ungrounded: {
-    id: "ungrounded",
-    title: "Ungrounded / Raw Agent",
-    badge: "Reasoning only",
-    badgeColor: "amber",
-    backendLabel: "LangChain ungrounded agent",
-    description:
-      "Answers from general reasoning only. No grounded Supplie data tools are available on this side.",
-    emptyStateTitle: "Raw reasoning appears here",
-    emptyStateDetail:
-      "This panel stays ungrounded and should disclose when a question needs real data or tools.",
-    capabilities: UNGROUNDED_CAPABILITIES,
-  },
-  grounded: {
-    id: "grounded",
-    title: "Grounded Supplie Agent",
-    badge: "Supplie tools",
-    badgeColor: "teal",
-    backendLabel: "Supplie grounded demo agent",
-    description:
-      "Uses built-in Supplie demo tools against a static bundled snapshot. No live ERP, browsing, code execution, or file access.",
-    emptyStateTitle: "Grounded tool-backed answers appear here",
-    emptyStateDetail:
-      "This panel can query the bundled Supplie demo snapshot and should say when a question falls outside that data.",
-    capabilities: GROUNDED_CAPABILITIES,
-  },
-};
+export function getDemoPanelConfigs(
+  provider: DemoProvider,
+  options?: { openAIConfigured?: boolean },
+): Record<DemoAgentMode, DemoPanelConfig> {
+  const openaiRaw =
+    provider === "openai" && (options?.openAIConfigured ?? true);
 
-export function getPublicDemoConfig() {
+  return {
+    ungrounded: {
+      id: "ungrounded",
+      title: "Ungrounded / Raw Agent",
+      badge: openaiRaw ? "OpenAI native tools" : "Reasoning only",
+      badgeColor: "amber",
+      backendLabel: openaiRaw
+        ? "OpenAI Responses raw agent"
+        : "LangChain ungrounded agent",
+      description: openaiRaw
+        ? "Ungrounded relative to Supplie data, but the raw panel can use native OpenAI web search, bundled file workflows, and a sandboxed code interpreter."
+        : "Answers from general reasoning only. No grounded Supplie data tools or OpenAI native tools are available on this side.",
+      emptyStateTitle: "Raw comparison output appears here",
+      emptyStateDetail: openaiRaw
+        ? "With an OpenAI model selected, this panel can show native web, file, and code tool use while staying ungrounded relative to Supplie data."
+        : "This panel stays ungrounded and should disclose when a question needs real data or tools.",
+      capabilities: getUngroundedCapabilities(
+        provider,
+        options?.openAIConfigured,
+      ),
+    },
+    grounded: {
+      id: "grounded",
+      title: "Grounded Supplie Agent",
+      badge: "Supplie tools",
+      badgeColor: "teal",
+      backendLabel: "Supplie grounded demo agent",
+      description:
+        "Uses built-in Supplie demo tools against a static bundled snapshot. No live ERP, browsing, code execution, or file access.",
+      emptyStateTitle: "Grounded tool-backed answers appear here",
+      emptyStateDetail:
+        "This panel can query the bundled Supplie demo snapshot and should say when a question falls outside that data.",
+      capabilities: GROUNDED_CAPABILITIES,
+    },
+  };
+}
+
+export function getPublicDemoConfig(
+  provider: DemoProvider = "openai",
+  options?: { openAIConfigured?: boolean },
+) {
+  const panels = getDemoPanelConfigs(provider, options);
+
   return {
     comparisonMode: "dual-agent",
-    panels: [
-      DEMO_PANEL_CONFIGS.ungrounded,
-      DEMO_PANEL_CONFIGS.grounded,
-    ] satisfies DemoPanelConfig[],
+    panels: [panels.ungrounded, panels.grounded] satisfies DemoPanelConfig[],
     sharedLimitations: [
       "No live ERP or warehouse connectivity.",
-      "No native web search.",
-      "No code sandbox.",
-      "No file access or downloads.",
+      "The grounded panel is limited to the bundled Supplie snapshot and does not browse, execute code, or use OpenAI file workflows.",
+      "The raw panel never has live Supplie systems or grounded Supplie snapshot tools.",
     ],
   };
 }

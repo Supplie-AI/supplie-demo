@@ -38,6 +38,17 @@ export function ToolCallCard({
     if (Array.isArray(result)) return `${result.length} results`;
     if (typeof result === "object" && result !== null) {
       const r = result as Record<string, unknown>;
+      if (toolName === "openai_web_search") {
+        return "Web search complete";
+      }
+      if (toolName === "openai_file_search") {
+        const count = Array.isArray(r.results) ? r.results.length : 0;
+        return `${count} file hits`;
+      }
+      if (toolName === "openai_code_interpreter") {
+        const outputs = Array.isArray(r.outputs) ? r.outputs.length : 0;
+        return `${outputs} sandbox outputs`;
+      }
       if ("margin_pct" in r) return `Margin: ${r.margin_pct}%`;
       if ("days_remaining" in r)
         return `${r.days_remaining} days remaining${r.urgent ? " ⚠ URGENT" : ""}`;

@@ -16,7 +16,11 @@ import {
   assertProviderIsConfigured,
   getUngroundedAgent,
 } from "@/lib/server/ungrounded-agent";
-import { DEMO_PANEL_CONFIGS, type DemoAgentMode, type DemoProvider } from "@/lib/server/demo-config";
+import {
+  getDemoPanelConfigs,
+  type DemoAgentMode,
+  type DemoProvider,
+} from "@/lib/server/demo-config";
 import type { DemoRequestMessage } from "@/lib/server/demo-agent-runner";
 
 export const runtime = "nodejs";
@@ -107,7 +111,7 @@ export async function POST(req: Request) {
     agentMode === "grounded"
       ? getGroundedAgent({ model, provider })
       : getUngroundedAgent({ model, provider });
-  const backendLabel = DEMO_PANEL_CONFIGS[agentMode].backendLabel;
+  const backendLabel = getDemoPanelConfigs(provider)[agentMode].backendLabel;
 
   console.log(
     JSON.stringify({
