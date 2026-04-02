@@ -1,5 +1,4 @@
 import { tool } from "@langchain/core/tools";
-import { createAgent } from "langchain";
 import { z } from "zod";
 import {
   GROUNDED_CAPABILITIES,
@@ -7,6 +6,7 @@ import {
 } from "./demo-capabilities";
 import type { DemoProvider } from "./demo-config";
 import { getChatModel } from "./chat-model";
+import { createToolAgent } from "./demo-agent-runner";
 
 interface GroundedAgentOptions {
   model: string;
@@ -303,7 +303,7 @@ const groundedTools = [
   ),
 ];
 
-const agentCache = new Map<string, ReturnType<typeof createAgent>>();
+const agentCache = new Map<string, ReturnType<typeof createToolAgent>>();
 
 function buildSystemPrompt(): string {
   return [
@@ -326,7 +326,7 @@ export function getGroundedAgent(options: GroundedAgentOptions) {
     return cached;
   }
 
-  const agent = createAgent({
+  const agent = createToolAgent({
     model: getChatModel(options),
     tools: groundedTools,
     systemPrompt: buildSystemPrompt(),
