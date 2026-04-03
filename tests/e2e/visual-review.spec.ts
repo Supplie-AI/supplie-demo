@@ -81,7 +81,7 @@ test("captures deterministic screenshots for PRD-based visual review", async ({
   await authenticate(page);
   await expect(page.getByText("Live Comparison")).toBeVisible();
   await expect(page.getByTestId("panel-ungrounded")).toContainText(
-    "Raw reasoning appears here",
+    "Raw comparison output appears here",
   );
   await expect(page.getByTestId("panel-grounded")).toContainText(
     "Grounded tool-backed answers appear here",
