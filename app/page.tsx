@@ -401,7 +401,7 @@ export default function Home() {
                     Annona.ai
                   </span>
                   <span
-                    className="text-[11px] uppercase tracking-[0.24em]"
+                    className="text-[11px] tracking-[0.24em]"
                     style={{ color: "var(--text-muted)" }}
                   >
                     Grounding Demo
