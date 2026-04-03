@@ -9,6 +9,9 @@ const PROMPTS = [
   "What's the net margin on last week's Suspension King orders after freight and rebates?",
   "Which SKUs are at risk of stockout in the next 30 days?",
   "Which supplier is causing the most margin leakage?",
+  "Search the web for a current ocean freight trend and cite what you used.",
+  "Inspect the bundled benchmark files and tell me what they contain.",
+  "Use your code sandbox on the bundled CSV and tell me the average transit days.",
 ];
 
 export function PromptButtons({ onPrompt, disabled }: PromptButtonsProps) {

@@ -1,0 +1,9 @@
+lane,mode,carrier_family,region,transit_days,cost_usd,reliability_pct
+Shanghai-Sydney,Ocean,BlueWave,APAC,19,2850,91
+Shanghai-Melbourne,Ocean,BlueWave,APAC,17,2760,93
+Shenzhen-Los Angeles,Ocean,HarborSpan,North America,16,3180,89
+Ningbo-Rotterdam,Ocean,HarborSpan,Europe,28,3340,88
+Busan-Sydney,Ocean,Pacific Arc,APAC,14,2490,95
+Singapore-Brisbane,Ocean,Pacific Arc,APAC,11,2210,96
+Melbourne-Perth,Road,Linehaul One,Australia,4,980,97
+Sydney-Auckland,Air,SkyBridge,ANZ,2,1460,94
