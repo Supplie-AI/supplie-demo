@@ -35,8 +35,8 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
   comparisonMode: "dual-agent",
   sharedLimitations: [
     "No live ERP or warehouse connectivity.",
-    "The grounded panel is limited to the bundled Annona snapshot and does not browse, execute code, or use OpenAI file workflows.",
-    "The raw panel never has live Annona systems or grounded Annona snapshot tools.",
+    "Both panels share the same bundled CSV/reference baseline and the same native OpenAI web, sandbox, and file workflow surface.",
+    "Only the right panel has Annona-specific grounded tools, calculators, datasets, and grounded analysis over the bundled Annona snapshot.",
   ],
   panels: [
     {
@@ -87,29 +87,78 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
     {
       id: "grounded",
       title: "Grounded Annona Agent",
-      badge: "Annona tools",
+      badge: "Superset + Annona",
       badgeColor: "teal",
-      backendLabel: "Annona grounded demo agent",
+      backendLabel: "OpenAI Responses grounded Annona agent",
       description:
-        "Uses built-in Annona demo tools against a static bundled snapshot. No live ERP, browsing, code execution, or file access.",
+        "Shares the same native OpenAI web, file, and code baseline as the raw panel, then adds Annona tools, calculators, datasets, and grounded analysis.",
       emptyStateTitle: "Grounded tool-backed answers appear here",
       emptyStateDetail:
-        "This panel can query the bundled Annona demo snapshot and should say when a question falls outside that data.",
+        "This panel can use the shared native baseline plus Annona tools, and it should say when a question falls outside the bundled Annona data.",
       capabilities: [
         {
           id: "streaming_text",
           label: "Streaming responses",
           enabled: true,
           availability: "available",
-          description: "LangChain agent text streaming is live in this slice.",
+          description:
+            "OpenAI Responses output is streamed from the grounded panel.",
         },
         {
-          id: "supplie_demo_tools",
-          label: "Annona demo snapshot tools",
+          id: "native_web_search",
+          label: "Native web search",
           enabled: true,
           availability: "available",
           description:
-            "The grounded panel can query built-in Annona demo data tools against a static snapshot bundled with this app.",
+            "OpenAI web search is available on the grounded panel as part of the shared native baseline.",
+        },
+        {
+          id: "code_sandbox",
+          label: "Code sandbox",
+          enabled: true,
+          availability: "available",
+          description:
+            "OpenAI code interpreter is available on the grounded panel with the same sandboxed baseline as the raw panel.",
+        },
+        {
+          id: "file_access",
+          label: "Bundled file workflows",
+          enabled: true,
+          availability: "available",
+          description:
+            "OpenAI file search and code interpreter can read the same bundled reference files as the raw panel.",
+        },
+        {
+          id: "annona_tools",
+          label: "Annona grounded tools",
+          enabled: true,
+          availability: "available",
+          description:
+            "The grounded panel exposes Annona-specific tool calls over the bundled Annona demo snapshot.",
+        },
+        {
+          id: "annona_calculators",
+          label: "Annona calculators",
+          enabled: true,
+          availability: "available",
+          description:
+            "The grounded panel adds Annona-specific calculator tools on top of the shared native provider tooling.",
+        },
+        {
+          id: "annona_datasets",
+          label: "Annona demo datasets",
+          enabled: true,
+          availability: "available",
+          description:
+            "The grounded panel can query the bundled Annona snapshot datasets for orders, stock risk, and supplier leakage.",
+        },
+        {
+          id: "annona_model_analysis",
+          label: "Annona model-backed analysis",
+          enabled: true,
+          availability: "available",
+          description:
+            "The grounded panel can synthesize Annona findings with model-backed analysis over Annona tools and datasets.",
         },
       ],
     },
@@ -322,7 +371,7 @@ export default function Home() {
                     className="text-sm font-semibold"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    Annona
+                    Annona.ai
                   </span>
                   <span
                     className="text-[11px] uppercase tracking-[0.24em]"
@@ -360,8 +409,8 @@ export default function Home() {
               </div>
               <div className="mt-2 text-sm leading-6 text-slate-100">
                 Left panel stays raw on {ungroundedPanel.backendLabel}. Right
-                panel runs {groundedPanel.backendLabel} with bundled Annona
-                snapshot tools.
+                panel runs {groundedPanel.backendLabel} with the same native
+                tool baseline plus Annona tools and datasets.
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                 <span className="rounded-full border border-[rgba(243,166,59,0.18)] bg-[rgba(243,166,59,0.08)] px-3 py-1 text-amber-200">
