@@ -31,7 +31,7 @@ export function createPlaywrightMockChatResponse({
   const normalizedPrompt = prompt.trim() || "No prompt provided.";
   const responseText =
     agentMode === "grounded"
-      ? `Grounded mock response: the Annona snapshot points to Atlas Springs as the main source of margin leakage for "${normalizedPrompt}", and the right panel can also use the shared native provider tools when needed.`
+      ? `Grounded mock response: the Annona snapshot points to Suspension King as the main source of margin leakage for "${normalizedPrompt}", and the right panel can also use the shared native provider tools when needed.`
       : `Ungrounded mock response: without grounded Annona data I can only hypothesize about "${normalizedPrompt}" based on general reasoning and any shared native provider tools.`;
 
   const stream = new ReadableStream({
@@ -40,37 +40,11 @@ export function createPlaywrightMockChatResponse({
         controller.enqueue(
           encodeMetadata({
             type: "tool-start",
-            toolCallId: "playwright-openai-file-search",
-            toolName: "openai_file_search",
-            args: {
-              queries: ["global freight benchmark csv"],
-            },
-          }),
-        );
-        controller.enqueue(
-          encodeMetadata({
-            type: "tool-end",
-            toolCallId: "playwright-openai-file-search",
-            toolName: "openai_file_search",
-            result: {
-              status: "completed",
-              queries: ["global freight benchmark csv"],
-              results: [
-                {
-                  filename: "global_freight_benchmarks.csv",
-                  score: 0.93,
-                },
-              ],
-            },
-          }),
-        );
-        controller.enqueue(
-          encodeMetadata({
-            type: "tool-start",
             toolCallId: "playwright-grounded-lookup",
-            toolName: "annona_query_supplier_margin_leakage_snapshot",
+            toolName: "query_supplie_snapshot",
             args: {
-              top_n: 3,
+              question: normalizedPrompt,
+              dataset: "static-demo-snapshot",
             },
           }),
         );
@@ -85,9 +59,9 @@ export function createPlaywrightMockChatResponse({
           encodeMetadata({
             type: "tool-end",
             toolCallId: "playwright-grounded-lookup",
-            toolName: "annona_query_supplier_margin_leakage_snapshot",
+            toolName: "query_supplie_snapshot",
             result: {
-              supplier: "Atlas Springs",
+              supplier: "Suspension King",
               finding: "margin_leakage_rank_1",
             },
           }),
