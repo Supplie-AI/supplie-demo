@@ -192,6 +192,29 @@ function formatCapabilityList(capabilities: DemoCapability[]) {
     : "No runtime capabilities are enabled.";
 }
 
+function getSharedNativeToolLabels(
+  leftCapabilities: DemoCapability[],
+  rightCapabilities: DemoCapability[],
+) {
+  const nativeToolIds = new Set([
+    "native_web_search",
+    "code_sandbox",
+    "file_access",
+  ]);
+  const rightById = new Map(
+    rightCapabilities.map((capability) => [capability.id, capability]),
+  );
+
+  return leftCapabilities
+    .filter(
+      (capability) =>
+        nativeToolIds.has(capability.id) &&
+        capability.enabled &&
+        rightById.get(capability.id)?.enabled,
+    )
+    .map((capability) => capability.label);
+}
+
 function findPanelConfig(
   config: DemoConfig | null,
   panelId: DemoPanelConfig["id"],
@@ -326,6 +349,10 @@ export default function Home() {
       ),
       groundedCapabilities: formatCapabilityList(groundedPanel.capabilities),
       sharedLimitations,
+      sharedNativeToolLabels: getSharedNativeToolLabels(
+        ungroundedPanel.capabilities,
+        groundedPanel.capabilities,
+      ),
     };
   }, [config, groundedPanel.capabilities, ungroundedPanel.capabilities]);
 
@@ -409,8 +436,10 @@ export default function Home() {
               </div>
               <div className="mt-2 text-sm leading-6 text-slate-100">
                 Left panel stays raw on {ungroundedPanel.backendLabel}. Right
-                panel runs {groundedPanel.backendLabel} with the same native
-                tool baseline plus Annona tools and datasets.
+                panel runs {groundedPanel.backendLabel}
+                {comparisonMessage.sharedNativeToolLabels.length > 0
+                  ? ` with the same ${comparisonMessage.sharedNativeToolLabels.join(", ").toLowerCase()} baseline plus Annona tools and datasets.`
+                  : " as the Annona-specific superset, while native provider web, sandbox, and file tools are unavailable in this deployment."}
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                 <span className="rounded-full border border-[rgba(243,166,59,0.18)] bg-[rgba(243,166,59,0.08)] px-3 py-1 text-amber-200">

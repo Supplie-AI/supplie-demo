@@ -11,8 +11,8 @@ against screenshots.
 - The left panel is the ungrounded / raw agent and must stay ungrounded relative
   to Annona data.
 - The right panel is the grounded Annona agent and must be a strict superset of
-  the left panel, showing both the shared native provider tooling baseline and
-  Annona-specific grounded tooling behavior.
+  the left panel, adding Annona-specific grounded tooling behavior and, when the
+  provider is configured, the same shared native provider tooling baseline.
 - The UI must disclose capabilities and limitations truthfully instead of
   implying unavailable features.
 - A password gate must block the demo until the user authenticates.
