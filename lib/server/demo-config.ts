@@ -37,11 +37,11 @@ export function getDemoPanelConfigs(
         ? "OpenAI Responses raw agent"
         : "LangChain ungrounded agent",
       description: openaiRaw
-        ? "Ungrounded relative to Supplie data, but the raw panel can use native OpenAI web search, bundled file workflows, and a sandboxed code interpreter."
-        : "Answers from general reasoning only. No grounded Supplie data tools or OpenAI native tools are available on this side.",
+        ? "Ungrounded relative to Annona data, but the raw panel can use native OpenAI web search, bundled file workflows, and a sandboxed code interpreter."
+        : "Answers from general reasoning only. No grounded Annona data tools or OpenAI native tools are available on this side.",
       emptyStateTitle: "Raw comparison output appears here",
       emptyStateDetail: openaiRaw
-        ? "With an OpenAI model selected, this panel can show native web, file, and code tool use while staying ungrounded relative to Supplie data."
+        ? "With an OpenAI model selected, this panel can show native web, file, and code tool use while staying ungrounded relative to Annona data."
         : "This panel stays ungrounded and should disclose when a question needs real data or tools.",
       capabilities: getUngroundedCapabilities(
         provider,
@@ -50,15 +50,15 @@ export function getDemoPanelConfigs(
     },
     grounded: {
       id: "grounded",
-      title: "Grounded Supplie Agent",
-      badge: "Supplie tools",
+      title: "Grounded Annona Agent",
+      badge: "Annona tools",
       badgeColor: "teal",
-      backendLabel: "Supplie grounded demo agent",
+      backendLabel: "Annona grounded demo agent",
       description:
-        "Uses built-in Supplie demo tools against a static bundled snapshot. No live ERP, browsing, code execution, or file access.",
+        "Uses built-in Annona demo tools against a static bundled snapshot. No live ERP, browsing, code execution, or file access.",
       emptyStateTitle: "Grounded tool-backed answers appear here",
       emptyStateDetail:
-        "This panel can query the bundled Supplie demo snapshot and should say when a question falls outside that data.",
+        "This panel can query the bundled Annona demo snapshot and should say when a question falls outside that data.",
       capabilities: GROUNDED_CAPABILITIES,
     },
   };
@@ -75,8 +75,8 @@ export function getPublicDemoConfig(
     panels: [panels.ungrounded, panels.grounded] satisfies DemoPanelConfig[],
     sharedLimitations: [
       "No live ERP or warehouse connectivity.",
-      "The grounded panel is limited to the bundled Supplie snapshot and does not browse, execute code, or use OpenAI file workflows.",
-      "The raw panel never has live Supplie systems or grounded Supplie snapshot tools.",
+      "The grounded panel is limited to the bundled Annona snapshot and does not browse, execute code, or use OpenAI file workflows.",
+      "The raw panel never has live Annona systems or grounded Annona snapshot tools.",
     ],
   };
 }

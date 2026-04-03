@@ -35,8 +35,8 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
   comparisonMode: "dual-agent",
   sharedLimitations: [
     "No live ERP or warehouse connectivity.",
-    "The grounded panel is limited to the bundled Supplie snapshot and does not browse, execute code, or use OpenAI file workflows.",
-    "The raw panel never has live Supplie systems or grounded Supplie snapshot tools.",
+    "The grounded panel is limited to the bundled Annona snapshot and does not browse, execute code, or use OpenAI file workflows.",
+    "The raw panel never has live Annona systems or grounded Annona snapshot tools.",
   ],
   panels: [
     {
@@ -46,10 +46,10 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
       badgeColor: "amber",
       backendLabel: "OpenAI Responses raw agent",
       description:
-        "Ungrounded relative to Supplie data, but the raw panel can use native OpenAI web search, bundled file workflows, and a sandboxed code interpreter.",
+        "Ungrounded relative to Annona data, but the raw panel can use native OpenAI web search, bundled file workflows, and a sandboxed code interpreter.",
       emptyStateTitle: "Raw comparison output appears here",
       emptyStateDetail:
-        "With an OpenAI model selected, this panel can show native web, file, and code tool use while staying ungrounded relative to Supplie data.",
+        "With an OpenAI model selected, this panel can show native web, file, and code tool use while staying ungrounded relative to Annona data.",
       capabilities: [
         {
           id: "streaming_text",
@@ -86,15 +86,15 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
     },
     {
       id: "grounded",
-      title: "Grounded Supplie Agent",
-      badge: "Supplie tools",
+      title: "Grounded Annona Agent",
+      badge: "Annona tools",
       badgeColor: "teal",
-      backendLabel: "Supplie grounded demo agent",
+      backendLabel: "Annona grounded demo agent",
       description:
-        "Uses built-in Supplie demo tools against a static bundled snapshot. No live ERP, browsing, code execution, or file access.",
+        "Uses built-in Annona demo tools against a static bundled snapshot. No live ERP, browsing, code execution, or file access.",
       emptyStateTitle: "Grounded tool-backed answers appear here",
       emptyStateDetail:
-        "This panel can query the bundled Supplie demo snapshot and should say when a question falls outside that data.",
+        "This panel can query the bundled Annona demo snapshot and should say when a question falls outside that data.",
       capabilities: [
         {
           id: "streaming_text",
@@ -105,11 +105,11 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
         },
         {
           id: "supplie_demo_tools",
-          label: "Supplie demo snapshot tools",
+          label: "Annona demo snapshot tools",
           enabled: true,
           availability: "available",
           description:
-            "The grounded panel can query built-in Supplie demo data tools against a static snapshot bundled with this app.",
+            "The grounded panel can query built-in Annona demo data tools against a static snapshot bundled with this app.",
         },
       ],
     },
@@ -322,7 +322,7 @@ export default function Home() {
                     className="text-sm font-semibold"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    Supplie.ai
+                    Annona
                   </span>
                   <span
                     className="text-[11px] uppercase tracking-[0.24em]"
@@ -333,7 +333,7 @@ export default function Home() {
                 </div>
                 <div className="text-sm text-slate-400">
                   Demo-quality side-by-side review of raw reasoning vs grounded
-                  Supplie output.
+                  Annona output.
                 </div>
               </div>
             </div>
@@ -360,7 +360,7 @@ export default function Home() {
               </div>
               <div className="mt-2 text-sm leading-6 text-slate-100">
                 Left panel stays raw on {ungroundedPanel.backendLabel}. Right
-                panel runs {groundedPanel.backendLabel} with bundled Supplie
+                panel runs {groundedPanel.backendLabel} with bundled Annona
                 snapshot tools.
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">

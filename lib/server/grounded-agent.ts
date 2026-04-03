@@ -47,7 +47,7 @@ const DEMO_SNAPSHOT = {
   snapshot_id: "supplie-demo-snapshot-2026-03-22",
   captured_at: "2026-03-22T18:00:00Z",
   disclosure:
-    "This is a static Supplie demo snapshot bundled with the app. It is not live production data.",
+    "This is a static Annona demo snapshot bundled with the app. It is not live production data.",
   orders: [
     {
       order_id: "SK-240317-01",
@@ -165,7 +165,7 @@ const groundedTools = [
     {
       name: "get_supplie_demo_snapshot_context",
       description:
-        "Use to confirm what the grounded Supplie demo snapshot contains and how it should be disclosed.",
+        "Use to confirm what the grounded Annona demo snapshot contains and how it should be disclosed.",
       schema: z.object({}),
     },
   ),
@@ -223,7 +223,7 @@ const groundedTools = [
     {
       name: "query_order_margin_snapshot",
       description:
-        "Look up grounded order margin data from the Supplie demo snapshot, including freight and rebate impacts.",
+        "Look up grounded order margin data from the Annona demo snapshot, including freight and rebate impacts.",
       schema: z.object({
         customer: z
           .string()
@@ -255,7 +255,7 @@ const groundedTools = [
     {
       name: "query_stockout_risk_snapshot",
       description:
-        "Return grounded SKU stockout risks from the Supplie demo snapshot for the requested planning horizon.",
+        "Return grounded SKU stockout risks from the Annona demo snapshot for the requested planning horizon.",
       schema: z.object({
         horizon_days: z
           .number()
@@ -289,7 +289,7 @@ const groundedTools = [
     {
       name: "query_supplier_margin_leakage_snapshot",
       description:
-        "Rank suppliers by margin leakage using the grounded Supplie demo snapshot.",
+        "Rank suppliers by margin leakage using the grounded Annona demo snapshot.",
       schema: z.object({
         top_n: z
           .number()
@@ -307,12 +307,12 @@ const agentCache = new Map<string, ReturnType<typeof createToolAgent>>();
 
 function buildSystemPrompt(): string {
   return [
-    "You are the grounded Supplie demo agent for a supply-chain comparison demo.",
-    "Always use the supplied Supplie demo tools before answering any question that asks for numbers, rankings, order details, stock risk, or supplier leakage.",
-    "Your grounded data is limited to the bundled Supplie demo snapshot. It is not live production data.",
+    "You are the grounded Annona demo agent for a supply-chain comparison demo.",
+    "Always use the supplied Annona demo tools before answering any question that asks for numbers, rankings, order details, stock risk, or supplier leakage.",
+    "Your grounded data is limited to the bundled Annona demo snapshot. It is not live production data.",
     "Never claim to have accessed the web, code execution, files, or live ERP / warehouse systems unless a real tool in this run did that. Those capabilities are not available here.",
     "If the user asks for something outside the bundled snapshot, say what is missing and keep the limitation explicit.",
-    "When you answer from the grounded snapshot, mention that it came from the Supplie demo snapshot.",
+    "When you answer from the grounded snapshot, mention that it came from the Annona demo snapshot.",
     "",
     "Current runtime capability status:",
     ...getCapabilitySummaryLines(GROUNDED_CAPABILITIES),

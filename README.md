@@ -1,4 +1,4 @@
-# Supplie Demo
+# Annona Demo
 
 This repo is a Next.js demo frontend with two side-by-side demo agents.
 
@@ -6,11 +6,11 @@ This repo is a Next.js demo frontend with two side-by-side demo agents.
 
 - The UI keeps the two-panel side-by-side demo layout.
 - The left panel is an **ungrounded / raw** agent.
-- The right panel is a **grounded Supplie** agent backed by built-in demo tools.
+- The right panel is a **grounded Annona** agent backed by built-in demo tools.
 - Streaming text is supported on both sides.
-- The grounded side uses a static bundled Supplie demo snapshot, not live production data.
+- The grounded side uses a static bundled Annona demo snapshot, not live production data.
 - When an OpenAI model is selected, the raw panel can use native OpenAI web search, a sandboxed code interpreter, and bundled file workflows over a small static demo file set.
-- The raw panel still does **not** have grounded Supplie tools or live ERP / warehouse access.
+- The raw panel still does **not** have grounded Annona tools or live ERP / warehouse access.
 - The grounded panel still does **not** have browsing, code execution, or OpenAI file workflows.
 
 Both agents are instructed to say when required data or capabilities are missing instead of pretending they exist.
