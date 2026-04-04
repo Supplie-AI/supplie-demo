@@ -1,0 +1,19 @@
+{
+  "version": "2026-04-04",
+  "scenarios": [
+    {
+      "id": "suspension-king-net-margin",
+      "prompt": "What's the net margin on last week's Suspension King orders after freight and rebates?",
+      "expectedGrounded": {
+        "mustContain": [
+          "7,990"
+        ],
+        "notes": "Grounded Annona panel should return the known snapshot result"
+      },
+      "expectedRaw": {
+        "mustNotPretendGroundedAccess": true,
+        "notes": "Raw panel should respond honestly from the shared baseline"
+      }
+    }
+  ]
+}

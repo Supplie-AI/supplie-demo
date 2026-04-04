@@ -1,0 +1,39 @@
+{
+  "version": "2026-04-04",
+  "brandName": "Annona",
+  "sharedBaseline": {
+    "data": [
+      "bundled demo CSV / snapshot"
+    ],
+    "nativeProviderTools": [
+      "web_search",
+      "code_sandbox",
+      "file_artifact_workflows"
+    ]
+  },
+  "leftAgent": {
+    "id": "raw",
+    "name": "Ungrounded / Raw Agent",
+    "inheritsSharedBaseline": true,
+    "annonaSpecificTools": []
+  },
+  "rightAgent": {
+    "id": "grounded",
+    "name": "Grounded Annona Agent",
+    "inheritsSharedBaseline": true,
+    "annonaSpecificTools": [
+      "annona_margin_lookup",
+      "annona_stockout_risk",
+      "annona_supplier_margin_leakage"
+    ]
+  },
+  "providerConditions": {
+    "openai": {
+      "nativeProviderToolsAvailable": true
+    },
+    "anthropic": {
+      "nativeProviderToolsAvailable": false,
+      "notes": "Fall back to honest disclosure until equivalent native tooling is wired"
+    }
+  }
+}
