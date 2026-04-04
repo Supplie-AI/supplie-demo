@@ -25,18 +25,18 @@ export function ToolCallCard({
       ? {
           label: "OpenAI native",
           className:
-            "border-sky-400/20 bg-sky-400/10 text-sky-200",
+            "border-[rgba(0,210,255,0.16)] bg-[rgba(0,210,255,0.08)] text-[color:#005f77]",
         }
       : toolName.startsWith("annona_")
         ? {
             label: "Annona tool",
             className:
-              "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
+              "border-[rgba(0,95,119,0.16)] bg-[rgba(0,95,119,0.08)] text-[color:#005f77]",
           }
         : {
             label: "Demo tool",
             className:
-              "border-white/10 bg-white/5 text-slate-300",
+              "border-[rgba(28,28,26,0.08)] bg-[rgba(255,255,255,0.82)] text-[color:var(--text-secondary)]",
           };
 
   const formatValue = (v: unknown): string => {
@@ -81,22 +81,22 @@ export function ToolCallCard({
 
   return (
     <div
-      className={`mb-2 overflow-hidden rounded-2xl border ${hasError ? "border-red-500/25 bg-red-500/10" : "border-teal-400/20 bg-[linear-gradient(180deg,rgba(11,42,43,0.42),rgba(5,18,22,0.55))]"} animate-slide-in shadow-[0_12px_32px_rgba(0,0,0,0.18)]`}
+      className={`mb-2 overflow-hidden rounded-2xl border ${hasError ? "border-red-500/25 bg-red-500/10" : "border-[rgba(0,95,119,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(240,251,255,0.94))]"} animate-slide-in shadow-[0_12px_32px_rgba(28,28,26,0.06)]`}
       style={{ animationDelay: `${index * 50}ms` }}
     >
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-white/4"
+        className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-[rgba(0,210,255,0.04)]"
       >
         {expanded ? (
-          <ChevronDown className="h-3 w-3 flex-shrink-0 text-teal-300" />
+          <ChevronDown className="h-3 w-3 flex-shrink-0 text-[color:#00d2ff]" />
         ) : (
-          <ChevronRight className="h-3 w-3 flex-shrink-0 text-teal-300" />
+          <ChevronRight className="h-3 w-3 flex-shrink-0 text-[color:#00d2ff]" />
         )}
         {hasError && (
           <AlertTriangle className="h-3 w-3 flex-shrink-0 text-red-400" />
         )}
-        <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-mono text-[11px] font-semibold text-teal-200">
+        <span className="rounded-full border border-[rgba(0,95,119,0.08)] bg-[rgba(255,255,255,0.82)] px-2 py-0.5 font-mono text-[11px] font-semibold text-[color:#005f77]">
           {toolName}
         </span>
         <span
@@ -105,7 +105,7 @@ export function ToolCallCard({
           {toolSource.label}
         </span>
         <span
-          className={`ml-auto font-mono text-[11px] ${hasError ? "text-red-300" : "text-slate-400"}`}
+          className={`ml-auto font-mono text-[11px] ${hasError ? "text-red-500" : "text-[color:var(--text-muted)]"}`}
         >
           {getResultSummary()}
         </span>
@@ -114,20 +114,20 @@ export function ToolCallCard({
       {expanded && (
         <div className="space-y-3 px-4 pb-4">
           <div>
-            <div className="mb-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+            <div className="mb-1 text-[11px] uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
               Inputs
             </div>
-            <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-white/6 bg-black/25 p-3 font-mono text-xs text-slate-300">
+            <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-[rgba(0,95,119,0.08)] bg-[rgba(255,255,255,0.82)] p-3 font-mono text-xs text-[color:var(--text-secondary)]">
               {formatValue(args)}
             </pre>
           </div>
           {result !== undefined && (
             <div>
-              <div className="mb-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+              <div className="mb-1 text-[11px] uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
                 Result
               </div>
               <pre
-                className={`max-h-48 overflow-x-auto whitespace-pre-wrap rounded-xl border border-white/6 bg-black/25 p-3 font-mono text-xs ${hasError ? "text-red-200" : "text-teal-100"}`}
+                className={`max-h-48 overflow-x-auto whitespace-pre-wrap rounded-xl border border-[rgba(0,95,119,0.08)] bg-[rgba(255,255,255,0.82)] p-3 font-mono text-xs ${hasError ? "text-red-600" : "text-[color:var(--text-primary)]"}`}
               >
                 {formatValue(result)}
               </pre>

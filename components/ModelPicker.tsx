@@ -43,7 +43,10 @@ export function ModelPicker({ value, onChange }: ModelPickerProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
+      <span
+        className="text-xs uppercase tracking-[0.2em]"
+        style={{ color: "var(--text-muted)" }}
+      >
         Model
       </span>
       <div className="relative">
@@ -53,7 +56,13 @@ export function ModelPicker({ value, onChange }: ModelPickerProps) {
             const m = MODELS.find((m) => m.modelId === e.target.value)!;
             onChange(m.modelId, m.provider);
           }}
-          className="cursor-pointer appearance-none rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(20,29,42,0.9),rgba(10,15,24,0.9))] py-2 pl-3 pr-8 text-xs text-slate-200 outline-none transition-colors focus:border-teal-400/50"
+          className="cursor-pointer appearance-none rounded-xl border py-2 pl-3 pr-8 text-xs outline-none transition-colors"
+          style={{
+            borderColor: "rgba(28, 28, 26, 0.1)",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,245,240,0.92))",
+            color: "var(--text-primary)",
+          }}
         >
           {MODELS.map((m) => (
             <option key={m.modelId} value={m.modelId}>
@@ -66,7 +75,8 @@ export function ModelPicker({ value, onChange }: ModelPickerProps) {
         </select>
         <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
           <svg
-            className="h-3 w-3 text-slate-500"
+            className="h-3 w-3"
+            style={{ color: "var(--text-muted)" }}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

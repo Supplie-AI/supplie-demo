@@ -1,27 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #08121b;
-  --bg-shell: rgba(7, 12, 18, 0.84);
-  --bg-shell-strong: rgba(10, 16, 24, 0.96);
-  --bg-secondary: #101922;
-  --bg-tertiary: #172231;
-  --bg-amber-panel: linear-gradient(180deg, #1d1710 0%, #100d09 100%);
-  --bg-teal-panel: linear-gradient(180deg, #0f1d1f 0%, #081215 100%);
+  --bg-primary: #f5f5f0;
+  --bg-shell: rgba(255, 255, 255, 0.82);
+  --bg-shell-strong: rgba(255, 255, 255, 0.94);
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0fbff;
+  --bg-raw-panel: linear-gradient(180deg, #ffffff 0%, #fbf6ed 100%);
+  --bg-grounded-panel: linear-gradient(180deg, #ffffff 0%, #f0fbff 100%);
 
-  --text-primary: #f3f7fb;
-  --text-secondary: #b1bfd1;
-  --text-muted: #738298;
+  --text-primary: #1c1c1a;
+  --text-secondary: #3d3d3a;
+  --text-muted: #737370;
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --shadow-panel: 0 24px 80px rgba(2, 6, 14, 0.42);
+  --border-subtle: rgba(28, 28, 26, 0.08);
+  --border-strong: rgba(0, 95, 119, 0.16);
+  --shadow-panel: 0 24px 72px rgba(28, 28, 26, 0.08);
 
-  --accent-amber: #f3a63b;
-  --accent-amber-soft: rgba(243, 166, 59, 0.16);
-  --accent-teal: #2ed3c4;
-  --accent-teal-soft: rgba(46, 211, 196, 0.16);
-  --accent-sky: #72a8ff;
+  --accent-blue: #00d2ff;
+  --accent-blue-soft: rgba(0, 210, 255, 0.12);
+  --accent-blue-strong: rgba(0, 210, 255, 0.22);
+  --accent-raw: #c7862f;
+  --accent-raw-soft: rgba(199, 134, 47, 0.12);
+  --accent-teal: #005f77;
+  --accent-teal-soft: rgba(0, 95, 119, 0.1);
+  --rule: #ddddd6;
+
+  --font-heading: "Aeonik", "Avenir Next", "Helvetica Neue", sans-serif;
+  --font-body: "Inter", "Avenir Next", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", "SF Mono", monospace;
 }
 
 @keyframes slide-in {
@@ -93,15 +100,15 @@ body {
   margin: 0;
   padding: 0;
   background:
-    radial-gradient(circle at top left, rgba(46, 211, 196, 0.12), transparent 28%),
-    radial-gradient(circle at top right, rgba(114, 168, 255, 0.18), transparent 26%),
-    linear-gradient(180deg, #061018 0%, #08111a 42%, #070c12 100%);
+    radial-gradient(circle at top right, rgba(0, 210, 255, 0.14), transparent 24%),
+    radial-gradient(circle at top left, rgba(0, 95, 119, 0.08), transparent 26%),
+    linear-gradient(180deg, #f9f9f5 0%, #f5f5f0 48%, #eef9fd 100%);
   color: var(--text-primary);
-  font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  font-family: var(--font-body);
 }
 
 body::selection {
-  background: rgba(46, 211, 196, 0.3);
+  background: rgba(0, 210, 255, 0.24);
 }
 
 a {
@@ -114,10 +121,10 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(28, 28, 26, 0.04);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(115, 130, 152, 0.45);
+  background: rgba(61, 61, 58, 0.24);
   border-radius: 999px;
 }
