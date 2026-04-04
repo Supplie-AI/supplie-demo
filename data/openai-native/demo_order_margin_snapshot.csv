@@ -1,0 +1,4 @@
+order_id,booked_at,customer,revenue,cogs,freight,rebates
+SK-240317-01,2026-03-17,Suspension King,18420,11980,920,460
+SK-240319-02,2026-03-19,Suspension King,14280,10140,1180,520
+SK-240321-03,2026-03-21,Suspension King,11240,9360,980,410

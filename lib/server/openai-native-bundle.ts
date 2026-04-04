@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import OpenAI, { toFile } from "openai";
 
-const SHARED_BUNDLE_ID = "supplie-demo-openai-native-shared-bundle-v1";
+const SHARED_BUNDLE_ID = "supplie-demo-openai-native-shared-bundle-v2";
 const SHARED_VECTOR_STORE_NAME = "supplie-demo-openai-native-reference-files";
 
 export const SHARED_OPENAI_NATIVE_FILES = [
@@ -27,6 +27,28 @@ export const SHARED_OPENAI_NATIVE_FILES = [
     ),
     description:
       "A shared illustrative freight benchmark CSV available to both panels through native OpenAI file and code workflows.",
+  },
+  {
+    fileName: "demo_order_margin_snapshot.csv",
+    absolutePath: path.join(
+      /* turbopackIgnore: true */ process.cwd(),
+      "data",
+      "openai-native",
+      "demo_order_margin_snapshot.csv",
+    ),
+    description:
+      "Static demo order snapshot rows for the Suspension King margin scenario, including revenue, COGS, freight, and rebates.",
+  },
+  {
+    fileName: "demo_order_margin_reference.md",
+    absolutePath: path.join(
+      /* turbopackIgnore: true */ process.cwd(),
+      "data",
+      "openai-native",
+      "demo_order_margin_reference.md",
+    ),
+    description:
+      "Reference notes for calculating demo net margin from the bundled order snapshot CSV.",
   },
 ] as const;
 
@@ -93,7 +115,10 @@ async function findExistingBundle(
   });
   const fileIds = filesPage.data.map((file) => file.id);
 
-  if (fileIds.length === 0) {
+  if (
+    fileIds.length === 0 ||
+    fileIds.length !== SHARED_OPENAI_NATIVE_FILES.length
+  ) {
     return null;
   }
 

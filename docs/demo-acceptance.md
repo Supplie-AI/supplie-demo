@@ -26,7 +26,8 @@ Expected grounded result:
 Expected left/raw behavior:
 
 - Must not pretend to have grounded operational access it does not have
-- Should answer honestly from the shared baseline
+- Should answer from the shared bundled baseline when the prompt is solvable from those bundled files
+- For the Suspension King margin scenario, should attempt the calculation from the bundled order snapshot/reference files
 
 ## Done Criteria
 

@@ -10,7 +10,11 @@ import type {
   DemoAgent,
   DemoAgentEvent,
 } from "./demo-agent-runner";
-import { getOpenAIClient, prepareOpenAIBundle, SHARED_OPENAI_NATIVE_FILES } from "./openai-native-bundle";
+import {
+  getOpenAIClient,
+  prepareOpenAIBundle,
+  SHARED_OPENAI_NATIVE_FILES,
+} from "./openai-native-bundle";
 import {
   getResponseFunctionCalls,
   parseResponseFunctionArguments,
@@ -21,12 +25,13 @@ import {
 
 const MAX_TOOL_TURNS = 6;
 
-function buildSystemPrompt(): string {
+export function buildOpenAINativeGroundedSystemPrompt(): string {
   return [
     "You are the grounded Annona agent for a supply-chain comparison demo.",
     "You have the same native OpenAI web, file, and code tooling baseline as the raw panel, plus Annona-specific tools, calculators, and demo datasets.",
     "Always prefer Annona tools for questions about snapshot numbers, rankings, order details, stock risk, margin leakage, or Annona-specific calculations.",
     "Use OpenAI native tools when outside research, file inspection, or sandboxed computation would help, and say explicitly whether each tool used was an OpenAI native tool or an Annona tool.",
+    "For numeric questions over bundled CSVs, prefer using the code interpreter on the bundled data instead of only paraphrasing reference notes.",
     "Your Annona data is limited to the bundled Annona demo snapshot. It is not live production data.",
     "Do not claim live ERP or warehouse access.",
     "",
@@ -57,7 +62,7 @@ export function createOpenAINativeGroundedAgent(model: string): DemoAgent {
             {
               type: "message",
               role: "developer",
-              content: buildSystemPrompt(),
+              content: buildOpenAINativeGroundedSystemPrompt(),
             },
             ...toInputMessages(messages),
           ],

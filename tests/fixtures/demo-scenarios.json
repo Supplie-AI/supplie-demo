@@ -11,8 +11,12 @@
         "notes": "Grounded Annona panel should return the known snapshot result"
       },
       "expectedRaw": {
+        "mustContainOneOf": [
+          "7,990",
+          "7990"
+        ],
         "mustNotPretendGroundedAccess": true,
-        "notes": "Raw panel should respond honestly from the shared baseline"
+        "notes": "Raw panel should attempt the calculation from the shared bundled files while staying honest about lacking Annona-only grounded access"
       }
     }
   ]
