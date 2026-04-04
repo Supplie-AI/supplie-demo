@@ -103,10 +103,13 @@ test("captures deterministic screenshots for PRD-based visual review", async ({
     "Grounded mock response:",
   );
   await expect(page.getByTestId("panel-grounded")).toContainText(
-    "query_supplie_snapshot",
+    "openai_file_search",
   );
   await expect(page.getByTestId("panel-grounded")).toContainText(
-    "Suspension King",
+    "annona_query_supplier_margin_leakage_snapshot",
+  );
+  await expect(page.getByTestId("panel-grounded")).toContainText(
+    "Atlas Springs",
   );
   screenshots.push(
     await captureScreenshot(

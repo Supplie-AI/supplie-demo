@@ -1,4 +1,4 @@
-# Supplie Demo
+# Annona Demo
 
 This repo is a Next.js demo frontend with two side-by-side demo agents.
 

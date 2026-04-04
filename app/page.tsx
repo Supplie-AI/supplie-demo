@@ -398,7 +398,7 @@ export default function Home() {
                     className="text-sm font-semibold"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    Annona.ai
+                    Annona
                   </span>
                   <span
                     className="text-[11px] tracking-[0.24em]"
