@@ -21,9 +21,13 @@ test("requires the password gate before the demo is shown", async ({ page }) => 
   await expect(page.getByTestId("panel-ungrounded")).toContainText(
     "Raw comparison output appears here",
   );
+  await expect(page.getByTestId("panel-ungrounded")).toContainText(
+    "native OpenAI web search",
+  );
   await expect(page.getByTestId("panel-grounded")).toContainText(
     "Grounded tool-backed answers appear here",
   );
+  await expect(page.getByText(/same native web search, code sandbox, bundled file workflows baseline plus Annona tools and datasets\./i)).toBeVisible();
 });
 
 for (const scenario of DEMO_SCENARIOS) {
