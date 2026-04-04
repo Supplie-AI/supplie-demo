@@ -74,8 +74,8 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
               Private Preview
             </div>
 
-            <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12 lg:py-12">
-              <div className="mx-auto flex w-full max-w-2xl flex-col justify-center text-center lg:mx-0 lg:text-left">
+            <div className="flex flex-1 items-center justify-center py-10 lg:py-12">
+              <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center text-center">
                 <div className="text-4xl font-semibold tracking-[-0.04em] text-slate-50 sm:text-5xl lg:text-6xl">
                   Annona<span className="text-teal-400">.</span>
                 </div>
@@ -86,52 +86,51 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
                   Private Annona grounded demo access. Enter the password to
                   unlock the protected workspace.
                 </p>
-              </div>
-
-              <div className="mx-auto w-full max-w-xl rounded-[30px] border border-white/12 bg-[linear-gradient(180deg,rgba(9,18,26,0.96),rgba(6,12,18,0.88))] p-6 shadow-[0_24px_80px_rgba(2,6,14,0.42)] sm:p-8">
-                <div className="mb-6 text-center">
-                  <div className="text-[11px] uppercase tracking-[0.26em] text-slate-500">
-                    Invite-only access
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-300">
-                    Enter the demo password to unlock the protected comparison
-                    workspace.
-                  </p>
-                </div>
-
-                <form
-                  onSubmit={handleSubmit}
-                  className={`space-y-4 ${shake ? "animate-shake" : ""}`}
-                >
-                  <div className="rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.04)] p-3">
-                    <input
-                      data-testid="password-input"
-                      ref={inputRef}
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter demo password"
-                      className="w-full rounded-[14px] border border-white/10 bg-slate-950/60 px-4 py-4 text-center text-sm tracking-[0.26em] text-slate-100 outline-none transition-colors placeholder:text-slate-500 focus:border-teal-400/50 focus:bg-slate-950/80"
-                      autoComplete="current-password"
-                    />
-                  </div>
-                  <button
-                    data-testid="password-submit"
-                    type="submit"
-                    disabled={loading || !password.trim()}
-                    className="w-full rounded-2xl border border-teal-300/20 bg-[linear-gradient(135deg,rgba(16,185,166,0.9),rgba(34,211,238,0.72))] py-4 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(20,184,166,0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_48px_rgba(20,184,166,0.34)] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {loading ? "Checking..." : "Enter"}
-                  </button>
-                  {error && (
-                    <div
-                      data-testid="password-error"
-                      className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-sm text-red-300"
-                    >
-                      {error}
+                <div className="mt-8 w-full max-w-xl rounded-[30px] border border-white/12 bg-[linear-gradient(180deg,rgba(9,18,26,0.96),rgba(6,12,18,0.88))] p-6 shadow-[0_24px_80px_rgba(2,6,14,0.42)] sm:p-8">
+                  <div className="mb-6 text-center">
+                    <div className="text-[11px] uppercase tracking-[0.26em] text-slate-500">
+                      Invite-only access
                     </div>
-                  )}
-                </form>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">
+                      Enter the demo password to unlock the protected
+                      workspace.
+                    </p>
+                  </div>
+
+                  <form
+                    onSubmit={handleSubmit}
+                    className={`space-y-4 ${shake ? "animate-shake" : ""}`}
+                  >
+                    <div className="rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.04)] p-3">
+                      <input
+                        data-testid="password-input"
+                        ref={inputRef}
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter demo password"
+                        className="w-full rounded-[14px] border border-white/10 bg-slate-950/60 px-4 py-4 text-center text-sm tracking-[0.26em] text-slate-100 outline-none transition-colors placeholder:text-slate-500 focus:border-teal-400/50 focus:bg-slate-950/80"
+                        autoComplete="current-password"
+                      />
+                    </div>
+                    <button
+                      data-testid="password-submit"
+                      type="submit"
+                      disabled={loading || !password.trim()}
+                      className="w-full rounded-2xl border border-teal-300/20 bg-[linear-gradient(135deg,rgba(16,185,166,0.9),rgba(34,211,238,0.72))] py-4 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(20,184,166,0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_48px_rgba(20,184,166,0.34)] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {loading ? "Checking..." : "Enter"}
+                    </button>
+                    {error && (
+                      <div
+                        data-testid="password-error"
+                        className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-sm text-red-300"
+                      >
+                        {error}
+                      </div>
+                    )}
+                  </form>
+                </div>
               </div>
             </div>
 
