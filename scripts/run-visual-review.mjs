@@ -341,7 +341,7 @@ async function runOpenAIReview({ rubricRaw, manifest, screenshots }) {
     text: {
       format: {
         type: "json_schema",
-        name: "supplie_visual_review",
+        name: "annona_visual_review",
         schema: REVIEW_SCHEMA,
         strict: true,
       },

@@ -2,14 +2,17 @@
 
 This document is the CI visual-review rubric for the current Annona demo slice.
 It consolidates the accepted product intent from issues `#7`, `#11`, and `#12`
-into a deterministic checklist that GPT-5.4 can evaluate against screenshots.
+and issue `#17` into a deterministic checklist that GPT-5.4 can evaluate
+against screenshots.
 
 ## Product Intent
 
 - The demo must present a trustworthy side-by-side comparison between two agents.
-- The left panel is the ungrounded / raw agent and must stay ungrounded relative to Annona data.
-- The right panel is the grounded Annona agent and must show Annona snapshot
-  tooling behavior.
+- The left panel is the ungrounded / raw agent and must stay ungrounded relative
+  to Annona data.
+- The right panel is the grounded Annona agent and must be a strict superset of
+  the left panel, adding Annona-specific grounded tooling behavior and, when the
+  provider is configured, the same shared native provider tooling baseline.
 - The UI must disclose capabilities and limitations truthfully instead of
   implying unavailable features.
 - A password gate must block the demo until the user authenticates.
@@ -41,8 +44,8 @@ into a deterministic checklist that GPT-5.4 can evaluate against screenshots.
 - The same user prompt appears in both panels.
 - The left panel response is visibly framed as ungrounded relative to Annona data.
 - The right panel response is visibly framed as grounded Annona output.
-- The grounded panel includes tool evidence for the Annona snapshot lookup.
-- The grounded result references the snapshot finding for `Suspension King`.
+- The grounded panel includes tool evidence for shared native tools and the Annona grounded lookup.
+- The grounded result references the snapshot finding for `Atlas Springs`.
 
 ## Visual Acceptance Criteria
 

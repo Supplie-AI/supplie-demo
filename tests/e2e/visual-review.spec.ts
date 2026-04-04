@@ -103,17 +103,20 @@ test("captures deterministic screenshots for PRD-based visual review", async ({
     "Grounded mock response:",
   );
   await expect(page.getByTestId("panel-grounded")).toContainText(
-    "query_supplie_snapshot",
+    "openai_file_search",
   );
   await expect(page.getByTestId("panel-grounded")).toContainText(
-    "Suspension King",
+    "annona_query_supplier_margin_leakage_snapshot",
+  );
+  await expect(page.getByTestId("panel-grounded")).toContainText(
+    "Atlas Springs",
   );
   screenshots.push(
     await captureScreenshot(
       page,
       "03-post-prompt-grounded-response.png",
       "post-prompt-response",
-      "Both panels show the same user prompt; the grounded panel also shows an Annona snapshot tool call and the Suspension King finding.",
+      "Both panels show the same user prompt; the grounded panel also shows shared native tool evidence, an Annona grounded tool call, and the Atlas Springs finding.",
     ),
   );
 

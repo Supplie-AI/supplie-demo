@@ -50,6 +50,9 @@ test("submits a prompt and renders streamed responses in both comparison panels"
   await expect(groundedPanel).toContainText(CRITICAL_PROMPT);
   await expect(ungroundedPanel).toContainText("Ungrounded mock response:");
   await expect(groundedPanel).toContainText("Grounded mock response:");
-  await expect(groundedPanel).toContainText("query_supplie_snapshot");
-  await expect(groundedPanel).toContainText("Suspension King");
+  await expect(groundedPanel).toContainText("openai_file_search");
+  await expect(groundedPanel).toContainText(
+    "annona_query_supplier_margin_leakage_snapshot",
+  );
+  await expect(groundedPanel).toContainText("Atlas Springs");
 });

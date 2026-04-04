@@ -5,6 +5,10 @@ export function checkRateLimit(
   limit = 10,
   windowMs = 60_000,
 ): boolean {
+  if (process.env.PLAYWRIGHT_TEST_MODE === "1") {
+    return true;
+  }
+
   const now = Date.now();
   const entry = rateLimitMap.get(key);
 

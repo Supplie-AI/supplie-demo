@@ -6,12 +6,12 @@ This repo is a Next.js demo frontend with two side-by-side demo agents.
 
 - The UI keeps the two-panel side-by-side demo layout.
 - The left panel is an **ungrounded / raw** agent.
-- The right panel is a **grounded Annona** agent backed by built-in demo tools.
+- The right panel is a **grounded Annona** agent backed by Annona tools.
 - Streaming text is supported on both sides.
 - The grounded side uses a static bundled Annona demo snapshot, not live production data.
-- When an OpenAI model is selected, the raw panel can use native OpenAI web search, a sandboxed code interpreter, and bundled file workflows over a small static demo file set.
-- The raw panel still does **not** have grounded Annona tools or live ERP / warehouse access.
-- The grounded panel still does **not** have browsing, code execution, or OpenAI file workflows.
+- When an OpenAI model is selected, both panels share the same native OpenAI web search, sandboxed code interpreter, and bundled file workflows over the same static reference file set.
+- The raw panel still does **not** have Annona-specific grounded tools, calculators, datasets, or grounded analysis.
+- The grounded panel is a strict superset of the raw panel and adds Annona-specific tools, calculators, datasets, and grounded model-backed analysis.
 
 Both agents are instructed to say when required data or capabilities are missing instead of pretending they exist.
 

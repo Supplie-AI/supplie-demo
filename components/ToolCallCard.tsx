@@ -20,6 +20,25 @@ export function ToolCallCard({
 }: ToolCallCardProps) {
   const [expanded, setExpanded] = useState(false);
 
+  const toolSource =
+    toolName.startsWith("openai_")
+      ? {
+          label: "OpenAI native",
+          className:
+            "border-sky-400/20 bg-sky-400/10 text-sky-200",
+        }
+      : toolName.startsWith("annona_")
+        ? {
+            label: "Annona tool",
+            className:
+              "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
+          }
+        : {
+            label: "Demo tool",
+            className:
+              "border-white/10 bg-white/5 text-slate-300",
+          };
+
   const formatValue = (v: unknown): string => {
     if (typeof v === "object") return JSON.stringify(v, null, 2);
     return String(v);
@@ -79,6 +98,11 @@ export function ToolCallCard({
         )}
         <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 font-mono text-[11px] font-semibold text-teal-200">
           {toolName}
+        </span>
+        <span
+          className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] ${toolSource.className}`}
+        >
+          {toolSource.label}
         </span>
         <span
           className={`ml-auto font-mono text-[11px] ${hasError ? "text-red-300" : "text-slate-400"}`}
