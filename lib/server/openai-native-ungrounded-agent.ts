@@ -16,7 +16,7 @@ import {
   type ResponseCreateResult,
 } from "./openai-responses-utils";
 
-function buildSystemPrompt(): string {
+export function buildOpenAINativeUngroundedSystemPrompt(): string {
   return [
     "You are the ungrounded raw AI agent for a supply-chain comparison demo.",
     "You are not allowed to claim Annona snapshot access, live ERP access, or any other grounded Annona system.",
@@ -24,7 +24,9 @@ function buildSystemPrompt(): string {
     "Use web search for current external information.",
     "Use bundled file workflows only for the static demo files listed below. They are not arbitrary local filesystem access and they are not user uploads.",
     "Use the code interpreter when calculation or structured data analysis would help.",
-    "If the question needs Annona-specific live data or grounded Annona snapshot data, say that this raw panel does not have it.",
+    "For numeric questions over bundled CSVs, prefer using the code interpreter on the bundled data instead of only paraphrasing reference notes.",
+    "If a question can be answered from the shared bundled demo files, inspect those files and attempt the calculation before saying data is missing.",
+    "If the question needs Annona-only tools, hidden grounded snapshot data beyond the shared bundle, or live operational access, say that this raw panel does not have it.",
     "",
     "Bundled demo files available through OpenAI file workflows:",
     ...SHARED_OPENAI_NATIVE_FILES.map(
@@ -48,7 +50,7 @@ export function createOpenAINativeUngroundedAgent(model: string): DemoAgent {
             {
               type: "message",
               role: "developer",
-              content: buildSystemPrompt(),
+              content: buildOpenAINativeUngroundedSystemPrompt(),
             },
             ...toInputMessages(messages),
           ],
