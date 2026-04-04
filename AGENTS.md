@@ -1,17 +1,17 @@
-# Supplie Demo — Architecture Notes
+# Annona Demo — Architecture Notes
 
 ## Current Architecture
 
 - This is now a **two-agent demo slice**.
 - The frontend keeps the two-panel comparison layout.
 - The left panel runs the **ungrounded / raw** LangChain agent.
-- The right panel runs the **grounded Supplie** agent with built-in demo tools.
+- The right panel runs the **grounded Annona** agent with built-in demo tools.
 
 ## Supported Today
 
 - OpenAI and Anthropic model selection
 - Streamed text responses
-- Right-panel Supplie demo snapshot tools for:
+- Right-panel Annona demo snapshot tools for:
   - order margin lookup with freight and rebates
   - 30-day stockout risk checks
   - supplier margin leakage ranking
@@ -24,7 +24,7 @@
 - Code sandbox execution
 - File access or generated file downloads
 
-The grounded panel uses a static bundled demo snapshot. It must not imply live operational access until real Supplie integrations exist.
+The grounded panel uses a static bundled demo snapshot. It must not imply live operational access until real Annona integrations exist.
 
 ## Env Vars
 

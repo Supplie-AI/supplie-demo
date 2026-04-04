@@ -33,11 +33,11 @@ export function getUngroundedCapabilities(
     },
     {
       id: "supplie_demo_tools",
-      label: "Supplie demo snapshot tools",
+      label: "Annona demo snapshot tools",
       enabled: false,
       availability: "planned",
       description:
-        "The raw panel never uses grounded Supplie snapshot tools and must stay ungrounded relative to Supplie data.",
+        "The raw panel never uses grounded Annona snapshot tools and must stay ungrounded relative to Annona data.",
     },
     {
       id: "live_systems",
@@ -45,7 +45,7 @@ export function getUngroundedCapabilities(
       enabled: false,
       availability: "planned",
       description:
-        "No live operational systems are connected. Do not imply access to current Supplie data.",
+        "No live operational systems are connected. Do not imply access to current Annona data.",
     },
     {
       id: "native_web_search",
@@ -93,11 +93,11 @@ export const GROUNDED_CAPABILITIES: DemoCapability[] = [
   },
   {
     id: "supplie_demo_tools",
-    label: "Supplie demo snapshot tools",
+    label: "Annona demo snapshot tools",
     enabled: true,
     availability: "available",
     description:
-      "The grounded panel can query built-in Supplie demo data tools against a static snapshot bundled with this app.",
+      "The grounded panel can query built-in Annona demo data tools against a static snapshot bundled with this app.",
   },
   {
     id: "live_systems",
@@ -113,7 +113,7 @@ export const GROUNDED_CAPABILITIES: DemoCapability[] = [
     enabled: false,
     availability: "planned",
     description:
-      "Not available on the grounded panel. It stays limited to bundled Supplie snapshot tools only.",
+      "Not available on the grounded panel. It stays limited to bundled Annona snapshot tools only.",
   },
   {
     id: "code_sandbox",

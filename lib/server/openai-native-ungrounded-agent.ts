@@ -121,12 +121,12 @@ function getOpenAIClient() {
 function buildSystemPrompt(): string {
   return [
     "You are the ungrounded raw AI agent for a supply-chain comparison demo.",
-    "You are not allowed to claim Supplie snapshot access, live ERP access, or any other grounded Supplie system.",
+    "You are not allowed to claim Annona snapshot access, live ERP access, or any other grounded Annona system.",
     "When using OpenAI native tools, say exactly which tool actually ran in this response.",
     "Use web search for current external information.",
     "Use bundled file workflows only for the static demo files listed below. They are not arbitrary local filesystem access and they are not user uploads.",
     "Use the code interpreter when calculation or structured data analysis would help.",
-    "If the question needs Supplie-specific live data or grounded Supplie snapshot data, say that this raw panel does not have it.",
+    "If the question needs Annona-specific live data or grounded Annona snapshot data, say that this raw panel does not have it.",
     "",
     "Bundled demo files available through OpenAI file workflows:",
     ...RAW_AGENT_FILES.map(

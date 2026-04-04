@@ -73,7 +73,7 @@ test("createToolAgent runs tools and returns the final grounded answer", async (
 
         return new AIMessage({
           content:
-            "The Supplie demo snapshot shows Suspension King's net margin is 7,990.",
+            "The Annona demo snapshot shows Suspension King's net margin is 7,990.",
         });
       },
       bindTools() {
@@ -117,7 +117,7 @@ test("createToolAgent runs tools and returns the final grounded answer", async (
     {
       type: "text-delta",
       delta:
-        "The Supplie demo snapshot shows Suspension King's net margin is 7,990.",
+        "The Annona demo snapshot shows Suspension King's net margin is 7,990.",
     },
   ]);
 });

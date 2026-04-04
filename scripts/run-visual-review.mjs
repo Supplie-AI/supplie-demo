@@ -306,7 +306,7 @@ async function runOpenAIReview({ rubricRaw, manifest, screenshots }) {
     {
       type: "input_text",
       text: [
-        "Review the supplied Supplie demo screenshots against the PRD/demo-plan rubric.",
+        "Review the supplied Annona demo screenshots against the PRD/demo-plan rubric.",
         "Fail the review if any required state or automatic failure condition is violated.",
         "Base the answer only on what is visibly present in the screenshots and the supplied rubric.",
         "",

@@ -67,13 +67,13 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
               Private Preview
             </div>
             <div className="text-4xl font-semibold tracking-[-0.04em] text-slate-50 sm:text-5xl">
-              supplie<span className="text-teal-400">.</span>
+              Annona<span className="text-teal-400">.</span>
             </div>
             <div className="mt-2 text-xs uppercase tracking-[0.32em] text-slate-400">
               Grounding Demo
             </div>
             <p className="mt-4 text-sm leading-6 text-slate-300">
-              Compare raw reasoning with tool-backed Supplie answers in a gated
+              Compare raw reasoning with tool-backed Annona answers in a gated
               demo environment.
             </p>
           </div>
