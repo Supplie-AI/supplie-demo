@@ -14,7 +14,7 @@ Treat these files as the source of truth for product behavior:
 - `docs/brand-spec.md`
 - `docs/demo-acceptance.md`
 - `docs/capability-matrix.json`
-- `tests/fixtures/demo-scenarios.json`
+- `tests/fixtures/demo-scenarios.js`
 
 Issue bodies should point to these files. They should not silently replace them.
 

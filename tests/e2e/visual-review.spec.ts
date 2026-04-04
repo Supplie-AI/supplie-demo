@@ -1,10 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+import { DEMO_SCENARIOS } from "../fixtures/demo-scenarios.js";
+import {
+  authenticate,
+  runScenario,
+  type RenderedScenarioOutput,
+} from "./demo-review-helpers";
 
-const DEMO_PASSWORD = "test_password";
-const CRITICAL_PROMPT =
-  "Which supplier is causing the most margin leakage?";
 const OUTPUT_ROOT = path.join(
   process.cwd(),
   "artifacts",
@@ -28,14 +31,6 @@ test.use({
   viewport: { width: 1440, height: 1200 },
 });
 
-async function authenticate(page: Page, password = DEMO_PASSWORD) {
-  await page.goto("/");
-  await expect(page.getByTestId("password-gate")).toBeVisible();
-  await page.getByTestId("password-input").fill(password);
-  await page.getByTestId("password-submit").click();
-  await expect(page.getByTestId("demo-app")).toBeVisible();
-}
-
 async function captureScreenshot(
   page: Page,
   fileName: string,
@@ -58,14 +53,24 @@ async function captureScreenshot(
   };
 }
 
-test("captures deterministic screenshots for PRD-based visual review", async ({
+test("captures deterministic screenshots and rendered answers for visual review", async ({
   page,
 }) => {
+  test.setTimeout(180_000);
+
   await fs.rm(OUTPUT_ROOT, { recursive: true, force: true });
   await fs.mkdir(SCREENSHOT_DIR, { recursive: true });
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   const screenshots: VisualReviewScreenshot[] = [];
+  const scenarioReviews: Array<{
+    scenarioId: string;
+    prompt: string;
+    sharedBundleAnswerable: boolean;
+    screenshot: string;
+    raw: RenderedScenarioOutput["raw"];
+    grounded: RenderedScenarioOutput["grounded"];
+  }> = [];
 
   await page.goto("/");
   await expect(page.getByTestId("password-gate")).toBeVisible();
@@ -80,45 +85,40 @@ test("captures deterministic screenshots for PRD-based visual review", async ({
 
   await authenticate(page);
   await expect(page.getByText("Live Comparison")).toBeVisible();
-  await expect(page.getByTestId("panel-ungrounded")).toContainText(
-    "Raw comparison output appears here",
-  );
-  await expect(page.getByTestId("panel-grounded")).toContainText(
-    "Grounded tool-backed answers appear here",
-  );
   screenshots.push(
     await captureScreenshot(
       page,
       "02-authenticated-comparison.png",
       "authenticated-comparison",
-      "Authenticated desktop comparison view with the top bar, prompt buttons, explainer, and both side-by-side panels in their empty states.",
+      "Authenticated comparison view with the top bar, prompt buttons, explainer, and both empty comparison panels.",
     ),
   );
 
-  await page.getByRole("button", { name: CRITICAL_PROMPT }).click();
-  await expect(page.getByTestId("panel-ungrounded")).toContainText(
-    "Ungrounded mock response:",
-  );
-  await expect(page.getByTestId("panel-grounded")).toContainText(
-    "Grounded mock response:",
-  );
-  await expect(page.getByTestId("panel-grounded")).toContainText(
-    "openai_file_search",
-  );
-  await expect(page.getByTestId("panel-grounded")).toContainText(
-    "annona_query_supplier_margin_leakage_snapshot",
-  );
-  await expect(page.getByTestId("panel-grounded")).toContainText(
-    "Atlas Springs",
-  );
-  screenshots.push(
-    await captureScreenshot(
-      page,
-      "03-post-prompt-grounded-response.png",
-      "post-prompt-response",
-      "Both panels show the same user prompt; the grounded panel also shows shared native tool evidence, an Annona grounded tool call, and the Atlas Springs finding.",
-    ),
-  );
+  let scenarioNumber = 3;
+  for (const scenario of DEMO_SCENARIOS) {
+    const { rendered } = await runScenario(page, scenario);
+    const fileName = `${String(scenarioNumber).padStart(2, "0")}-${scenario.id}.png`;
+
+    screenshots.push(
+      await captureScreenshot(
+        page,
+        fileName,
+        `scenario-${scenario.id}`,
+        `Rendered raw and grounded answers for the "${scenario.prompt}" demo scenario.`,
+      ),
+    );
+
+    scenarioReviews.push({
+      scenarioId: scenario.id,
+      prompt: scenario.prompt,
+      sharedBundleAnswerable: scenario.sharedBundleAnswerable,
+      screenshot: fileName,
+      raw: rendered.raw,
+      grounded: rendered.grounded,
+    });
+
+    scenarioNumber += 1;
+  }
 
   await fs.writeFile(
     MANIFEST_PATH,
@@ -127,6 +127,7 @@ test("captures deterministic screenshots for PRD-based visual review", async ({
         generatedAt: new Date().toISOString(),
         rubricPath: "docs/site-prd-demo-plan.md",
         screenshots,
+        scenarioReviews,
       },
       null,
       2,
