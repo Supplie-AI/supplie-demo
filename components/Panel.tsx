@@ -48,30 +48,44 @@ export function Panel({
 
   const badgeStyles = {
     amber:
-      "border border-[rgba(243,166,59,0.18)] bg-[rgba(243,166,59,0.12)] text-amber-200",
+      "border text-[color:#8a5618]",
     teal:
-      "border border-[rgba(46,211,196,0.18)] bg-[rgba(46,211,196,0.12)] text-teal-200",
+      "border text-[color:#005f77]",
   };
   const accentStyles = {
     amber: {
-      orb: "bg-amber-300/80",
-      ring: "border-[rgba(243,166,59,0.2)] bg-[rgba(243,166,59,0.06)]",
-      note: "from-amber-500/10 to-transparent",
+      orb: "bg-[color:#c7862f]",
+      headerBorder: "rgba(199, 134, 47, 0.18)",
+      badgeBorder: "rgba(199, 134, 47, 0.22)",
+      badgeBg: "rgba(199, 134, 47, 0.1)",
+      ring: "border-[rgba(199,134,47,0.16)] bg-[rgba(255,249,241,0.96)]",
+      noteBorder: "rgba(199, 134, 47, 0.14)",
+      noteBg:
+        "linear-gradient(90deg, rgba(199,134,47,0.08), rgba(255,255,255,0.72))",
       message:
-        "border-[rgba(243,166,59,0.14)] bg-[rgba(243,166,59,0.08)]",
-      userMessage: "border-slate-600/50 bg-[linear-gradient(180deg,rgba(33,44,61,0.92),rgba(25,34,49,0.92))]",
-      retry:
-        "border-[rgba(243,166,59,0.3)] text-amber-200 hover:border-[rgba(243,166,59,0.6)]",
+        "border-[rgba(199,134,47,0.16)] bg-[rgba(255,250,244,0.96)]",
+      userMessage:
+        "border-[rgba(199,134,47,0.12)] bg-[linear-gradient(180deg,rgba(249,244,235,0.98),rgba(244,236,224,0.98))]",
+      retryBorder: "rgba(199, 134, 47, 0.28)",
+      retryText: "#8a5618",
+      indicator: "bg-[color:#c7862f]",
     },
     teal: {
-      orb: "bg-teal-300/80",
-      ring: "border-[rgba(46,211,196,0.2)] bg-[rgba(46,211,196,0.06)]",
-      note: "from-teal-400/10 to-transparent",
+      orb: "bg-[color:#00d2ff]",
+      headerBorder: "rgba(0, 210, 255, 0.18)",
+      badgeBorder: "rgba(0, 210, 255, 0.22)",
+      badgeBg: "rgba(0, 210, 255, 0.1)",
+      ring: "border-[rgba(0,210,255,0.16)] bg-[rgba(240,251,255,0.98)]",
+      noteBorder: "rgba(0, 210, 255, 0.16)",
+      noteBg:
+        "linear-gradient(90deg, rgba(0,210,255,0.08), rgba(255,255,255,0.78))",
       message:
-        "border-[rgba(46,211,196,0.14)] bg-[rgba(46,211,196,0.08)]",
-      userMessage: "border-slate-600/50 bg-[linear-gradient(180deg,rgba(33,44,61,0.92),rgba(25,34,49,0.92))]",
-      retry:
-        "border-[rgba(46,211,196,0.3)] text-teal-200 hover:border-[rgba(46,211,196,0.6)]",
+        "border-[rgba(0,210,255,0.18)] bg-[rgba(240,251,255,0.98)]",
+      userMessage:
+        "border-[rgba(0,95,119,0.12)] bg-[linear-gradient(180deg,rgba(244,252,255,0.98),rgba(232,247,252,0.98))]",
+      retryBorder: "rgba(0, 95, 119, 0.24)",
+      retryText: "#005f77",
+      indicator: "bg-[color:#00d2ff]",
     },
   };
   const accent = accentStyles[badgeColor];
@@ -79,20 +93,27 @@ export function Panel({
   return (
     <div
       data-testid={`panel-${panelId}`}
-      className={`flex h-full flex-col overflow-hidden rounded-[28px] border ${borderColor} shadow-[0_24px_60px_rgba(3,8,16,0.28)]`}
-      style={{ background: bgColor }}
+      className="flex h-full flex-col overflow-hidden rounded-[28px] border shadow-[0_24px_60px_rgba(28,28,26,0.08)]"
+      style={{ background: bgColor, borderColor }}
     >
-      <div className="border-b border-white/8 px-5 py-4">
+      <div className="px-5 py-4" style={{ borderBottom: `1px solid ${accent.headerBorder}` }}>
         <div className="flex items-center gap-3">
           <div className={`h-2.5 w-2.5 rounded-full ${accent.orb} shadow-lg`} />
           <span
             className="text-[15px] font-semibold tracking-[-0.02em]"
-            style={{ color: "var(--text-primary)" }}
+            style={{
+              color: "var(--text-primary)",
+              fontFamily: "var(--font-heading)",
+            }}
           >
             {title}
           </span>
           <span
             className={`rounded-full px-2.5 py-1 text-[11px] uppercase tracking-[0.18em] ${badgeStyles[badgeColor]}`}
+            style={{
+              borderColor: accent.badgeBorder,
+              background: accent.badgeBg,
+            }}
           >
             {badge}
           </span>
@@ -101,7 +122,7 @@ export function Panel({
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
-                  className={`h-1.5 w-1.5 rounded-full ${badgeColor === "teal" ? "bg-teal-300" : "bg-amber-300"} animate-bounce`}
+                  className={`h-1.5 w-1.5 rounded-full ${accent.indicator} animate-bounce`}
                   style={{ animationDelay: `${i * 150}ms` }}
                 />
               ))}
@@ -109,7 +130,12 @@ export function Panel({
           )}
         </div>
         <span
-          className={`mt-3 block rounded-2xl border border-white/8 bg-gradient-to-r px-4 py-3 text-xs leading-relaxed text-slate-300 ${accent.note}`}
+          className="mt-3 block rounded-2xl border px-4 py-3 text-xs leading-relaxed"
+          style={{
+            borderColor: accent.noteBorder,
+            background: accent.noteBg,
+            color: "var(--text-secondary)",
+          }}
         >
           {note}
         </span>
@@ -147,7 +173,8 @@ export function Panel({
             {msg.role === "user" && (
               <div className="flex justify-end">
                 <div
-                  className={`max-w-xs rounded-2xl border px-4 py-3 text-sm text-slate-100 shadow-[0_12px_30px_rgba(3,8,16,0.22)] ${accent.userMessage}`}
+                  className={`max-w-xs rounded-2xl border px-4 py-3 text-sm shadow-[0_12px_30px_rgba(28,28,26,0.08)] ${accent.userMessage}`}
+                  style={{ color: "var(--text-primary)" }}
                 >
                   {msg.content}
                 </div>
@@ -185,7 +212,10 @@ export function Panel({
                     </div>
                 )}
                 {msg.content && (
-                  <div className="whitespace-pre-wrap text-sm leading-7 text-slate-100">
+                  <div
+                    className="whitespace-pre-wrap text-sm leading-7"
+                    style={{ color: "var(--text-primary)" }}
+                  >
                     {msg.content}
                   </div>
                 )}
@@ -198,20 +228,26 @@ export function Panel({
           <div className="flex items-center gap-2">
             <button
               onClick={onRetry}
-              className={`rounded-full border px-3 py-1 text-xs transition-colors ${accent.retry}`}
+              className="rounded-full border px-3 py-1 text-xs transition-colors"
+              style={{
+                borderColor: accent.retryBorder,
+                color: accent.retryText,
+              }}
             >
               ↺ Retry
             </button>
-            <span className="text-slate-500 text-xs">{error.message}</span>
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {error.message}
+            </span>
           </div>
         )}
         {is429 && (
-          <div className="text-slate-400 text-xs">
+          <div className="text-xs" style={{ color: "var(--text-muted)" }}>
             Rate limit exceeded. Retry when the minute window resets.
           </div>
         )}
         {is401 && (
-          <div className="text-slate-400 text-xs">
+          <div className="text-xs" style={{ color: "var(--text-muted)" }}>
             Session expired. Refresh and authenticate again.
           </div>
         )}

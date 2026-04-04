@@ -382,23 +382,52 @@ export default function Home() {
       className="min-h-screen px-4 py-4 sm:px-5"
       style={{
         background: "transparent",
-        fontFamily: '"Space Grotesk", "Avenir Next", "Segoe UI", sans-serif',
+        fontFamily: 'var(--font-body)',
       }}
     >
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-[1540px] flex-col rounded-[32px] border border-white/10 bg-[var(--bg-shell)] p-3 shadow-[0_32px_120px_rgba(2,6,14,0.5)] backdrop-blur-xl">
-        <div className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(11,17,25,0.92),rgba(8,13,20,0.92))] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-[1540px] flex-col rounded-[32px] border p-3 backdrop-blur-xl"
+        style={{
+          borderColor: "var(--border-subtle)",
+          background: "var(--bg-shell)",
+          boxShadow:
+            "0 28px 100px rgba(28, 28, 26, 0.1), inset 0 1px 0 rgba(255,255,255,0.72)",
+        }}
+      >
+        <div
+          className="rounded-[28px] px-5 py-4"
+          style={{
+            border: "1px solid rgba(221, 221, 214, 0.9)",
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(245,245,240,0.82))",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72)",
+          }}
+        >
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-teal-300/20 bg-[linear-gradient(135deg,rgba(20,184,166,0.22),rgba(56,189,248,0.18))] shadow-[0_12px_30px_rgba(20,184,166,0.18)]">
-                <div className="h-3 w-3 rounded-full bg-teal-300" />
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-2xl"
+                style={{
+                  border: "1px solid rgba(0, 210, 255, 0.18)",
+                  background:
+                    "linear-gradient(135deg, rgba(240, 251, 255, 0.98), rgba(255,255,255,0.92))",
+                  boxShadow: "0 14px 28px rgba(0, 210, 255, 0.12)",
+                }}
+              >
+                <div
+                  className="h-3 w-3 rounded-full"
+                  style={{ background: "var(--accent-blue)" }}
+                />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span
                     className="text-sm font-semibold"
-                    style={{ color: "var(--text-primary)" }}
+                    style={{
+                      color: "var(--text-primary)",
+                      fontFamily: "var(--font-heading)",
+                    }}
                   >
-                    Annona
+                    Annona<span style={{ color: "var(--accent-blue)" }}>.</span>
                   </span>
                   <span
                     className="text-[11px] tracking-[0.24em]"
@@ -407,7 +436,10 @@ export default function Home() {
                     Grounding Demo
                   </span>
                 </div>
-                <div className="text-sm text-slate-400">
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--text-secondary)" }}
+                >
                   Demo-quality side-by-side review of raw reasoning vs grounded
                   Annona output.
                 </div>
@@ -417,7 +449,13 @@ export default function Home() {
               <ModelPicker value={model} onChange={handleModelChange} />
               <button
                 onClick={handleClear}
-                className="rounded-xl border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300 transition-all hover:border-white/20 hover:text-white"
+                className="rounded-xl border px-3 py-2 text-xs transition-all hover:-translate-y-0.5"
+                style={{
+                  borderColor: "rgba(28, 28, 26, 0.1)",
+                  background: "rgba(255,255,255,0.9)",
+                  color: "var(--text-secondary)",
+                  boxShadow: "0 8px 20px rgba(28, 28, 26, 0.05)",
+                }}
               >
                 Clear
               </button>
@@ -429,12 +467,24 @@ export default function Home() {
               onPrompt={handlePrompt}
               disabled={ungroundedChat.isLoading || groundedChat.isLoading}
             />
-
-            <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(9,14,22,0.86),rgba(9,13,20,0.74))] px-4 py-4">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+            <div
+              className="rounded-[24px] px-4 py-4"
+              style={{
+                border: "1px solid rgba(221, 221, 214, 0.95)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.98), rgba(240,251,255,0.72))",
+              }}
+            >
+              <div
+                className="text-[11px] uppercase tracking-[0.22em]"
+                style={{ color: "var(--text-muted)" }}
+              >
                 Live Comparison
               </div>
-              <div className="mt-2 text-sm leading-6 text-slate-100">
+              <div
+                className="mt-2 text-sm leading-6"
+                style={{ color: "var(--text-primary)" }}
+              >
                 Left panel stays raw on {ungroundedPanel.backendLabel}. Right
                 panel runs {groundedPanel.backendLabel}
                 {comparisonMessage.sharedNativeToolLabels.length > 0
@@ -442,14 +492,31 @@ export default function Home() {
                   : " as the Annona-specific superset, while native provider web, sandbox, and file tools are unavailable in this deployment."}
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <span className="rounded-full border border-[rgba(243,166,59,0.18)] bg-[rgba(243,166,59,0.08)] px-3 py-1 text-amber-200">
+                <span
+                  className="rounded-full border px-3 py-1"
+                  style={{
+                    borderColor: "rgba(199, 134, 47, 0.2)",
+                    background: "rgba(199, 134, 47, 0.08)",
+                    color: "#8a5618",
+                  }}
+                >
                   Raw: {comparisonMessage.ungroundedCapabilities}
                 </span>
-                <span className="rounded-full border border-[rgba(46,211,196,0.18)] bg-[rgba(46,211,196,0.08)] px-3 py-1 text-teal-200">
+                <span
+                  className="rounded-full border px-3 py-1"
+                  style={{
+                    borderColor: "rgba(0, 210, 255, 0.24)",
+                    background: "rgba(0, 210, 255, 0.08)",
+                    color: "#005f77",
+                  }}
+                >
                   Grounded: {comparisonMessage.groundedCapabilities}
                 </span>
               </div>
-              <div className="mt-3 text-xs leading-5 text-slate-400">
+              <div
+                className="mt-3 text-xs leading-5"
+                style={{ color: "var(--text-muted)" }}
+              >
                 Shared limits: {comparisonMessage.sharedLimitations}
               </div>
             </div>
@@ -462,8 +529,8 @@ export default function Home() {
             title={ungroundedPanel.title}
             badge={ungroundedPanel.badge}
             badgeColor={ungroundedPanel.badgeColor}
-            bgColor="var(--bg-amber-panel)"
-            borderColor="border-amber-300/14"
+            bgColor="var(--bg-raw-panel)"
+            borderColor="rgba(199, 134, 47, 0.18)"
             note={ungroundedPanel.description}
             emptyStateTitle={ungroundedPanel.emptyStateTitle}
             emptyStateDetail={ungroundedPanel.emptyStateDetail}
@@ -477,8 +544,8 @@ export default function Home() {
             title={groundedPanel.title}
             badge={groundedPanel.badge}
             badgeColor={groundedPanel.badgeColor}
-            bgColor="var(--bg-teal-panel)"
-            borderColor="border-teal-300/14"
+            bgColor="var(--bg-grounded-panel)"
+            borderColor="rgba(0, 210, 255, 0.2)"
             note={groundedPanel.description}
             emptyStateTitle={groundedPanel.emptyStateTitle}
             emptyStateDetail={groundedPanel.emptyStateDetail}
