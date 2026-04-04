@@ -60,8 +60,9 @@ export function getDemoPanelConfigs(
         ? "Shares the same native OpenAI web, file, and code baseline as the raw panel, then adds Annona tools, calculators, datasets, and grounded analysis."
         : "Uses Annona-specific grounded tools and datasets against a static bundled snapshot.",
       emptyStateTitle: "Grounded tool-backed answers appear here",
-      emptyStateDetail:
-        "This panel can use the shared native baseline plus Annona tools, and it should say when a question falls outside the bundled Annona data.",
+      emptyStateDetail: openaiNativeToolsEnabled
+        ? "This panel can use the shared native baseline plus Annona tools, and it should say when a question falls outside the bundled Annona data."
+        : "This panel can use Annona tools and should say when a question falls outside the bundled Annona data.",
       capabilities: getGroundedCapabilities(
         provider,
         options?.openAIConfigured,
