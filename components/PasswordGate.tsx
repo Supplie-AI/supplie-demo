@@ -70,13 +70,8 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
           </div>
 
           <div className="relative flex min-h-[calc(100vh-2rem)] flex-1 flex-col justify-between px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
-            <div className="flex items-start justify-between gap-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.28em] text-slate-300">
-                Private Preview
-              </div>
-              <div className="hidden text-right text-[11px] uppercase tracking-[0.24em] text-slate-500 sm:block">
-                Protected comparison
-              </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.05)] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.28em] text-slate-300">
+              Private Preview
             </div>
 
             <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12 lg:py-12">
@@ -88,30 +83,9 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
                   Grounding Demo
                 </div>
                 <p className="mt-6 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">
-                  Compare raw reasoning with tool-backed Annona answers in a
-                  gated demo environment. The comparison surface stays hidden
-                  until access is confirmed.
+                  Private Annona grounded demo access. Enter the password to
+                  unlock the protected workspace.
                 </p>
-                <div className="mt-8 grid gap-3 text-left sm:grid-cols-2">
-                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-                    <div className="text-[11px] uppercase tracking-[0.22em] text-teal-300">
-                      Left panel
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-300">
-                      Raw OpenAI comparison with the shared native tool
-                      baseline.
-                    </p>
-                  </div>
-                  <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-                    <div className="text-[11px] uppercase tracking-[0.22em] text-amber-200">
-                      Right panel
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-300">
-                      Grounded Annona analysis with additional datasets,
-                      calculators, and tool evidence.
-                    </p>
-                  </div>
-                </div>
               </div>
 
               <div className="mx-auto w-full max-w-xl rounded-[30px] border border-white/12 bg-[linear-gradient(180deg,rgba(9,18,26,0.96),rgba(6,12,18,0.88))] p-6 shadow-[0_24px_80px_rgba(2,6,14,0.42)] sm:p-8">
@@ -162,8 +136,8 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
             </div>
 
             <div className="flex items-center justify-between gap-4 text-[11px] uppercase tracking-[0.18em] text-slate-500">
-              <span>Protected comparison</span>
-              <span>Live comparison remains hidden until auth</span>
+              <span>Invite-only preview</span>
+              <span>Protected workspace remains hidden until auth</span>
             </div>
           </div>
         </div>
