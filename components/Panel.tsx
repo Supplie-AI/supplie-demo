@@ -168,11 +168,16 @@ export function Panel({
           </div>
         )}
 
-        {messages.map((msg) => (
-          <div key={msg.id} className="space-y-2">
+        {messages.map((msg, messageIndex) => (
+          <div
+            key={msg.id}
+            data-testid={`panel-${panelId}-message-${messageIndex}-${msg.role}`}
+            className="space-y-2"
+          >
             {msg.role === "user" && (
               <div className="flex justify-end">
                 <div
+                  data-testid={`panel-${panelId}-user-text-${messageIndex}`}
                   className={`max-w-xs rounded-2xl border px-4 py-3 text-sm shadow-[0_12px_30px_rgba(28,28,26,0.08)] ${accent.userMessage}`}
                   style={{ color: "var(--text-primary)" }}
                 >
@@ -206,6 +211,7 @@ export function Panel({
                               result={result}
                               index={i}
                               hasError={!!hasError}
+                              testId={`panel-${panelId}-tool-${messageIndex}-${i}`}
                             />
                           );
                         })}
@@ -213,6 +219,7 @@ export function Panel({
                 )}
                 {msg.content && (
                   <div
+                    data-testid={`panel-${panelId}-assistant-text-${messageIndex}`}
                     className="whitespace-pre-wrap text-sm leading-7"
                     style={{ color: "var(--text-primary)" }}
                   >

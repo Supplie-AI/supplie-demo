@@ -2,6 +2,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import OpenAI from "openai";
+import {
+  DEMO_SCENARIOS,
+  evaluateScenarioOutputs,
+  getDemoScenarioById,
+} from "../tests/fixtures/demo-scenarios.js";
 
 const DEFAULT_MODEL = process.env.VISUAL_REVIEW_MODEL ?? "gpt-5.4";
 const INPUT_DIR = path.resolve(
@@ -15,6 +20,16 @@ const MANIFEST_PATH = path.join(INPUT_DIR, "manifest.json");
 const REVIEW_JSON_PATH = path.join(OUTPUT_DIR, "visual-review.json");
 const GATE_JSON_PATH = path.join(OUTPUT_DIR, "gate-result.json");
 const SUMMARY_MD_PATH = path.join(OUTPUT_DIR, "summary.md");
+
+const CRITERIA_IDS = [
+  "password_gate_integrity",
+  "comparison_layout",
+  "truthful_disclosure",
+  "grounded_evidence_visibility",
+  "raw_answer_correctness",
+  "grounded_answer_correctness",
+  "readability_and_polish",
+];
 
 const REVIEW_SCHEMA = {
   type: "object",
@@ -43,7 +58,7 @@ const REVIEW_SCHEMA = {
     },
     criteria: {
       type: "array",
-      minItems: 5,
+      minItems: CRITERIA_IDS.length,
       items: {
         type: "object",
         additionalProperties: false,
@@ -51,13 +66,7 @@ const REVIEW_SCHEMA = {
         properties: {
           id: {
             type: "string",
-            enum: [
-              "password_gate_integrity",
-              "comparison_layout",
-              "truthful_disclosure",
-              "grounded_evidence_visibility",
-              "readability_and_polish",
-            ],
+            enum: CRITERIA_IDS,
           },
           result: {
             type: "string",
@@ -96,13 +105,8 @@ const REVIEW_SCHEMA = {
     },
   },
 };
-const REQUIRED_CRITERIA_IDS = new Set([
-  "password_gate_integrity",
-  "comparison_layout",
-  "truthful_disclosure",
-  "grounded_evidence_visibility",
-  "readability_and_polish",
-]);
+
+const REQUIRED_CRITERIA_IDS = new Set(CRITERIA_IDS);
 
 function dataUrlForImage(buffer, extension) {
   const normalized = extension.toLowerCase();
@@ -162,7 +166,143 @@ function normalizeReviewResult(review) {
   };
 }
 
-function renderSummary({ gate, model, manifest }) {
+function summarizeScenarioFailures(results, panel) {
+  return results
+    .filter((result) => !result.evaluation[panel].pass)
+    .map(
+      (result) =>
+        `${result.scenarioId}: ${result.evaluation[panel].failures.join("; ")}`,
+    );
+}
+
+function runDeterministicAnswerChecks(manifest) {
+  if (
+    !Array.isArray(manifest?.scenarioReviews) ||
+    manifest.scenarioReviews.length !== DEMO_SCENARIOS.length
+  ) {
+    throw new Error(
+      `Manifest must contain ${DEMO_SCENARIOS.length} scenarioReviews entries.`,
+    );
+  }
+
+  const results = manifest.scenarioReviews.map((scenarioReview) => {
+    const scenario = getDemoScenarioById(scenarioReview.scenarioId);
+
+    if (!scenario) {
+      throw new Error(`Unknown scenario id: ${scenarioReview.scenarioId}`);
+    }
+
+    const evaluation = evaluateScenarioOutputs(scenario, {
+      raw: scenarioReview.raw,
+      grounded: scenarioReview.grounded,
+    });
+
+    return {
+      scenarioId: scenario.id,
+      prompt: scenario.prompt,
+      screenshot: scenarioReview.screenshot,
+      sharedBundleAnswerable: scenario.sharedBundleAnswerable,
+      evaluation,
+      raw: scenarioReview.raw,
+      grounded: scenarioReview.grounded,
+    };
+  });
+
+  const rawFailures = summarizeScenarioFailures(results, "raw");
+  const groundedFailures = summarizeScenarioFailures(results, "grounded");
+
+  return {
+    results,
+    rawFailures,
+    groundedFailures,
+    pass: rawFailures.length === 0 && groundedFailures.length === 0,
+    mustFix: [
+      ...rawFailures.map((failure) => `Raw answer correctness failed: ${failure}`),
+      ...groundedFailures.map(
+        (failure) => `Grounded answer correctness failed: ${failure}`,
+      ),
+    ],
+  };
+}
+
+function upsertCriterion(criteria, nextCriterion) {
+  const index = criteria.findIndex((criterion) => criterion.id === nextCriterion.id);
+
+  if (index === -1) {
+    criteria.push(nextCriterion);
+    return criteria;
+  }
+
+  const updated = [...criteria];
+  updated[index] = nextCriterion;
+  return updated;
+}
+
+function applyDeterministicChecks(review, deterministicChecks) {
+  let criteria = Array.isArray(review?.criteria) ? [...review.criteria] : [];
+  const rawEvidence =
+    deterministicChecks.rawFailures.length === 0
+      ? `All ${deterministicChecks.results.length} raw-panel scenarios matched the authoritative fixture rubrics.`
+      : deterministicChecks.rawFailures.join(" | ");
+  const groundedEvidence =
+    deterministicChecks.groundedFailures.length === 0
+      ? `All ${deterministicChecks.results.length} grounded-panel scenarios matched the authoritative fixture rubrics.`
+      : deterministicChecks.groundedFailures.join(" | ");
+
+  criteria = upsertCriterion(criteria, {
+    id: "raw_answer_correctness",
+    result: deterministicChecks.rawFailures.length === 0 ? "pass" : "fail",
+    evidence: rawEvidence,
+    notes:
+      "Deterministic answer check over rendered raw-panel text and tool traces from the manifest.",
+  });
+  criteria = upsertCriterion(criteria, {
+    id: "grounded_answer_correctness",
+    result: deterministicChecks.groundedFailures.length === 0 ? "pass" : "fail",
+    evidence: groundedEvidence,
+    notes:
+      "Deterministic answer check over rendered grounded-panel text and tool traces from the manifest.",
+  });
+
+  const mustFix = Array.isArray(review?.must_fix)
+    ? [...review.must_fix.filter((item) => typeof item === "string" && item.trim())]
+    : [];
+
+  for (const item of deterministicChecks.mustFix) {
+    if (!mustFix.includes(item)) {
+      mustFix.push(item);
+    }
+  }
+
+  const strengths = Array.isArray(review?.strengths)
+    ? [...review.strengths.filter((item) => typeof item === "string" && item.trim())]
+    : [];
+  if (deterministicChecks.pass) {
+    strengths.push(
+      "Every rendered raw and grounded answer matched the authoritative per-scenario fixture expectations.",
+    );
+  }
+
+  const baseSummary =
+    typeof review?.summary === "string" && review.summary.trim()
+      ? review.summary.trim()
+      : "Visual review completed.";
+  const deterministicSummary = deterministicChecks.pass
+    ? "Deterministic answer checks passed for every scenario."
+    : `Deterministic answer checks failed for ${deterministicChecks.mustFix.length} scenario-panel combinations.`;
+
+  return {
+    ...review,
+    status:
+      review?.status === "fail" || !deterministicChecks.pass ? "fail" : "pass",
+    summary: `${baseSummary} ${deterministicSummary}`.trim(),
+    criteria,
+    must_fix: mustFix,
+    strengths,
+  };
+}
+
+function renderSummary({ gate, model, manifest, deterministicChecks }) {
   const criteriaLines = gate.criteria.map(
     (criterion) =>
       `- ${criterion.id}: ${criterion.result.toUpperCase()} | ${criterion.evidence}`,
@@ -178,6 +318,11 @@ function renderSummary({ gate, model, manifest }) {
   const screenshotLines = manifest.screenshots.map(
     (screenshot) => `- ${screenshot.fileName}: ${screenshot.description}`,
   );
+  const scenarioLines = deterministicChecks.results.map((result) => {
+    const rawStatus = result.evaluation.raw.pass ? "PASS" : "FAIL";
+    const groundedStatus = result.evaluation.grounded.pass ? "PASS" : "FAIL";
+    return `- ${result.scenarioId}: raw ${rawStatus}, grounded ${groundedStatus}`;
+  });
 
   return [
     "# GPT-5.4 Visual Review",
@@ -186,6 +331,7 @@ function renderSummary({ gate, model, manifest }) {
     `- Score: **${gate.score}/100**`,
     `- Model: \`${model}\``,
     `- Screenshots reviewed: **${manifest.screenshots.length}**`,
+    `- Scenarios reviewed: **${deterministicChecks.results.length}**`,
     "",
     "## Summary",
     "",
@@ -194,6 +340,10 @@ function renderSummary({ gate, model, manifest }) {
     "## Criteria",
     "",
     ...criteriaLines,
+    "",
+    "## Scenario Answer Checks",
+    "",
+    ...scenarioLines,
     "",
     "## Strengths",
     "",
@@ -241,12 +391,12 @@ async function loadInputs() {
   };
 }
 
-async function runMockReview({ manifest }) {
+async function runMockReview({ manifest, deterministicChecks }) {
   return {
-    status: "pass",
+    status: deterministicChecks.pass ? "pass" : "fail",
     summary:
-      "Mock mode confirms the visual-review pipeline wiring and artifact generation path.",
-    score: 100,
+      "Mock mode confirms the visual-review pipeline wiring, structured manifest capture, and deterministic answer-gate path.",
+    score: deterministicChecks.pass ? 100 : 40,
     criteria: [
       {
         id: "password_gate_integrity",
@@ -263,19 +413,32 @@ async function runMockReview({ manifest }) {
       {
         id: "truthful_disclosure",
         result: "pass",
-        evidence: "Post-auth comparison state was captured for review.",
+        evidence: "Scenario manifests capture raw limitation language and grounded snapshot language for comparison.",
         notes: "Mock mode only.",
       },
       {
         id: "grounded_evidence_visibility",
         result: "pass",
-        evidence: "Post-prompt screenshot is present in the manifest.",
+        evidence: "Scenario screenshots and tool traces include grounded Annona tool evidence where expected.",
         notes: "Mock mode only.",
+      },
+      {
+        id: "raw_answer_correctness",
+        result: "pass",
+        evidence: "Deterministic checks will overwrite this criterion with the actual raw-answer result.",
+        notes: "Mock mode placeholder.",
+      },
+      {
+        id: "grounded_answer_correctness",
+        result: "pass",
+        evidence:
+          "Deterministic checks will overwrite this criterion with the actual grounded-answer result.",
+        notes: "Mock mode placeholder.",
       },
       {
         id: "readability_and_polish",
         result: "pass",
-        evidence: "All expected screenshots exist.",
+        evidence: `All ${manifest.screenshots.length} expected screenshots exist.`,
         notes: "Mock mode only.",
       },
     ],
@@ -286,12 +449,16 @@ async function runMockReview({ manifest }) {
     })),
     must_fix: [],
     strengths: [
-      "Artifact generation, manifest writing, and summary rendering all completed.",
+      "Artifact generation, manifest writing, summary rendering, and deterministic answer checks all completed.",
     ],
   };
 }
 
-async function runOpenAIReview({ rubricRaw, manifest, screenshots }) {
+async function runOpenAIReview({
+  rubricRaw,
+  manifest,
+  screenshots,
+}) {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error(
       "OPENAI_API_KEY is required for GPT-5.4 visual review. Set VISUAL_REVIEW_MOCK=1 to validate locally without an API call.",
@@ -306,14 +473,17 @@ async function runOpenAIReview({ rubricRaw, manifest, screenshots }) {
     {
       type: "input_text",
       text: [
-        "Review the supplied Annona demo screenshots against the PRD/demo-plan rubric.",
-        "Fail the review if any required state or automatic failure condition is violated.",
-        "Base the answer only on what is visibly present in the screenshots and the supplied rubric.",
+        "Review the supplied Annona demo screenshots and rendered-answer manifest against the PRD/demo-plan rubric and the authoritative demo scenario fixture.",
+        "Fail the review if any required state, visual requirement, truthful-disclosure rule, or answer-correctness rule is violated.",
+        "Use the screenshot images together with the rendered raw/grounded answer text and tool traces from the manifest.",
         "",
         "Rubric:",
         rubricRaw,
         "",
-        "Screenshot manifest:",
+        "Authoritative scenario fixture:",
+        JSON.stringify(DEMO_SCENARIOS, null, 2),
+        "",
+        "Screenshot + answer manifest:",
         JSON.stringify(manifest, null, 2),
       ].join("\n"),
     },
@@ -337,7 +507,7 @@ async function runOpenAIReview({ rubricRaw, manifest, screenshots }) {
   const response = await client.responses.create({
     model: DEFAULT_MODEL,
     store: false,
-    max_output_tokens: 2400,
+    max_output_tokens: 2600,
     text: {
       format: {
         type: "json_schema",
@@ -353,10 +523,10 @@ async function runOpenAIReview({ rubricRaw, manifest, screenshots }) {
           {
             type: "input_text",
             text: [
-              "You are a strict CI visual gate reviewer.",
-              "Return pass only when every required state and acceptance criterion is satisfied.",
-              "If evidence is missing, ambiguous, visually broken, or contradicts the rubric, return fail.",
-              "Be concrete and reference the screenshot filenames in your reasoning.",
+              "You are a strict CI visual-and-answer gate reviewer.",
+              "Return pass only when every required screenshot state is present, the UI is visually acceptable, and the rendered raw/grounded answer content matches the authoritative scenario fixture.",
+              "If evidence is missing, ambiguous, visually broken, semantically wrong, or contradicts the fixture/rubric, return fail.",
+              "Be concrete and reference screenshot filenames and scenario ids in your reasoning.",
             ].join(" "),
           },
         ],
@@ -378,10 +548,15 @@ async function runOpenAIReview({ rubricRaw, manifest, screenshots }) {
   };
 }
 
-async function writeOutputs({ gate, manifest, rawReview, model }) {
+async function writeOutputs({ gate, manifest, rawReview, model, deterministicChecks }) {
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
 
-  const summary = renderSummary({ gate, model, manifest });
+  const summary = renderSummary({
+    gate,
+    model,
+    manifest,
+    deterministicChecks,
+  });
   const gateResult = {
     generatedAt: new Date().toISOString(),
     model,
@@ -431,6 +606,7 @@ async function writeFailureArtifacts(error) {
     gate,
     model: DEFAULT_MODEL,
     manifest: { screenshots: [] },
+    deterministicChecks: { results: [] },
   });
 
   await Promise.all([
@@ -470,17 +646,22 @@ async function writeFailureArtifacts(error) {
 async function main() {
   try {
     const inputs = await loadInputs();
+    const deterministicChecks = runDeterministicAnswerChecks(inputs.manifest);
     const reviewResponse =
       process.env.VISUAL_REVIEW_MOCK === "1"
-        ? { parsed: await runMockReview(inputs), responseId: "mock-review" }
+        ? { parsed: await runMockReview({ ...inputs, deterministicChecks }), responseId: "mock-review" }
         : await runOpenAIReview(inputs);
-
-    const gate = normalizeReviewResult(reviewResponse.parsed);
+    const augmentedReview = applyDeterministicChecks(
+      reviewResponse.parsed,
+      deterministicChecks,
+    );
+    const gate = normalizeReviewResult(augmentedReview);
     const rawReview = {
       generatedAt: new Date().toISOString(),
       model: DEFAULT_MODEL,
       responseId: reviewResponse.responseId,
-      review: reviewResponse.parsed,
+      review: augmentedReview,
+      deterministicChecks,
       gate: {
         status: gate.status,
         score: gate.score,
@@ -493,6 +674,7 @@ async function main() {
       manifest: inputs.manifest,
       rawReview,
       model: DEFAULT_MODEL,
+      deterministicChecks,
     });
 
     if (gate.status !== "pass") {

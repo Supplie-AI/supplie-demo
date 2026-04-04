@@ -76,19 +76,8 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
             <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: "rgba(221, 221, 214, 0.9)" }} />
           </div>
 
-          <div className="relative flex min-h-[calc(100vh-2rem)] flex-1 flex-col justify-between px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
-            <div
-              className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-medium uppercase tracking-[0.28em]"
-              style={{
-                borderColor: "rgba(0, 210, 255, 0.18)",
-                background: "rgba(240, 251, 255, 0.82)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              Private Preview
-            </div>
-
-            <div className="flex flex-1 items-center justify-center py-10 lg:py-12">
+          <div className="relative flex min-h-[calc(100vh-2rem)] flex-1 items-center justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
+            <div className="flex w-full items-center justify-center py-10 lg:py-12">
               <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center text-center">
                 <div
                   className="text-4xl font-semibold tracking-[-0.04em] sm:text-5xl lg:text-6xl"
@@ -194,14 +183,6 @@ export function PasswordGate({ onAuth }: PasswordGateProps) {
                   </form>
                 </div>
               </div>
-            </div>
-
-            <div
-              className="flex items-center justify-between gap-4 text-[11px] uppercase tracking-[0.18em]"
-              style={{ color: "var(--text-muted)" }}
-            >
-              <span>Invite-only preview</span>
-              <span>Protected workspace remains hidden until auth</span>
             </div>
           </div>
         </div>

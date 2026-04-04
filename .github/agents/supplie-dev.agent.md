@@ -17,7 +17,7 @@ instructions: |
   - `docs/brand-spec.md`
   - `docs/demo-acceptance.md`
   - `docs/capability-matrix.json`
-  - `tests/fixtures/demo-scenarios.json`
+  - `tests/fixtures/demo-scenarios.js`
 
   If you change branding, capability disclosures, expected outputs, or user-facing behavior, update the relevant spec file in the same branch.
 

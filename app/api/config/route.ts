@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPublicDemoConfig } from "@/lib/server/demo-config";
+import { isPlaywrightTestMode } from "@/lib/server/playwright-mock-chat";
 
 export const runtime = "nodejs";
 
@@ -8,7 +9,9 @@ export async function GET(req: Request) {
   const provider = searchParams.get("provider") === "anthropic"
     ? "anthropic"
     : "openai";
-  const openAIConfigured = !!process.env.OPENAI_API_KEY;
+  const openAIConfigured =
+    provider === "openai" &&
+    (isPlaywrightTestMode() || !!process.env.OPENAI_API_KEY);
 
   return NextResponse.json({
     ...getPublicDemoConfig(provider, { openAIConfigured }),

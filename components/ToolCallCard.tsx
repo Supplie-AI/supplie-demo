@@ -9,6 +9,7 @@ interface ToolCallCardProps {
   result: unknown;
   index: number;
   hasError?: boolean;
+  testId?: string;
 }
 
 export function ToolCallCard({
@@ -17,6 +18,7 @@ export function ToolCallCard({
   result,
   index,
   hasError,
+  testId,
 }: ToolCallCardProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -81,6 +83,8 @@ export function ToolCallCard({
 
   return (
     <div
+      data-testid={testId}
+      data-tool-name={toolName}
       className={`mb-2 overflow-hidden rounded-2xl border ${hasError ? "border-red-500/25 bg-red-500/10" : "border-[rgba(0,95,119,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(240,251,255,0.94))]"} animate-slide-in shadow-[0_12px_32px_rgba(28,28,26,0.06)]`}
       style={{ animationDelay: `${index * 50}ms` }}
     >
@@ -96,7 +100,10 @@ export function ToolCallCard({
         {hasError && (
           <AlertTriangle className="h-3 w-3 flex-shrink-0 text-red-400" />
         )}
-        <span className="rounded-full border border-[rgba(0,95,119,0.08)] bg-[rgba(255,255,255,0.82)] px-2 py-0.5 font-mono text-[11px] font-semibold text-[color:#005f77]">
+        <span
+          data-testid={testId ? `${testId}-name` : undefined}
+          className="rounded-full border border-[rgba(0,95,119,0.08)] bg-[rgba(255,255,255,0.82)] px-2 py-0.5 font-mono text-[11px] font-semibold text-[color:#005f77]"
+        >
           {toolName}
         </span>
         <span

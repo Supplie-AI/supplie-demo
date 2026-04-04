@@ -4,6 +4,10 @@ import {
   encodeMetadata,
   encodeTextDelta,
 } from "./stream-protocol";
+import {
+  getDemoScenarioByPrompt,
+  getScenarioExpectation,
+} from "@/tests/fixtures/demo-scenarios.js";
 
 interface PlaywrightMockChatResponseOptions {
   agentMode: DemoAgentMode;
@@ -29,69 +33,40 @@ export function createPlaywrightMockChatResponse({
   prompt,
 }: PlaywrightMockChatResponseOptions) {
   const normalizedPrompt = prompt.trim() || "No prompt provided.";
+  const scenario = getDemoScenarioByPrompt(normalizedPrompt);
+  const expectation = scenario
+    ? getScenarioExpectation(scenario, agentMode)
+    : undefined;
   const responseText =
-    agentMode === "grounded"
-      ? `Grounded mock response: the Annona snapshot points to Atlas Springs as the main source of margin leakage for "${normalizedPrompt}", and the right panel can also use the shared native provider tools when needed.`
-      : `Ungrounded mock response: without grounded Annona data I can only hypothesize about "${normalizedPrompt}" based on general reasoning and any shared native provider tools.`;
+    expectation?.canonicalAnswer ??
+    (agentMode === "grounded"
+      ? `Grounded mock response: the right panel did not find a canonical demo scenario for "${normalizedPrompt}".`
+      : `Ungrounded mock response: the left panel did not find a canonical demo scenario for "${normalizedPrompt}".`);
+  const toolInvocations = expectation?.mockToolInvocations ?? [];
 
   const stream = new ReadableStream({
     start(controller) {
-      if (agentMode === "grounded") {
+      for (const toolInvocation of toolInvocations) {
         controller.enqueue(
           encodeMetadata({
             type: "tool-start",
-            toolCallId: "playwright-openai-file-search",
-            toolName: "openai_file_search",
-            args: {
-              queries: ["global freight benchmark csv"],
-            },
+            toolCallId: `playwright-${toolInvocation.toolName}`,
+            toolName: toolInvocation.toolName,
+            args: toolInvocation.args,
           }),
         );
         controller.enqueue(
           encodeMetadata({
             type: "tool-end",
-            toolCallId: "playwright-openai-file-search",
-            toolName: "openai_file_search",
-            result: {
-              status: "completed",
-              queries: ["global freight benchmark csv"],
-              results: [
-                {
-                  filename: "global_freight_benchmarks.csv",
-                  score: 0.93,
-                },
-              ],
-            },
-          }),
-        );
-        controller.enqueue(
-          encodeMetadata({
-            type: "tool-start",
-            toolCallId: "playwright-grounded-lookup",
-            toolName: "annona_query_supplier_margin_leakage_snapshot",
-            args: {
-              top_n: 3,
-            },
+            toolCallId: `playwright-${toolInvocation.toolName}`,
+            toolName: toolInvocation.toolName,
+            result: toolInvocation.result,
           }),
         );
       }
 
       for (const chunk of chunkText(responseText, 28)) {
         controller.enqueue(encodeTextDelta(chunk));
-      }
-
-      if (agentMode === "grounded") {
-        controller.enqueue(
-          encodeMetadata({
-            type: "tool-end",
-            toolCallId: "playwright-grounded-lookup",
-            toolName: "annona_query_supplier_margin_leakage_snapshot",
-            result: {
-              supplier: "Atlas Springs",
-              finding: "margin_leakage_rank_1",
-            },
-          }),
-        );
       }
 
       controller.enqueue(encodeDone());

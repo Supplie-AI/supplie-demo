@@ -1,18 +1,11 @@
 "use client";
 
+import { DEMO_SCENARIOS } from "@/tests/fixtures/demo-scenarios.js";
+
 interface PromptButtonsProps {
   onPrompt: (prompt: string) => void;
   disabled?: boolean;
 }
-
-const PROMPTS = [
-  "What's the net margin on last week's Suspension King orders after freight and rebates?",
-  "Which SKUs are at risk of stockout in the next 30 days?",
-  "Which supplier is causing the most margin leakage?",
-  "Search the web for a current ocean freight trend and cite what you used.",
-  "Inspect the bundled benchmark files and tell me what they contain.",
-  "Use your code sandbox on the bundled CSV and tell me the average transit days.",
-];
 
 export function PromptButtons({ onPrompt, disabled }: PromptButtonsProps) {
   return (
@@ -37,10 +30,10 @@ export function PromptButtons({ onPrompt, disabled }: PromptButtonsProps) {
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        {PROMPTS.map((prompt, i) => (
+        {DEMO_SCENARIOS.map((scenario) => (
           <button
-            key={i}
-            onClick={() => onPrompt(prompt)}
+            key={scenario.id}
+            onClick={() => onPrompt(scenario.prompt)}
             disabled={disabled}
             className="min-w-[260px] flex-1 rounded-full border px-4 py-2.5 text-center text-xs leading-tight transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             style={{
@@ -51,7 +44,7 @@ export function PromptButtons({ onPrompt, disabled }: PromptButtonsProps) {
               boxShadow: "0 10px 24px rgba(0, 95, 119, 0.06)",
             }}
           >
-            {prompt}
+            {scenario.prompt}
           </button>
         ))}
       </div>
