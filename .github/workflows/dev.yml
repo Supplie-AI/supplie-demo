@@ -139,6 +139,9 @@ jobs:
     needs: [verify, e2e, visual-review]
     if: github.event_name != 'pull_request'
     environment: development
+    outputs:
+      hostname: ${{ steps.lb.outputs.hostname }}
+      base_url: ${{ steps.lb.outputs.base_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -213,6 +216,7 @@ jobs:
               -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
             if [ -n "$HOST" ]; then
               echo "hostname=$HOST" >> "$GITHUB_OUTPUT"
+              echo "base_url=http://$HOST" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             sleep 10
@@ -227,3 +231,24 @@ jobs:
           echo "- Image: \`${{ steps.tags.outputs.supplie_image }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Namespace: \`${K8S_NAMESPACE}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Load balancer: \`${{ steps.lb.outputs.hostname }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: ${{ steps.lb.outputs.base_url }}" >> "$GITHUB_STEP_SUMMARY"
+
+  smoke-deployed-dev:
+    name: Deployed Dev Smoke Test
+    runs-on: ubuntu-latest
+    needs: deploy-eks-dev
+    if: github.event_name != 'pull_request'
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Smoke test deployed dev app
+        env:
+          SMOKE_BASE_URL: ${{ needs.deploy-eks-dev.outputs.base_url }}
+          SMOKE_DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD_DEV }}
+        run: node scripts/smoke-dev-deploy.mjs
