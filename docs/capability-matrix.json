@@ -1,39 +1,107 @@
 {
-  "version": "2026-04-04",
+  "version": "2026-04-05",
   "brandName": "Annona",
+  "category": "decision_intelligence_for_operations",
+  "corePromise": "See clearly. Act early.",
   "sharedBaseline": {
+    "description": "Both panels begin from the same tabular-data baseline and the same native web and code surface.",
     "data": [
-      "bundled demo CSV / snapshot"
+      "uploaded CSV / tabular datasets",
+      "canonical bundled fixture used as the upload surrogate in tests"
     ],
     "nativeProviderTools": [
       "web_search",
       "code_sandbox",
-      "file_artifact_workflows"
+      "tabular_file_search"
+    ],
+    "truthConstraints": [
+      "No live ERP or warehouse connection is implied unless explicitly configured.",
+      "Shared baseline access is the same for both panels.",
+      "Web findings must stay distinct from dataset findings."
     ]
   },
   "leftAgent": {
     "id": "raw",
     "name": "Ungrounded / Raw Agent",
     "inheritsSharedBaseline": true,
-    "annonaSpecificTools": []
+    "role": "generic_model_over_shared_baseline",
+    "strengths": [
+      "direct file inspection",
+      "generic calculations",
+      "web lookups when available"
+    ],
+    "constraints": [
+      "No Annona orchestration layer",
+      "No dataset-adaptive planning contract",
+      "No explicit answer-evaluation pass before final response"
+    ]
   },
   "rightAgent": {
     "id": "grounded",
     "name": "Grounded Annona Agent",
     "inheritsSharedBaseline": true,
-    "annonaSpecificTools": [
-      "annona_margin_lookup",
-      "annona_stockout_risk",
-      "annona_supplier_margin_leakage"
+    "role": "dataset_adaptive_orchestrator",
+    "differentiators": [
+      "dataset intake and profiling",
+      "semantic understanding of tabular inputs",
+      "stable analysis primitives",
+      "orchestration and answer planning",
+      "answer evaluation before response"
+    ],
+    "outputContract": [
+      "clear recommendation with context",
+      "situation_impact_action structure when a decision is required",
+      "explainable and traceable reasoning",
+      "no dashboard sprawl or black-box claims"
+    ]
+  },
+  "annonaFlow": {
+    "stages": [
+      {
+        "id": "intake_profile",
+        "label": "Dataset intake and profiling",
+        "outcome": "Identify available tables, fields, row counts, and basic data quality signals."
+      },
+      {
+        "id": "semantic_understanding",
+        "label": "Semantic understanding",
+        "outcome": "Infer operational meaning such as orders, lanes, timing, cost, reliability, margin, and action surfaces."
+      },
+      {
+        "id": "analysis_primitives",
+        "label": "Stable analysis primitives",
+        "outcome": "Prefer reusable primitives like variance, ranking, thresholding, trend framing, and recommendation synthesis over ad hoc tool invention."
+      },
+      {
+        "id": "orchestration_planning",
+        "label": "Orchestration and planning",
+        "outcome": "Select the right sequence of inspection, calculation, and contextualization steps for the prompt."
+      },
+      {
+        "id": "answer_evaluation",
+        "label": "Answer evaluation",
+        "outcome": "Check whether the recommendation is supported, scoped, and operationally usable before finalizing it."
+      }
+    ],
+    "stableAnalysisPrimitives": [
+      "dataset profiling",
+      "schema-to-meaning mapping",
+      "margin decomposition",
+      "variance ranking",
+      "service-risk ranking",
+      "future-state risk framing",
+      "recommendation synthesis",
+      "answer self-check"
     ]
   },
   "providerConditions": {
     "openai": {
-      "nativeProviderToolsAvailable": true
+      "nativeProviderToolsAvailable": true,
+      "notes": "Web search, file workflows, and code execution can be part of the shared baseline when OpenAI native tooling is configured."
     },
     "anthropic": {
       "nativeProviderToolsAvailable": false,
-      "notes": "Fall back to honest disclosure until equivalent native tooling is wired"
+      "notes": "Fall back to honest disclosure until equivalent native tooling is wired."
     }
   }
 }

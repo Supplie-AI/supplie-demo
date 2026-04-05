@@ -2,40 +2,89 @@
 
 Canonical prompt and answer expectations live in
 [`tests/fixtures/demo-scenarios.js`](/home/jack/workspace/supplie-demo/tests/fixtures/demo-scenarios.js).
-Any change to the demo prompt set, expected answers, or answer-review behavior
-must update that fixture in the same branch.
+Any change to the demo prompt set, answer behavior, or review rubric must update
+that fixture in the same branch.
+
+## Acceptance Goal
+
+The demo is accepted only when it presents a truthful side-by-side comparison:
+
+- both panels receive the same baseline of CSV / tabular data, web search, and
+  code execution
+- the left panel shows what a generic model does with that baseline
+- the right panel shows how Annona turns the same baseline into a clearer,
+  earlier, more operational recommendation
+
+The differentiator is not hidden data access. The differentiator is Annona's
+dataset-adaptive orchestration.
 
 ## Core Flow
 
-The demo is accepted only when the live dev deployment can show this end-to-end:
+The demo must show this end-to-end:
 
 1. Password gate loads
 2. Demo unlocks
 3. Both panels render
-4. A known prompt can be submitted
-5. Left/raw panel responds honestly from the shared baseline
-6. Right/grounded panel responds with the expected grounded Annona result
-7. No runtime/module error is shown
+4. A tabular dataset baseline is available to both panels
+5. A canonical prompt can be submitted to both panels
+6. The raw panel responds honestly from the shared baseline
+7. The Annona panel responds from the same baseline, but with Annona's
+   orchestration flow
+8. The response shows no runtime or module failure
 
-## Prompt Coverage
+In the current test harness, the shared dataset baseline may be represented by a
+canonical bundled fixture rather than a live upload UI. That does not change the
+spec: the baseline is shared tabular data.
 
-Every demo prompt in the canonical fixture must have:
+## Annona Flow Requirement
 
-- an authoritative raw expectation
-- an authoritative grounded expectation
-- the correct answer path called out explicitly, such as shared bundle,
-  shared native web/code, or Annona grounded snapshot
-- answer-review coverage in the Playwright and visual-review flows
+The grounded Annona panel is accepted only if the spec, prompts, and review
+rubric all align on this flow:
 
-For prompts answerable from shared bundled files, the raw panel is judged against
-the shared-bundle answer path even if the prose is less polished than the
-grounded panel. For Annona-grounded scenarios, the grounded panel is judged
-against the Annona-specific expected answer path.
+1. Dataset intake and profiling
+2. Semantic understanding of the tabular inputs
+3. Stable analysis primitive selection
+4. Orchestration and answer planning
+5. Answer evaluation before final response
+
+The final answer should read like a high-trust operational recommendation, not a
+tool dump or dashboard summary.
+
+## Canonical Scenario Structure
+
+Every canonical scenario in the fixture must declare:
+
+- the user prompt
+- whether the prompt is answerable from the shared tabular bundle alone
+- prompt class, including direct, predictive, or prescriptive framing
+- data prerequisites
+- expected raw behavior
+- expected Annona behavior
+- correctness rubric
+- authoritative raw and grounded expectations for automated review
+
+At least two canonical prompts must be future-state, predictive, or
+prescriptive. The prompt set is not accepted if it collapses into simple data
+lookups.
+
+## Review Expectations
+
+For every canonical scenario:
+
+- the raw panel may calculate, inspect files, search the web, or use code, but
+  it should read as a generic model working directly from the shared baseline
+- the Annona panel should profile the data, use stable analysis primitives,
+  and return a recommendation with context
+- both panels must stay explainable and honest about what came from the dataset
+  versus the web
+- automated review must check the expected answer path, key facts, and tool
+  evidence
 
 ## Done Criteria
 
-A feature touching the demo is only truly done when:
+A demo change is done only when:
 
-- PR is green
-- deploy completes
-- live QA passes against the intended flow
+- the canonical spec files are updated together where relevant
+- local validation passes at the strongest relevant level
+- the branch is pushed and reviewed
+- deploy and live QA, when run, match the intended spec

@@ -8,11 +8,10 @@ against screenshots.
 ## Product Intent
 
 - The demo must present a trustworthy side-by-side comparison between two agents.
-- The left panel is the ungrounded / raw agent and must stay ungrounded relative
-  to Annona data.
-- The right panel is the grounded Annona agent and must be a strict superset of
-  the left panel, adding Annona-specific grounded tooling behavior and, when the
-  provider is configured, the same shared native provider tooling baseline.
+- The left panel is the ungrounded / raw agent and must behave like a generic
+  model working directly from the shared baseline.
+- The right panel is the grounded Annona agent and must show the same shared
+  baseline transformed by Annona's dataset-adaptive orchestration flow.
 - The UI must disclose capabilities and limitations truthfully instead of
   implying unavailable features.
 - A password gate must block the demo until the user authenticates.
@@ -31,7 +30,7 @@ against screenshots.
 - The top bar shows `Annona`, `Grounding Demo`, the model picker, and the
   clear button.
 - Prompt chips are visible beneath the top bar.
-- A `Live Comparison` explainer is visible.
+- A `Live Comparison` explainer is visible and makes the comparison logic clear.
 - Two equal-width panels are visible side by side on desktop.
 - The left panel title is `Ungrounded / Raw Agent`.
 - The right panel title is `Grounded Annona Agent`.
@@ -42,10 +41,14 @@ against screenshots.
 ### 3. Post-Prompt Response
 
 - The same user prompt appears in both panels.
-- The left panel response is visibly framed as ungrounded relative to Annona data.
-- The right panel response is visibly framed as grounded Annona output.
-- The grounded panel includes tool evidence for shared native tools and the Annona grounded lookup.
-- The grounded result references the snapshot finding for `Atlas Springs`.
+- The left panel response is visibly framed as a generic read of the shared
+  baseline.
+- The right panel response is visibly framed as Annona output over the same
+  baseline.
+- The grounded panel includes tool evidence for dataset profiling, analysis, or
+  answer evaluation rather than reading like a plain lookup.
+- When the prompt is prescriptive, the grounded result resolves to a clear
+  recommendation with context.
 
 ## Visual Acceptance Criteria
 
@@ -54,10 +57,12 @@ against screenshots.
 - `comparison_layout`: the desktop layout clearly communicates a left-vs-right
   comparison without clipped, overlapping, or collapsed regions.
 - `truthful_disclosure`: labels, explainer copy, and panel notes do not
-  overclaim live ERP, Annona grounding, arbitrary filesystem access, or other
-  missing capabilities.
+  overclaim live ERP access, hidden data access, arbitrary filesystem access, or
+  other missing capabilities.
 - `grounded_evidence_visibility`: the grounded panel makes its tool-backed
-  evidence visually distinct from the raw panel.
+  orchestration evidence visually distinct from the raw panel.
+- `operational_recommendation_shape`: Annona answers read as operational
+  recommendations with context, not dashboard sprawl.
 - `readability_and_polish`: text is readable, contrast is acceptable, spacing is
   coherent, and the screen does not look broken or unfinished.
 
@@ -67,8 +72,10 @@ against screenshots.
 - Either panel is missing, mislabeled, or no longer clearly side by side on the
   desktop capture.
 - The password gate exposes protected content before authentication.
-- The grounded panel does not visually distinguish grounded evidence from the
-  raw panel.
+- The grounded panel does not visually distinguish Annona orchestration evidence
+  from the raw panel.
+- The prompt set shown in the UI collapses into simple retrospective lookups and
+  omits predictive or prescriptive questions.
 - Text is clipped, overlapping, or unreadable in any captured state.
 - The screenshots show obvious loading failure, blank output, or severe visual
   regression.

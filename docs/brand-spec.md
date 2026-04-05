@@ -4,7 +4,71 @@
 
 - Brand: **Annona**
 - Website: `https://goannona.com`
-- Tagline: **See clearly. Act early.**
+- Core promise: **See clearly. Act early.**
+- Category: **Decision intelligence for operations**
+
+## Product Framing
+
+Annona is the decision layer for operations teams. It is not positioned as
+another dashboard, generic copilot, or black-box analyst. The product promise
+is that Annona surfaces what matters, explains why it matters, and recommends
+what to do next with traceable context.
+
+For the demo spec, Annona must be framed as a **dataset-adaptive orchestrator**:
+
+- both agents start from the same baseline of CSV / tabular data, web search,
+  and code execution
+- the raw panel reasons over that baseline generically
+- the Annona panel adapts to the uploaded dataset, profiles it, chooses stable
+  analysis primitives, plans the answer, and evaluates the recommendation before
+  presenting it
+
+## Messaging Pillars
+
+### Clarity
+
+- Remove noise
+- Surface what matters
+- Replace dashboard sprawl with a clear recommendation and supporting context
+
+### Action
+
+- Every output should point to a decision
+- The preferred response shape is `Situation -> Impact -> Action`
+- Answers should help an operations team move, not just inspect
+
+### Timing
+
+- Earlier beats perfect
+- The product should emphasize early signals, not lagging explanations
+- Predictive and prescriptive prompts are part of the canonical demo, not edge
+  cases
+
+### Trust
+
+- Explainable
+- Traceable
+- No black boxes
+- Recommendations must show enough context that a human operator can validate
+  them quickly
+
+## Copy Guidance
+
+Preferred phrases:
+
+- `See clearly. Act early.`
+- `Decision intelligence for operations`
+- `Clear recommendation with context`
+- `Explainable. Traceable. No black boxes.`
+- `What is happening, why it matters, and what to do next`
+
+Avoid:
+
+- `another dashboard`
+- vague `AI insights` phrasing without operational consequence
+- claims that imply hidden magic instead of transparent reasoning
+- speculative product language that sounds more like model capability marketing
+  than operational software
 
 ## Logo / Wordmark
 
@@ -38,8 +102,9 @@ Extracted from `goannona.com`:
 
 ## Tone
 
-- Minimal
-- Clear
+- Crisp
 - Operational
 - High-trust
-- Not generic neon-AI
+- Minimal, but not sterile
+- Clear before clever
+- Confident without hype
