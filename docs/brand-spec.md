@@ -1,5 +1,10 @@
 # Annona Brand Spec
 
+This document defines product framing and messaging only. The implementation
+source of truth for backend architecture, orchestration, capabilities, and
+schemas lives in
+[`docs/annona-engine-spec.md`](/home/jack/workspace/supplie-demo/docs/annona-engine-spec.md).
+
 ## Canonical Name
 
 - Brand: **Annona**
@@ -14,14 +19,15 @@ another dashboard, generic copilot, or black-box analyst. The product promise
 is that Annona surfaces what matters, explains why it matters, and recommends
 what to do next with traceable context.
 
-For the demo spec, Annona must be framed as a **dataset-adaptive orchestrator**:
+For the demo spec, Annona must be framed as a **dataset-adaptive orchestrator**
+running on a dedicated backend engine:
 
 - both agents start from the same baseline of CSV / tabular data, web search,
   and code execution
 - the raw panel reasons over that baseline generically
-- the Annona panel adapts to the uploaded dataset, profiles it, chooses stable
-  analysis primitives, plans the answer, and evaluates the recommendation before
-  presenting it
+- the Annona panel delegates to the Annona engine, which compiles the dataset,
+  profiles it, chooses stable analysis primitives, binds capabilities, plans the
+  answer, evaluates the result, and returns a recommendation with evidence
 
 ## Messaging Pillars
 

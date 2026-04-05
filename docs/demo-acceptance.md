@@ -1,9 +1,11 @@
 # Demo Acceptance
 
+The canonical implementation spec for Annona engine behavior lives in
+[`docs/annona-engine-spec.md`](/home/jack/workspace/supplie-demo/docs/annona-engine-spec.md).
 Canonical prompt and answer expectations live in
 [`tests/fixtures/demo-scenarios.js`](/home/jack/workspace/supplie-demo/tests/fixtures/demo-scenarios.js).
-Any change to the demo prompt set, answer behavior, or review rubric must update
-that fixture in the same branch.
+Any change to the demo prompt set, answer behavior, review rubric, or engine
+execution contract must update the relevant canonical docs in the same branch.
 
 ## Acceptance Goal
 
@@ -16,7 +18,7 @@ The demo is accepted only when it presents a truthful side-by-side comparison:
   earlier, more operational recommendation
 
 The differentiator is not hidden data access. The differentiator is Annona's
-dataset-adaptive orchestration.
+dataset-adaptive orchestration running on the dedicated backend engine.
 
 ## Core Flow
 
@@ -28,8 +30,8 @@ The demo must show this end-to-end:
 4. A tabular dataset baseline is available to both panels
 5. A canonical prompt can be submitted to both panels
 6. The raw panel responds honestly from the shared baseline
-7. The Annona panel responds from the same baseline, but with Annona's
-   orchestration flow
+7. The Annona panel responds from the same baseline, but through the Annona
+   engine execution flow
 8. The response shows no runtime or module failure
 
 In the current test harness, the shared dataset baseline may be represented by a
@@ -43,9 +45,10 @@ rubric all align on this flow:
 
 1. Dataset intake and profiling
 2. Semantic understanding of the tabular inputs
-3. Stable analysis primitive selection
+3. Capability-template binding and stable analysis primitive selection
 4. Orchestration and answer planning
-5. Answer evaluation before final response
+5. Tool execution with evidence capture
+6. Answer evaluation before final response
 
 The final answer should read like a high-trust operational recommendation, not a
 tool dump or dashboard summary.
@@ -73,12 +76,13 @@ For every canonical scenario:
 
 - the raw panel may calculate, inspect files, search the web, or use code, but
   it should read as a generic model working directly from the shared baseline
-- the Annona panel should profile the data, use stable analysis primitives,
-  and return a recommendation with context
+- the Annona panel should compile or reuse compiled dataset context, use bound
+  capabilities and stable analysis primitives, and return a recommendation with
+  context
 - both panels must stay explainable and honest about what came from the dataset
   versus the web
-- automated review must check the expected answer path, key facts, and tool
-  evidence
+- automated review must check the expected answer path, key facts, tool
+  evidence, and recommendation quality
 
 ## Done Criteria
 
