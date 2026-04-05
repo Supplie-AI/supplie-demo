@@ -4,8 +4,8 @@
 
 This repository ships the Annona two-agent demo. The target experience is:
 
-- **Left / raw agent**: same bundled data baseline and same native provider tool surface, but no Annona-specific tools
-- **Right / grounded agent**: the same baseline plus Annona tools, calculators, datasets, and model-backed analysis
+- **Left / raw agent**: the same shared CSV / tabular baseline and the same native provider tool surface, interpreted generically
+- **Right / grounded agent**: the same shared baseline, but with Annona's dataset-adaptive orchestration, planning, and answer evaluation
 
 ## Canonical Spec Files
 
@@ -15,6 +15,11 @@ Treat these files as the source of truth for product behavior:
 - `docs/demo-acceptance.md`
 - `docs/capability-matrix.json`
 - `tests/fixtures/demo-scenarios.js`
+
+Closely coupled authority files should stay aligned when relevant:
+
+- `data/openai-native/capability-baseline-notes.md`
+- `docs/site-prd-demo-plan.md`
 
 Issue bodies should point to these files. They should not silently replace them.
 
