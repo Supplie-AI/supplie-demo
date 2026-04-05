@@ -29,13 +29,13 @@ export function PromptButtons({ onPrompt, disabled }: PromptButtonsProps) {
           One click mirrors the same prompt into both panels
         </div>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="grid gap-2 md:grid-cols-2">
         {DEMO_SCENARIOS.map((scenario) => (
           <button
             key={scenario.id}
             onClick={() => onPrompt(scenario.prompt)}
             disabled={disabled}
-            className="min-w-[260px] flex-1 rounded-full border px-4 py-2.5 text-center text-xs leading-tight transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-h-[72px] w-full items-start rounded-[22px] border px-4 py-3 text-left text-[12px] leading-5 transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             style={{
               borderColor: "rgba(0, 95, 119, 0.12)",
               background:
