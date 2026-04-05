@@ -86,5 +86,7 @@ A demo change is done only when:
 
 - the canonical spec files are updated together where relevant
 - local validation passes at the strongest relevant level
+- non-trivial work is committed on a dedicated issue branch and linked to a PR
 - the branch is pushed and reviewed
-- deploy and live QA, when run, match the intended spec
+- deploy and post-deploy smoke-test, when relevant, match the intended spec
+- live QA, when run, matches the intended spec

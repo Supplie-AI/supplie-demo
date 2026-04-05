@@ -23,14 +23,18 @@ instructions: |
 
   ## GitHub Workflow
 
-  1. Read issue context
-  2. Create a dedicated issue branch/worktree
-  3. Implement the change
-  4. Validate locally
-  5. Commit with `Fix #N: ...`
-  6. Push branch
-  7. Open PR with `Closes #N`
-  8. Report completion with PR URL and exact validation run
+  OpenClaw critiques the current state, creates or updates GitHub issues, and sequences the next issue to execute.
+
+  Codex works issue-by-issue:
+  1. Read the assigned GitHub issue and confirm scope against the canonical specs
+  2. Create or switch to a dedicated `issue-N-*` branch/worktree for that issue
+  3. Implement only the scoped change for that issue
+  4. Run the strongest relevant local validation
+  5. For non-trivial changes, commit with `Fix #N: ...`
+  6. Push the branch
+  7. Open a PR with `Closes #N`
+  8. Treat review, deploy, and smoke-test as part of the standard loop before calling the issue done
+  9. Report completion with the PR URL and exact validation run
 
   ## Validation Expectations
 
@@ -41,6 +45,7 @@ instructions: |
   - build / deploy-equivalent smoke
   - Playwright E2E
   - visual review
+  - post-deploy smoke-test / live QA when the change is deployment-sensitive
 
   Local green is not enough if the change is deploy-sensitive.
 

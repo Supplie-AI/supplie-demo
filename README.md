@@ -36,6 +36,13 @@ npm run typecheck
 npm run build
 ```
 
+## Delivery Workflow
+
+- OpenClaw critiques the current state, opens or updates GitHub issues, and sequences the next issue to work.
+- Codex executes one GitHub issue at a time on a dedicated `issue-N-*` branch/worktree.
+- Non-trivial changes are expected to ship through the full GitHub loop: local validation, commit, push, PR, review, deploy, and smoke-test.
+- Work is only done when the deployed result still matches the canonical specs and acceptance docs.
+
 ## AWS EKS Deployment
 
 - Dev CI/CD: [`.github/workflows/dev.yml`](/home/jack/workspace/supplie-demo/.github/workflows/dev.yml)
