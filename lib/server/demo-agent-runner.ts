@@ -5,6 +5,12 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
+import {
+  logError,
+  logInfo,
+  serializeError,
+} from "./app-logger.ts";
+import type { DemoAgentMode, DemoProvider } from "./demo-config";
 
 export interface DemoRequestMessage {
   role: "user" | "assistant";
@@ -52,6 +58,13 @@ export interface DemoAgent {
   streamResponse(
     options: DemoAgentOptions,
   ): AsyncGenerator<DemoAgentEvent, void, void>;
+}
+
+export interface DemoAgentInstrumentationOptions {
+  backend: string;
+  provider: DemoProvider;
+  model: string;
+  agentMode: DemoAgentMode;
 }
 
 interface DemoTool {
@@ -267,6 +280,79 @@ export function createToolAgent(options: {
       throw new Error(
         "Grounded agent exceeded the maximum number of tool iterations.",
       );
+    },
+  };
+}
+
+export function instrumentDemoAgent(
+  agent: DemoAgent,
+  metadata: DemoAgentInstrumentationOptions,
+): DemoAgent {
+  return {
+    async *streamResponse(options) {
+      const startedAt = Date.now();
+      const eventCounts = {
+        text_delta: 0,
+        tool_start: 0,
+        tool_end: 0,
+        tool_error: 0,
+      };
+      const toolNames = new Set<string>();
+
+      logInfo("model_run_started", {
+        backend: metadata.backend,
+        provider: metadata.provider,
+        model: metadata.model,
+        agent_mode: metadata.agentMode,
+        message_count: options.messages.length,
+      });
+
+      try {
+        for await (const event of agent.streamResponse(options)) {
+          if (event.type === "text-delta") {
+            eventCounts.text_delta += 1;
+          }
+
+          if (event.type === "tool-start") {
+            eventCounts.tool_start += 1;
+            toolNames.add(event.toolName);
+          }
+
+          if (event.type === "tool-end") {
+            eventCounts.tool_end += 1;
+            toolNames.add(event.toolName);
+          }
+
+          if (event.type === "tool-error") {
+            eventCounts.tool_error += 1;
+            toolNames.add(event.toolName);
+          }
+
+          yield event;
+        }
+
+        logInfo("model_run_completed", {
+          backend: metadata.backend,
+          provider: metadata.provider,
+          model: metadata.model,
+          agent_mode: metadata.agentMode,
+          duration_ms: Date.now() - startedAt,
+          event_counts: eventCounts,
+          tool_names: [...toolNames],
+        });
+      } catch (error) {
+        logError("model_run_failed", {
+          backend: metadata.backend,
+          provider: metadata.provider,
+          model: metadata.model,
+          agent_mode: metadata.agentMode,
+          duration_ms: Date.now() - startedAt,
+          event_counts: eventCounts,
+          tool_names: [...toolNames],
+          error: serializeError(error),
+        });
+        throw error;
+      }
     },
   };
 }

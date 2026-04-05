@@ -1,9 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-// @ts-expect-error TypeScript does not allow TS extensions without allowImportingTsExtensions.
 import { ANNONA_DEMO_SNAPSHOT } from "./annona-grounded-tools.ts";
-// @ts-expect-error TypeScript does not allow TS extensions without allowImportingTsExtensions.
 import { SHARED_OPENAI_NATIVE_FILES } from "./openai-native-bundle.ts";
 
 interface CsvOrderRow {

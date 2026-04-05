@@ -12,6 +12,7 @@ import {
 interface PlaywrightMockChatResponseOptions {
   agentMode: DemoAgentMode;
   prompt: string;
+  headers?: HeadersInit;
 }
 
 function chunkText(value: string, size: number) {
@@ -31,6 +32,7 @@ export function isPlaywrightTestMode() {
 export function createPlaywrightMockChatResponse({
   agentMode,
   prompt,
+  headers,
 }: PlaywrightMockChatResponseOptions) {
   const normalizedPrompt = prompt.trim() || "No prompt provided.";
   const scenario = getDemoScenarioByPrompt(normalizedPrompt);
@@ -79,6 +81,7 @@ export function createPlaywrightMockChatResponse({
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
       "X-Vercel-AI-Data-Stream": "v1",
+      ...Object.fromEntries(new Headers(headers).entries()),
     },
   });
 }
