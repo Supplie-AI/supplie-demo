@@ -3,18 +3,24 @@
 This document is the implementation source of truth for the Annona engine in
 the demo and any future productionized backend. Product messaging lives in
 [`docs/brand-spec.md`](/home/jack/workspace/supplie-demo/docs/brand-spec.md),
-but engine behavior, architecture, contracts, and orchestration rules are
-defined here.
+but engine behavior, architecture, contracts, orchestration rules, and the base
+analytical substrate are defined here.
 
 ## Scope
 
 This spec defines:
 
 - the dedicated Annona backend / container architecture separate from the UI
+- the Universal Schema Interpreter as the foundational compile step
+- the Universal Analytical Toolkit as the default capability-registry substrate
 - the dataset-adaptive capability registry and tool-template binding model
 - the algorithmic capability families Annona must support for generic tabular
   datasets
-- planner / orchestrator rules for selecting, executing, and evaluating work
+- the translation / narration layer that turns tool outputs into operator-ready
+  language
+- planner / orchestrator rules for selecting, composing, and evaluating work
+- the agent-team iteration loop that evolves the scaffold and tooling per
+  dataset
 - token and latency optimization requirements
 - wire-safe, versioned, polymorphic schemas used across the system
 
@@ -27,8 +33,16 @@ remain portable to TypeScript, Rust, or Go services.
   orchestration, planning, analysis, and schema enforcement belong in a
   dedicated Annona backend container.
 - Dataset adaptation is a compile step, not repeated prompt rhetoric. Annona
-  should profile a dataset once, bind capabilities once, and reuse that compiled
-  understanding across prompts.
+  should interpret a dataset once, bind capabilities once, and reuse that
+  compiled understanding across prompts.
+- The Universal Schema Interpreter is Layer 1. Every downstream capability
+  depends on its stable dataset profile and semantic interpretation.
+- The Universal Analytical Toolkit is the default substrate, not the whole
+  product. Annona-specific planning, evaluation, recommendation shaping, and
+  agent-team iteration sit on top of it.
+- Tools are independently invocable and composable. The engine may call one
+  tool, several tools, or none of a given family; there is no mandatory fixed
+  pipeline.
 - Tool-first, LLM-last is the default. Deterministic analysis tools should
   produce the facts; the LLM should primarily handle planning under uncertainty,
   explanation, and final narrative synthesis.
@@ -75,39 +89,64 @@ remain portable to TypeScript, Rust, or Go services.
    - receives dataset manifests and files
    - normalizes file metadata and storage references
 
-2. `Dataset Compiler`
-   - profiles data
-   - infers semantic roles
-   - builds reusable dataset assets
-   - binds tool templates to concrete dataset-aware capabilities
+2. `Layer 1: Universal Schema Interpreter`
+   - foundational compile step for every dataset version
+   - profiles raw tables, columns, units, missingness, keys, and time axes
+   - infers semantic roles and operational meaning
+   - produces the canonical `DatasetProfile` and `SemanticModel`
 
-3. `Capability Registry`
+3. `Dataset Compiler`
+   - orchestrates schema-interpreter outputs
+   - builds reusable dataset assets
+   - binds substrate tools and Annona-specific templates to concrete
+     dataset-aware capabilities
+
+4. `Capability Registry`
    - stores reusable tool templates and algorithm families
+   - uses the Universal Analytical Toolkit as the default substrate foundation
    - declares input requirements, output schemas, cost classes, and safety rules
 
-4. `Planner / Orchestrator`
+5. `Planner / Orchestrator`
    - classifies prompt intent
    - selects candidate capabilities
    - builds and executes a plan
    - decides when LLM reasoning is required versus when deterministic tools are
      sufficient
 
-5. `Execution Runtime`
+6. `Execution Runtime`
    - runs bound capabilities
    - captures artifacts, evidence, and telemetry
    - handles retries, timeouts, and fallbacks
 
-6. `Evaluation Layer`
+7. `Evaluation Layer`
    - validates recommendation quality, support, risk, and completeness before
      answer publication
 
-7. `Answer Composer`
-   - converts evidence-backed outputs into the final user-facing answer,
-     including `Situation -> Impact -> Action` when the prompt is operational
+8. `Translation / Narration Layer`
+   - converts evidence-backed outputs into the final user-facing answer
+   - translates structured tool outputs into operator-readable language
+   - includes the substrate `narrate` tool plus Annona-specific answer shaping
+     such as `Situation -> Impact -> Action`
 
-8. `Trace Store`
+9. `Trace Store`
    - persists plan versions, invocation history, evidence, evaluations, and
      final answer objects
+
+## Layer Model
+
+The Annona engine should be understood in three layers:
+
+1. `Layer 1: Universal Schema Interpreter`
+   - foundational compile step
+   - converts arbitrary tabular schemas into stable semantic interpretations
+
+2. `Layer 2: Universal Analytical Toolkit`
+   - schema-agnostic analytical substrate
+   - provides independently invocable tools that can be composed as needed
+
+3. `Layer 3: Annona Orchestration And Recommendation Layer`
+   - applies planning, evidence thresholds, evaluation, recommendation framing,
+     and agent-team iteration on top of the substrate
 
 ## Runtime Flow
 
@@ -115,18 +154,20 @@ remain portable to TypeScript, Rust, or Go services.
 
 1. Dataset uploaded or selected
 2. Engine creates a `DatasetManifest`
-3. Compiler profiles tables, columns, units, missingness, keys, time axes, and
-   categorical distributions
-4. Compiler derives a `SemanticModel` mapping raw fields to operational meaning
-5. Capability registry binds eligible tool templates to dataset-specific
-   `BoundCapability` objects
-6. Compiler stores a reusable `CompiledDataset` bundle containing:
+3. Layer 1 Schema Interpreter profiles tables, columns, units, missingness,
+   keys, time axes, and categorical distributions
+4. Schema Interpreter derives a `SemanticModel` mapping raw fields to
+   operational meaning
+5. Compiler materializes reusable dataset assets from the interpreted schema
+6. Capability registry binds eligible substrate tools and Annona-specific
+   templates to dataset-specific `BoundCapability` objects
+7. Compiler stores a reusable `CompiledDataset` bundle containing:
    - dataset profile
    - semantic model
    - bound capabilities
    - materialized helper artifacts such as embeddings, derived views, and
      feature summaries
-7. Prompt sessions reference the compiled dataset by immutable version
+8. Prompt sessions reference the compiled dataset by immutable version
 
 ### Prompt Execution Flow
 
@@ -145,12 +186,13 @@ remain portable to TypeScript, Rust, or Go services.
    - capability preconditions
    - expected evidence quality
    - runtime budget
+   - whether a single tool or a composition of tools is sufficient
 5. Planner emits a `Plan` with ordered steps
 6. Runtime executes deterministic tools first
 7. Planner may call the LLM to refine hypotheses, reconcile ambiguity, or
    compose missing reasoning only when tool outputs alone are insufficient
 8. Evaluation layer scores the draft answer and recommendations
-9. Answer composer emits the final `AnswerEnvelope`
+9. Translation / narration layer emits the final `AnswerEnvelope`
 10. UI renders answer, recommendation, evidence, and trace summary
 
 ## Dedicated Backend / Container Architecture
@@ -179,6 +221,58 @@ For the demo, the backend may run as a single container image with modular
 packages. The architectural boundary still applies even if deployed in one
 cluster namespace.
 
+## Universal Analytical Toolkit Substrate
+
+The default capability-registry foundation is the Universal Analytical Toolkit.
+It is the base substrate the research harness and agent team iterate on top of,
+not the entirety of Annona.
+
+The ten default substrate tools are:
+
+1. `profile`
+   - schema and statistical profiling over interpreted datasets
+2. `correlate`
+   - relationship and association discovery with explicit caveats
+3. `anomaly`
+   - exception and outlier detection
+4. `regress`
+   - regression-style driver and explanatory modeling
+5. `segment`
+   - cohorting, clustering, and segmentation
+6. `forecast`
+   - future-state projection over time-aware data
+7. `classify`
+   - classification and labeling over eligible targets
+8. `simulate`
+   - scenario testing and what-if evaluation
+9. `optimize`
+   - constrained recommendation and objective-seeking logic
+10. `narrate`
+   - translation of structured analytical outputs into concise human-readable
+     explanation
+
+These tools are schema-agnostic in design but become dataset-aware only after
+the Layer 1 Schema Interpreter and binder resolve fields, grains, measures, and
+constraints.
+
+The registry may add Annona-specific templates on top of this substrate, but it
+should default to these ten universal tools before introducing custom
+specializations.
+
+### Composability Rule
+
+The ten-tool substrate is not a compulsory end-to-end chain.
+
+- A prompt may invoke only `profile`.
+- A diagnostic question may use `profile`, `correlate`, and `regress`.
+- A prescriptive question may use `forecast`, `simulate`, `optimize`, and
+  `narrate`.
+- A simple operator-facing answer may skip most tools and use one deterministic
+  capability plus narration.
+
+The planner is responsible for composing the minimum effective tool set for the
+prompt and dataset.
+
 ## Capability Registry And Dataset-Adaptive Binding
 
 ### Registry Model
@@ -199,6 +293,10 @@ hard-coded one-off tools. Each template declares:
 - deterministic or model-assisted execution mode
 - safety / policy constraints
 
+The registry foundation should include the ten Universal Analytical Toolkit
+tools as first-class capability families. Annona-specific tools and templates
+should extend this base rather than replace it.
+
 ### Binding Model
 
 Binding happens per compiled dataset, not per prompt. A binder turns generic
@@ -210,6 +308,9 @@ templates into dataset-specific `BoundCapability` objects by attaching:
 - generated SQL / dataframe templates
 - default thresholds and priors inferred from the dataset
 - output artifact destinations
+
+Binding applies both to the Universal Analytical Toolkit substrate and to
+Annona-specific tools layered on top of it.
 
 Examples:
 
@@ -231,10 +332,13 @@ Examples:
 ## Algorithmic Capability Families
 
 Annona must support richer generic dataset families than simple lookup tools.
-Each family can contain multiple templates.
+Each family can contain multiple templates. The default substrate is the
+ten-tool Universal Analytical Toolkit, and the families below describe how that
+substrate maps into Annona behavior for generic datasets.
 
 ### 1. Descriptive Analysis
 
+- `profile`
 - summary statistics
 - grouped rollups and ranking
 - segmentation
@@ -244,6 +348,8 @@ Each family can contain multiple templates.
 
 ### 2. Driver / Diagnostic Analysis
 
+- `correlate`
+- `regress`
 - variance decomposition
 - contribution analysis
 - change-point explanation
@@ -253,6 +359,7 @@ Each family can contain multiple templates.
 
 ### 3. Anomaly Detection
 
+- `anomaly`
 - threshold and rules-based exception detection
 - robust z-score / MAD anomaly scans
 - residual-based anomaly scoring against forecast baselines
@@ -261,6 +368,7 @@ Each family can contain multiple templates.
 
 ### 4. Forecasting
 
+- `forecast`
 - univariate baseline forecasts
 - hierarchical forecasts where keys and time structure permit
 - scenario deltas and confidence bands
@@ -268,6 +376,8 @@ Each family can contain multiple templates.
 
 ### 5. Optimization / Prescriptive Logic
 
+- `simulate`
+- `optimize`
 - rule-based action selection
 - constrained prioritization
 - inventory / reorder or exception ranking
@@ -287,6 +397,13 @@ AutoML is optional and selective, not default. It is appropriate only when:
 When used, AutoML must produce explainability artifacts such as feature
 importance, validation metrics, and confidence limitations.
 
+### 7. Translation / Narration
+
+- `narrate`
+- answer translation from structured evidence to human-readable explanation
+- recommendation wording with explicit assumptions and confidence
+- operator-facing synthesis without inventing unsupported facts
+
 ## Planner / Orchestrator Logic
 
 ### Planning Policy
@@ -304,6 +421,8 @@ The planner must prefer this order:
 - Build minimal plans that answer the prompt with sufficient evidence.
 - Prefer one high-signal capability over many redundant tool calls.
 - Require at least one evidence-bearing step before any recommendation.
+- Prefer independently invocable substrate tools over monolithic fixed
+  workflows.
 - Escalate from descriptive to predictive or prescriptive only when the prompt
   or data justifies it.
 - Attach explicit assumptions when the prompt requires unavailable fields or
@@ -320,6 +439,10 @@ The planner must prefer this order:
   - when prompt ambiguity or task decomposition requires the model
 - `async_heavy_compute`
   - for forecasting sweeps, optimization, or AutoML workloads
+
+The planner may invoke substrate tools in any order required by the prompt. It
+must not force a fixed `profile -> correlate -> anomaly -> regress -> ... ->
+narrate` sequence when the prompt only needs a subset.
 
 ### Failure And Fallback Rules
 
@@ -363,6 +486,7 @@ Token use is a first-class architectural concern.
 - injecting raw CSVs into the model context when structured tools can read them
 - using the LLM to rediscover field semantics that already exist in the
   compiled dataset
+- forcing the full ten-tool substrate to run for every question
 - running AutoML or custom code for simple descriptive prompts
 
 ## Wire-Safe Versioned Schemas
@@ -463,16 +587,50 @@ contain:
 If the prompt is descriptive only, the answer may omit prescriptive fields, but
 the engine must still preserve trace and evidence objects.
 
+## Research Harness And Agent Team Loop
+
+The Universal Analytical Toolkit is the substrate the research harness and agent
+team iterate on top of for each dataset family.
+
+The expected loop is:
+
+1. failure analysis
+2. plan changes
+3. modify scaffold and/or tooling
+4. run evaluations
+5. compare results
+6. keep or revert
+
+This loop may adjust:
+
+- schema-interpreter heuristics
+- substrate-tool prompts, parameters, or guards
+- capability-binding logic
+- planner policies
+- evaluation thresholds
+- Annona-specific recommendation scaffolds
+
+The loop must remain dataset-aware. Changes are evaluated against the current
+dataset class and comparable benchmark datasets before being kept.
+
 ## Acceptance Requirements
 
 The implementation is only aligned with the canonical spec when:
 
 - the UI and engine are treated as separate architectural concerns
-- dataset compilation exists as a reusable backend operation
+- the Universal Schema Interpreter exists as Layer 1 and a reusable backend
+  compile step
+- the ten-tool Universal Analytical Toolkit is the default substrate of the
+  capability registry
+- translation / narration is explicitly modeled as a layer rather than an
+  implicit side effect
 - capabilities are registered as templates and bound per dataset
 - the planner chooses among descriptive, diagnostic, anomaly, forecasting,
-  optimization, and selective AutoML families as appropriate
+  optimization, narration, and selective AutoML families as appropriate
 - tool-first / LLM-last execution is observable in traces
+- tools remain independently invocable and composable rather than forced into a
+  mandatory pipeline
+- the agent-team eval loop iterates on top of the substrate per dataset
 - schemas are versioned and polymorphic across datasets, capabilities, plans,
   invocations, evidence, recommendations, evaluations, traces, artifacts, and
   answers

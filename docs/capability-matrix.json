@@ -17,11 +17,13 @@
       "name": "annona-engine",
       "responsibilities": [
         "dataset intake",
+        "schema interpretation",
         "dataset compilation",
         "capability registry and binding",
         "planning and orchestration",
         "tool execution",
         "evaluation",
+        "translation and narration",
         "answer composition"
       ]
     },
@@ -31,6 +33,23 @@
       "automl jobs"
     ]
   },
+  "layerModel": [
+    {
+      "id": "layer_1_schema_interpreter",
+      "name": "Universal Schema Interpreter",
+      "role": "foundational_compile_step"
+    },
+    {
+      "id": "layer_2_tool_substrate",
+      "name": "Universal Analytical Toolkit",
+      "role": "default_capability_registry_foundation"
+    },
+    {
+      "id": "layer_3_annona_orchestration",
+      "name": "Annona orchestration and recommendation layer",
+      "role": "planning_evaluation_and_operator_framing"
+    }
+  ],
   "sharedBaseline": {
     "description": "Both panels begin from the same tabular-data baseline and the same native web and code surface.",
     "data": [
@@ -70,12 +89,12 @@
     "inheritsSharedBaseline": true,
     "role": "dataset_adaptive_orchestrator",
     "differentiators": [
-      "dataset intake and profiling",
-      "semantic understanding of tabular inputs",
+      "layer_1_schema_interpreter",
       "stable analysis primitives",
       "capability-template binding",
       "orchestration and answer planning",
-      "answer evaluation before response"
+      "answer evaluation before response",
+      "translation and narration layer"
     ],
     "outputContract": [
       "clear recommendation with context",
@@ -84,22 +103,33 @@
       "no dashboard sprawl or black-box claims"
     ]
   },
+  "universalToolkit": {
+    "name": "Universal Analytical Toolkit",
+    "compositionRule": "tools_are_independently_invocable_and_composable_not_a_mandatory_pipeline",
+    "defaultSubstrateTools": [
+      "profile",
+      "correlate",
+      "anomaly",
+      "regress",
+      "segment",
+      "forecast",
+      "classify",
+      "simulate",
+      "optimize",
+      "narrate"
+    ]
+  },
   "annonaFlow": {
     "stages": [
       {
-        "id": "intake_profile",
-        "label": "Dataset intake and profiling",
-        "outcome": "Identify available tables, fields, row counts, and basic data quality signals."
-      },
-      {
-        "id": "semantic_understanding",
-        "label": "Semantic understanding",
-        "outcome": "Infer operational meaning such as orders, lanes, timing, cost, reliability, margin, and action surfaces."
+        "id": "schema_interpretation",
+        "label": "Universal Schema Interpreter",
+        "outcome": "Compile arbitrary tabular inputs into a reusable dataset profile and semantic model."
       },
       {
         "id": "capability_binding",
         "label": "Capability binding",
-        "outcome": "Bind generic capability templates to dataset-specific tools with resolved fields, grains, and constraints."
+        "outcome": "Bind universal substrate tools and Annona-specific templates to dataset-specific tools with resolved fields, grains, and constraints."
       },
       {
         "id": "analysis_primitives",
@@ -109,12 +139,17 @@
       {
         "id": "orchestration_planning",
         "label": "Orchestration and planning",
-        "outcome": "Select the right sequence of inspection, calculation, and contextualization steps for the prompt."
+        "outcome": "Select the minimum effective set of independently invocable tools for the prompt."
       },
       {
         "id": "answer_evaluation",
         "label": "Answer evaluation",
         "outcome": "Check whether the recommendation is supported, scoped, and operationally usable before finalizing it."
+      },
+      {
+        "id": "translation_narration",
+        "label": "Translation and narration",
+        "outcome": "Turn structured analytical outputs into operator-readable explanation without inventing unsupported facts."
       }
     ],
     "stableAnalysisPrimitives": [
@@ -131,6 +166,7 @@
   "registry": {
     "model": "capability_template_registry_with_dataset_adaptive_binding",
     "bindingTime": "compile_once_per_dataset_version",
+    "foundation": "universal_analytical_toolkit",
     "requiredTemplateFields": [
       "capabilityId",
       "family",
@@ -149,6 +185,10 @@
   "algorithmicFamilies": [
     {
       "id": "descriptive_analysis",
+      "substrateTools": [
+        "profile",
+        "segment"
+      ],
       "examples": [
         "summary_statistics",
         "grouped_rollups",
@@ -160,6 +200,10 @@
     },
     {
       "id": "driver_diagnostic_analysis",
+      "substrateTools": [
+        "correlate",
+        "regress"
+      ],
       "examples": [
         "variance_decomposition",
         "contribution_analysis",
@@ -170,6 +214,9 @@
     },
     {
       "id": "anomaly_detection",
+      "substrateTools": [
+        "anomaly"
+      ],
       "examples": [
         "threshold_rules",
         "robust_z_score",
@@ -180,6 +227,9 @@
     },
     {
       "id": "forecasting",
+      "substrateTools": [
+        "forecast"
+      ],
       "examples": [
         "univariate_baseline_forecast",
         "hierarchical_forecast",
@@ -189,11 +239,37 @@
     },
     {
       "id": "optimization_prescriptive_logic",
+      "substrateTools": [
+        "simulate",
+        "optimize"
+      ],
       "examples": [
         "rule_based_action_selection",
         "constrained_prioritization",
         "resource_allocation_heuristics",
         "mathematical_optimization"
+      ]
+    },
+    {
+      "id": "classification",
+      "substrateTools": [
+        "classify"
+      ],
+      "examples": [
+        "target_labeling",
+        "risk_bucket_prediction",
+        "segment_assignment"
+      ]
+    },
+    {
+      "id": "translation_narration",
+      "substrateTools": [
+        "narrate"
+      ],
+      "examples": [
+        "operator_ready_explanation",
+        "recommendation_wording",
+        "assumption_and_confidence_translation"
       ]
     },
     {
@@ -226,7 +302,8 @@
       "require evidence before recommendation",
       "distinguish dataset evidence from web evidence",
       "fail closed on unsupported capability families",
-      "downgrade answer confidence when evaluation fails"
+      "downgrade answer confidence when evaluation fails",
+      "do_not_force_full_ten_tool_pipeline"
     ]
   },
   "tokenOptimization": {
@@ -242,8 +319,20 @@
       "reprofile_same_dataset_every_prompt",
       "inject_raw_csvs_into_model_context",
       "use_llm_to_rediscover_known_field_semantics",
+      "force_full_ten_tool_pipeline_for_every_prompt",
       "run_automl_for_simple_descriptive_prompts"
     ]
+  },
+  "researchHarness": {
+    "agentTeamLoop": [
+      "failure_analysis",
+      "plan_changes",
+      "modify_scaffold_or_tooling",
+      "run_evals",
+      "compare_results",
+      "keep_or_revert"
+    ],
+    "iterationTarget": "universal_toolkit_plus_annona_orchestration_per_dataset"
   },
   "schemaFamilies": [
     "DatasetManifest",
