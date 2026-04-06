@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-04T14:20:56.463Z",
+  "generatedAt": "2026-04-06T07:22:24.216Z",
   "rubricPath": "docs/site-prd-demo-plan.md",
   "screenshots": [
     {
@@ -23,60 +23,30 @@
       }
     },
     {
-      "fileName": "03-suspension-king-net-margin.png",
-      "path": "screenshots/03-suspension-king-net-margin.png",
-      "state": "scenario-suspension-king-net-margin",
-      "description": "Rendered raw and grounded answers for the \"What's the net margin on last week's Suspension King orders after freight and rebates?\" demo scenario.",
+      "fileName": "03-blocker-traceability.png",
+      "path": "screenshots/03-blocker-traceability.png",
+      "state": "scenario-blocker-traceability",
+      "description": "Rendered raw and grounded answers for the \"What is the main blocker to protecting margin in this bundle, and trace it to the exact rows driving it?\" demo scenario.",
       "viewport": {
         "width": 1440,
         "height": 1200
       }
     },
     {
-      "fileName": "04-stockout-risk-30-day.png",
-      "path": "screenshots/04-stockout-risk-30-day.png",
-      "state": "scenario-stockout-risk-30-day",
-      "description": "Rendered raw and grounded answers for the \"Which SKUs are at risk of stockout in the next 30 days?\" demo scenario.",
+      "fileName": "04-predictive-service-risk.png",
+      "path": "screenshots/04-predictive-service-risk.png",
+      "state": "scenario-predictive-service-risk",
+      "description": "Rendered raw and grounded answers for the \"Which freight lane is the strongest predictive service risk next month, and what signal makes it risky before failure shows up?\" demo scenario.",
       "viewport": {
         "width": 1440,
         "height": 1200
       }
     },
     {
-      "fileName": "05-supplier-margin-leakage.png",
-      "path": "screenshots/05-supplier-margin-leakage.png",
-      "state": "scenario-supplier-margin-leakage",
-      "description": "Rendered raw and grounded answers for the \"Which supplier is causing the most margin leakage?\" demo scenario.",
-      "viewport": {
-        "width": 1440,
-        "height": 1200
-      }
-    },
-    {
-      "fileName": "06-current-ocean-freight-trend.png",
-      "path": "screenshots/06-current-ocean-freight-trend.png",
-      "state": "scenario-current-ocean-freight-trend",
-      "description": "Rendered raw and grounded answers for the \"Search the web for a current ocean freight trend and cite what you used.\" demo scenario.",
-      "viewport": {
-        "width": 1440,
-        "height": 1200
-      }
-    },
-    {
-      "fileName": "07-inspect-bundled-benchmark-files.png",
-      "path": "screenshots/07-inspect-bundled-benchmark-files.png",
-      "state": "scenario-inspect-bundled-benchmark-files",
-      "description": "Rendered raw and grounded answers for the \"Inspect the bundled benchmark files and tell me what they contain.\" demo scenario.",
-      "viewport": {
-        "width": 1440,
-        "height": 1200
-      }
-    },
-    {
-      "fileName": "08-average-transit-days.png",
-      "path": "screenshots/08-average-transit-days.png",
-      "state": "scenario-average-transit-days",
-      "description": "Rendered raw and grounded answers for the \"Use your code sandbox on the bundled CSV and tell me the average transit days.\" demo scenario.",
+      "fileName": "05-prioritization-next-action.png",
+      "path": "screenshots/05-prioritization-next-action.png",
+      "state": "scenario-prioritization-next-action",
+      "description": "Rendered raw and grounded answers for the \"If the team can only act on one thing in the next 24 hours, what should they prioritize first, and what is the next action?\" demo scenario.",
       "viewport": {
         "width": 1440,
         "height": 1200
@@ -85,112 +55,59 @@
   ],
   "scenarioReviews": [
     {
-      "scenarioId": "suspension-king-net-margin",
-      "prompt": "What's the net margin on last week's Suspension King orders after freight and rebates?",
+      "scenarioId": "blocker-traceability",
+      "prompt": "What is the main blocker to protecting margin in this bundle, and trace it to the exact rows driving it?",
       "sharedBundleAnswerable": true,
-      "screenshot": "03-suspension-king-net-margin.png",
+      "screenshot": "03-blocker-traceability.png",
       "raw": {
-        "answerText": "Raw shared-bundle answer: using the bundled demo_order_margin_snapshot.csv and the bundled margin reference, Suspension King's three sample orders total $43,940 revenue, $31,480 COGS, $3,080 freight, and $1,390 rebates, leaving a net margin of $7,990. This comes from the shared demo files, not Annona-only grounded access.",
-        "toolNames": [
-          "openai_file_search",
-          "openai_code_interpreter"
-        ]
-      },
-      "grounded": {
-        "answerText": "Grounded Annona answer: the static Annona demo snapshot shows Suspension King's last-week sample orders at $43,940 revenue, $31,480 COGS, $3,080 freight, and $1,390 rebates, for a net margin of $7,990. This is from the bundled Annona demo snapshot, not live ERP data.",
-        "toolNames": [
-          "openai_file_search",
-          "annona_query_order_margin_snapshot"
-        ]
-      }
-    },
-    {
-      "scenarioId": "stockout-risk-30-day",
-      "prompt": "Which SKUs are at risk of stockout in the next 30 days?",
-      "sharedBundleAnswerable": false,
-      "screenshot": "04-stockout-risk-30-day.png",
-      "raw": {
-        "answerText": "Raw panel limitation: I cannot identify 30-day stockout-risk SKUs from the shared bundle because those shared files only cover margin and benchmark examples; they do not include the Annona inventory and forecast snapshot needed for a stockout answer.",
-        "toolNames": [
-          "openai_file_search"
-        ]
-      },
-      "grounded": {
-        "answerText": "Grounded Annona answer: in the static Annona demo snapshot, the 30-day stockout-risk SKUs are COIL-PRADO-450, UCA-RANGER-22, SHOCK-HILUX-MT, and BUSH-KIT-80S. The urgent items are COIL-PRADO-450 with 12 days remaining and UCA-RANGER-22 with 14 days remaining.",
-        "toolNames": [
-          "annona_query_stockout_risk_snapshot"
-        ]
-      }
-    },
-    {
-      "scenarioId": "supplier-margin-leakage",
-      "prompt": "Which supplier is causing the most margin leakage?",
-      "sharedBundleAnswerable": false,
-      "screenshot": "05-supplier-margin-leakage.png",
-      "raw": {
-        "answerText": "Raw panel limitation: I cannot rank supplier margin leakage from the shared bundle because the shared files do not include the Annona supplier leakage snapshot or any supplier leakage ranking table.",
-        "toolNames": [
-          "openai_file_search"
-        ]
-      },
-      "grounded": {
-        "answerText": "Grounded Annona answer: Atlas Springs is the biggest source of margin leakage in the static Annona demo snapshot, with $11,200 of leakage. The primary driver is freight variance on bulky coil lines, with expedited inbound freight and rebate slippage compressing margin.",
-        "toolNames": [
-          "annona_query_supplier_margin_leakage_snapshot"
-        ]
-      }
-    },
-    {
-      "scenarioId": "current-ocean-freight-trend",
-      "prompt": "Search the web for a current ocean freight trend and cite what you used.",
-      "sharedBundleAnswerable": false,
-      "screenshot": "06-current-ocean-freight-trend.png",
-      "raw": {
-        "answerText": "Raw web answer: a current ocean freight trend is that schedule reliability is improving on major lanes while spot rates remain volatile. Source: Demo web-search citation placeholder, April 4, 2026. This is external web research, not Annona snapshot data.",
-        "toolNames": [
-          "openai_web_search"
-        ]
-      },
-      "grounded": {
-        "answerText": "Grounded web answer: a current ocean freight trend is improving schedule reliability on major lanes alongside volatile spot pricing. Source: Demo web-search citation placeholder, April 4, 2026. This came from shared native web search rather than the Annona snapshot.",
-        "toolNames": [
-          "openai_web_search"
-        ]
-      }
-    },
-    {
-      "scenarioId": "inspect-bundled-benchmark-files",
-      "prompt": "Inspect the bundled benchmark files and tell me what they contain.",
-      "sharedBundleAnswerable": true,
-      "screenshot": "07-inspect-bundled-benchmark-files.png",
-      "raw": {
-        "answerText": "Raw file inspection answer: the shared bundle includes capability-baseline-notes.md with native-tool limits, global_freight_benchmarks.csv with lane, mode, carrier, region, transit, cost, and reliability columns, demo_order_margin_snapshot.csv with Suspension King order rows, and demo_order_margin_reference.md with the net-margin formula and the $7,990 worked example.",
-        "toolNames": [
-          "openai_file_search"
-        ]
-      },
-      "grounded": {
-        "answerText": "Grounded file inspection answer: the shared native file bundle contains capability-baseline-notes.md for tool limits, global_freight_benchmarks.csv for freight benchmark lanes and service metrics, demo_order_margin_snapshot.csv for the Suspension King order rows, and demo_order_margin_reference.md for the net-margin formula and $7,990 example.",
-        "toolNames": [
-          "openai_file_search"
-        ]
-      }
-    },
-    {
-      "scenarioId": "average-transit-days",
-      "prompt": "Use your code sandbox on the bundled CSV and tell me the average transit days.",
-      "sharedBundleAnswerable": true,
-      "screenshot": "08-average-transit-days.png",
-      "raw": {
-        "answerText": "Raw code answer: using the shared bundled global_freight_benchmarks.csv in the code sandbox, the average transit days across all eight rows is 13.875 days, or about 13.9 days rounded. This is from the shared benchmark CSV, not Annona-only data.",
+        "answerText": "Raw blocker answer: using the shared demo_order_margin_snapshot.csv and margin reference, the main blocker to protecting margin is freight-and-rebate drag concentrated in the weakest order pattern. The exact row to trace first is SK-240321-03, which falls to $490 of net margin, or 4.4 percent, after $980 freight and $410 rebates. SK-240319-02 shows the same pressure at $2,440 net margin, so the blocker is visible in the shared order rows rather than hidden Annona-only data.",
         "toolNames": [
           "openai_code_interpreter"
         ]
       },
       "grounded": {
-        "answerText": "Grounded code answer: using the shared bundled global_freight_benchmarks.csv in the code sandbox, the average transit days is 13.875 days across eight rows, about 13.9 days rounded. This is a shared benchmark-file calculation rather than an Annona-only snapshot lookup.",
+        "answerText": "Annona blocker view: the blocker is not lack of revenue, it is traceable freight-and-rebate drag in the weakest order pattern. Evidence: SK-240321-03 resolves to only $490 of net margin, or 4.4 percent, after $980 freight and $410 rebates, and SK-240319-02 shows the same direction at $2,440 net margin. Traceability: this comes directly from the same shared order rows, so the first action is to review lookalike orders before that blocker repeats.",
+        "toolNames": [
+          "annona_trace_margin_blocker",
+          "annona_evaluate_recommendation"
+        ]
+      }
+    },
+    {
+      "scenarioId": "predictive-service-risk",
+      "prompt": "Which freight lane is the strongest predictive service risk next month, and what signal makes it risky before failure shows up?",
+      "sharedBundleAnswerable": true,
+      "screenshot": "04-predictive-service-risk.png",
+      "raw": {
+        "answerText": "Raw predictive-risk answer: from the shared global_freight_benchmarks.csv, Ningbo-Rotterdam on HarborSpan is the strongest service-risk watchpoint for next month because it already combines the longest transit at 28 days, the lowest reliability at 88 percent, and the highest cost at $3,340. Those three benchmark signals make it risky before failure shows up, so the earliest move is to review upcoming bookings on that lane now.",
         "toolNames": [
           "openai_code_interpreter"
+        ]
+      },
+      "grounded": {
+        "answerText": "Annona predictive-risk view: Ningbo-Rotterdam on HarborSpan is the earliest service-risk watchpoint in the same shared freight benchmark. Early signal: the lane is already at 28 transit days, 88 percent reliability, and $3,340 cost, so it is where delay and cost pressure are most likely to show up before the team sees an actual failure. Action: review and pre-empt the next bookings on that lane now rather than waiting for service to slip.",
+        "toolNames": [
+          "annona_rank_service_risk",
+          "annona_evaluate_recommendation"
+        ]
+      }
+    },
+    {
+      "scenarioId": "prioritization-next-action",
+      "prompt": "If the team can only act on one thing in the next 24 hours, what should they prioritize first, and what is the next action?",
+      "sharedBundleAnswerable": true,
+      "screenshot": "05-prioritization-next-action.png",
+      "raw": {
+        "answerText": "Raw prioritization answer: in the next 24 hours, prioritize the SK-240321-03 lookalike margin pattern before the Ningbo-Rotterdam lane watchpoint. The reason is immediacy: SK-240321-03 is already down to $490 of net margin, or 4.4 percent, so another similar order can erase margin now, while the HarborSpan lane risk is a next-month signal. The next action from the shared bundle is to review pending lookalike orders today for freight pass-through and rebate approval.",
+        "toolNames": [
+          "openai_code_interpreter"
+        ]
+      },
+      "grounded": {
+        "answerText": "Annona prioritization: Priority now: act on the SK-240321-03 lookalike margin pattern before the freight-lane watchpoint. Why first: the shared order rows show only $490 of net margin, or 4.4 percent, so the account can lose margin on the very next similar shipment, whereas Ningbo-Rotterdam on HarborSpan is still a next-month risk signal. Next action: in the next 24 hours, review pending lookalike orders for freight pass-through and rebate approval, then queue the lane contingency review second. This ordering is traceable to the same shared bundle.",
+        "toolNames": [
+          "annona_prioritize_next_action",
+          "annona_evaluate_recommendation"
         ]
       }
     }

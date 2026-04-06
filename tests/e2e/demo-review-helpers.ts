@@ -20,10 +20,16 @@ export interface RenderedScenarioOutput {
 }
 
 export async function authenticate(page: Page, password = DEMO_PASSWORD) {
-  await page.goto("/");
-  await expect(page.getByTestId("password-gate")).toBeVisible();
-  await page.getByTestId("password-input").fill(password);
-  await page.getByTestId("password-submit").click();
+  await page.goto("/", { waitUntil: "networkidle" });
+  const passwordGate = page.getByTestId("password-gate");
+  const passwordInput = page.getByTestId("password-input");
+  const passwordSubmit = page.getByTestId("password-submit");
+
+  await expect(passwordGate).toBeVisible();
+  await passwordInput.fill(password);
+  await expect(passwordInput).toHaveValue(password);
+  await expect(passwordSubmit).toBeEnabled();
+  await passwordSubmit.click();
   await expect(page.getByTestId("demo-app")).toBeVisible();
 }
 
