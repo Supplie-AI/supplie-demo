@@ -59,16 +59,21 @@ Every canonical scenario in the fixture must declare:
 
 - the user prompt
 - whether the prompt is answerable from the shared tabular bundle alone
-- prompt class, including direct, predictive, or prescriptive framing
+- prompt class, including analytical, predictive, or prescriptive framing
 - data prerequisites
 - expected raw behavior
 - expected Annona behavior
 - correctness rubric
 - authoritative raw and grounded expectations for automated review
 
-At least two canonical prompts must be future-state, predictive, or
-prescriptive. The prompt set is not accepted if it collapses into simple data
-lookups.
+The accepted prompt pack must include all of the following:
+
+- one blocker plus traceability prompt
+- one predictive-risk prompt
+- one prioritization plus next-action prompt
+
+The prompt set is not accepted if it collapses into simple descriptive or
+retrospective lookups.
 
 ## Review Expectations
 

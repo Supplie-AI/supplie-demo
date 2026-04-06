@@ -74,8 +74,9 @@ against screenshots.
 - The password gate exposes protected content before authentication.
 - The grounded panel does not visually distinguish Annona orchestration evidence
   from the raw panel.
-- The prompt set shown in the UI collapses into simple retrospective lookups and
-  omits predictive or prescriptive questions.
+- The prompt set shown in the UI omits any of the required harder prompt
+  classes: blocker plus traceability, predictive risk, or prioritization plus
+  next action.
 - Text is clipped, overlapping, or unreadable in any captured state.
 - The screenshots show obvious loading failure, blank output, or severe visual
   regression.
