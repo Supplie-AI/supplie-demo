@@ -73,7 +73,7 @@ export const DEMO_SCENARIOS = [
     promptClass: "descriptive",
     sharedBundleAnswerable: true,
     dataPrerequisites: [
-      "Shared tabular baseline with demo_order_margin_snapshot.csv",
+      "Shared multi-table order-margin bundle with manifest, customers, orders, order lines, and product dimension tables",
       "Shared tabular baseline with global_freight_benchmarks.csv",
       "Basic file inspection or profiling capability",
     ],
@@ -91,14 +91,15 @@ export const DEMO_SCENARIOS = [
       rubric:
         "Raw should inspect the shared uploaded or bundled tables, describe them accurately, and identify the decisions they support without implying Annona-only access.",
       canonicalAnswer:
-        "Raw baseline answer: the shared tabular baseline contains a three-row Suspension King order margin snapshot and an eight-row freight benchmark table. From these files I can inspect order economics, calculate net margin, compare lane transit, cost, and reliability, and flag where to look next, but this is still a generic read of the shared dataset.",
+        "Raw baseline answer: the shared tabular baseline contains a multi-table Suspension King order-margin bundle with customers, order headers, order lines, and product dimension rows, plus an eight-row freight benchmark table. From these files I can inspect order economics, join relationships, calculate net margin, compare lane transit, cost, and reliability, and flag where to look next, but this is still a generic read of the shared dataset.",
       mustContainAll: [
         "Suspension King",
         "freight benchmark",
         "shared dataset",
       ],
       mustContainOneOf: [
-        ["three-row", "3-row", "three row"],
+        ["multi-table", "bundle", "relationships"],
+        ["customers", "order headers", "order lines"],
         ["eight-row", "8-row", "eight row"],
         ["net margin", "margin"],
         ["transit", "cost", "reliability"],
@@ -114,7 +115,7 @@ export const DEMO_SCENARIOS = [
             status: "completed",
             results: [
               {
-                filename: "demo_order_margin_snapshot.csv",
+                filename: "demo_order_margin_bundle_manifest.json",
                 score: 0.98,
               },
               {
@@ -131,7 +132,7 @@ export const DEMO_SCENARIOS = [
       rubric:
         "Annona should use the same shared baseline, but describe it as a profiled operational dataset and map it to immediate decisions rather than stopping at file description.",
       canonicalAnswer:
-        "Annona answer: dataset intake shows two shared tabular inputs, a last-week Suspension King order margin snapshot and a multi-lane freight benchmark table. Annona treats them as an order-economics dataset plus a lane-risk dataset, so the immediate decision surface is margin leakage, service-risk watchpoints, and which action to take first. This is the same shared dataset, but Annona has already profiled it and mapped it to the next operational decisions.",
+        "Annona answer: dataset intake shows two shared tabular inputs, a relationship-aware Suspension King order bundle and a multi-lane freight benchmark table. Annona treats them as an order-economics dataset plus a lane-risk dataset, so the immediate decision surface is margin leakage, service-risk watchpoints, and which action to take first. This is the same shared dataset, but Annona has already profiled it and mapped it to the next operational decisions.",
       mustContainAll: [
         "dataset intake",
         "same shared dataset",
@@ -149,16 +150,16 @@ export const DEMO_SCENARIOS = [
           toolName: "annona_profile_tabular_inputs",
           args: {
             datasets: [
-              "demo_order_margin_snapshot.csv",
+              "demo_order_margin_bundle_manifest.json",
               "global_freight_benchmarks.csv",
             ],
           },
           result: {
             datasets: [
               {
-                name: "demo_order_margin_snapshot.csv",
+                name: "demo_order_margin_bundle_manifest.json",
                 inferred_domain: "order_economics",
-                row_count: 3,
+                row_count: 4,
               },
               {
                 name: "global_freight_benchmarks.csv",
@@ -183,7 +184,7 @@ export const DEMO_SCENARIOS = [
     promptClass: "analytical",
     sharedBundleAnswerable: true,
     dataPrerequisites: [
-      "Shared tabular baseline with demo_order_margin_snapshot.csv",
+      "Shared multi-table order-margin bundle with explicit customer and order-line relationships",
       "Shared formula reference in demo_order_margin_reference.md",
       "Calculation capability via code or structured reasoning",
     ],
@@ -201,11 +202,11 @@ export const DEMO_SCENARIOS = [
       rubric:
         "Raw should answer from the shared uploaded or bundled margin files, state the net margin result, and stay explicit that this came from the shared dataset rather than Annona-only access.",
       canonicalAnswer:
-        "Raw shared-baseline answer: using the shared demo_order_margin_snapshot.csv and the margin reference, Suspension King's three sample orders total $43,940 revenue, $31,480 COGS, $3,080 freight, and $1,390 rebates, leaving a net margin of $7,990. This comes from the shared dataset, not Annona-only access.",
+        "Raw shared-baseline answer: using the shared order bundle tables and the margin reference, Suspension King's three sample orders total $43,940 revenue, $31,480 COGS, $3,080 freight, and $1,390 rebates, leaving a net margin of $7,990. This comes from the shared dataset, not Annona-only access.",
       mustContainAll: ["Suspension King", "net margin", "shared dataset"],
       mustContainOneOf: [
         ["7,990", "7990"],
-        ["shared demo_order_margin_snapshot.csv", "shared dataset"],
+        ["shared order bundle", "shared dataset", "bundle tables"],
         ["43,940", "43940"],
       ],
       requiredToolOneOf: [["openai_file_search", "openai_code_interpreter"]],
@@ -214,14 +215,14 @@ export const DEMO_SCENARIOS = [
           toolName: "openai_file_search",
           args: {
             queries: [
-              "demo_order_margin_snapshot.csv Suspension King freight rebates",
+              "demo_order_margin_orders.csv demo_order_margin_order_lines.csv Suspension King freight rebates",
             ],
           },
           result: {
             status: "completed",
             results: [
               {
-                filename: "demo_order_margin_snapshot.csv",
+                filename: "demo_order_margin_orders.csv",
                 score: 0.98,
               },
               {
@@ -234,7 +235,7 @@ export const DEMO_SCENARIOS = [
         {
           toolName: "openai_code_interpreter",
           args: {
-            task: "Calculate net margin from the bundled Suspension King CSV rows.",
+            task: "Calculate net margin by joining the bundled Suspension King order headers and order lines.",
           },
           result: {
             outputs: [
@@ -253,9 +254,9 @@ export const DEMO_SCENARIOS = [
       rubric:
         "Annona should answer from the same shared dataset, state the same $7,990 result, and show a traceable decomposition rather than implying special hidden data.",
       canonicalAnswer:
-        "Annona answer: from the same shared margin snapshot, Suspension King's last-week sample orders resolve to $43,940 revenue, $31,480 COGS, $3,080 freight, and $1,390 rebates, for a traceable net margin of $7,990. Annona surfaces the decomposition so the recommendation path stays explainable and does not depend on a black box.",
+        "Annona answer: from the same shared order bundle, Suspension King's last-week sample orders resolve to $43,940 revenue, $31,480 COGS, $3,080 freight, and $1,390 rebates, for a traceable net margin of $7,990. Annona surfaces the decomposition so the recommendation path stays explainable and does not depend on a black box.",
       mustContainAll: [
-        "same shared margin snapshot",
+        "same shared order bundle",
         "traceable net margin",
         "Suspension King",
       ],
@@ -269,7 +270,7 @@ export const DEMO_SCENARIOS = [
         {
           toolName: "annona_run_margin_analysis",
           args: {
-            dataset: "demo_order_margin_snapshot.csv",
+            dataset: "demo_order_margin_bundle_manifest.json",
             metric: "net_margin",
           },
           result: {
@@ -293,7 +294,7 @@ export const DEMO_SCENARIOS = [
     promptClass: "prescriptive",
     sharedBundleAnswerable: true,
     dataPrerequisites: [
-      "Shared tabular baseline with demo_order_margin_snapshot.csv",
+      "Shared multi-table order-margin bundle with order headers and order lines",
       "Ability to rank rows by net margin and cost pressure",
       "Operational recommendation framing",
     ],
@@ -311,8 +312,8 @@ export const DEMO_SCENARIOS = [
       rubric:
         "Raw should use the shared margin snapshot to identify the weakest pattern and recommend a first intervention without pretending to have extra Annona-only context.",
       canonicalAnswer:
-        "Raw recommendation: the first pattern to intervene on is the SK-240321-03 order profile because it only leaves $490 of net margin, about 4.4 percent, after $980 freight and $410 rebates. From the shared margin snapshot, the practical next step is to review freight pass-through and rebate approvals before similar orders ship next week.",
-      mustContainAll: ["SK-240321-03", "shared margin snapshot"],
+        "Raw recommendation: the first pattern to intervene on is the SK-240321-03 order profile because it only leaves $490 of net margin, about 4.4 percent, after $980 freight and $410 rebates. From the shared order bundle, the practical next step is to review freight pass-through and rebate approvals before similar orders ship next week.",
+      mustContainAll: ["SK-240321-03", "shared order bundle"],
       mustContainOneOf: [
         ["490", "$490"],
         ["4.4", "4.4 percent", "4.4%"],
@@ -323,7 +324,7 @@ export const DEMO_SCENARIOS = [
         {
           toolName: "openai_code_interpreter",
           args: {
-            task: "Rank the Suspension King rows by net margin and highlight the weakest pattern.",
+            task: "Rank the Suspension King bundled orders by net margin and highlight the weakest pattern.",
           },
           result: {
             outputs: [
@@ -384,6 +385,92 @@ export const DEMO_SCENARIOS = [
             grounded: true,
             action_oriented: true,
             traceable_to_rows: true,
+          },
+        },
+      ],
+    },
+  },
+  {
+    id: "supplier-drag-cross-table",
+    prompt:
+      "Within the shared order bundle, which supplier absorbs the most freight and rebate drag, and why?",
+    promptClass: "analytical",
+    sharedBundleAnswerable: true,
+    dataPrerequisites: [
+      "Shared multi-table order-margin bundle with manifest, order headers, order lines, and product dimension rows",
+      "Ability to follow bundle relationships across order_lines.sku and order headers",
+      "Structured reasoning over a joined dataset",
+    ],
+    expectedRawBehavior:
+      "Raw should use the shared bundle tables to join orders, line items, and products, then identify the supplier with the largest allocated freight-plus-rebate drag.",
+    expectedAnnonaBehavior:
+      "Annona should use the same shared bundle, make the relationship path explicit, and turn the joined result into an explainable supplier-level margin-drag readout.",
+    correctnessRubric: [
+      "Identifies Atlas Springs as the top supplier by allocated freight-plus-rebate drag.",
+      "Uses the shared multi-table baseline rather than Annona-only hidden data.",
+      "Annona answer makes the relationship path or trace explicit.",
+    ],
+    expectedRaw: {
+      answerPath: "shared-tabular-baseline",
+      rubric:
+        "Raw should join the shared bundle tables generically, report Atlas Springs as the largest drag point, and disclose that the result came from the shared multi-table baseline.",
+      canonicalAnswer:
+        "Raw joined-bundle answer: after joining the shared order headers, order lines, and product dimension rows, Atlas Springs carries the most allocated freight-plus-rebate drag at about $1,486 across the Suspension King sample orders. This comes from the shared multi-table dataset, not Annona-only access.",
+      mustContainAll: ["Atlas Springs", "shared multi-table dataset"],
+      mustContainOneOf: [
+        ["1,486", "1486"],
+        ["order headers", "order lines", "product dimension"],
+        ["joined", "join", "relationship"],
+      ],
+      requiredTools: ["openai_code_interpreter"],
+      mockToolInvocations: [
+        {
+          toolName: "openai_code_interpreter",
+          args: {
+            task: "Join the bundled order headers, order lines, and product dimension tables and rank suppliers by allocated freight-plus-rebate drag.",
+          },
+          result: {
+            outputs: [
+              {
+                type: "logs",
+                content:
+                  "Top supplier drag=Atlas Springs, allocated_drag=1486, relationship_path=orders->order_lines->products",
+              },
+            ],
+          },
+        },
+      ],
+    },
+    expectedGrounded: {
+      answerPath: "annona-orchestrated-shared-baseline",
+      rubric:
+        "Annona should use the same shared bundle, show the join path, and frame the result as a relationship-aware margin-drag finding rather than a black-box answer.",
+      canonicalAnswer:
+        "Annona answer: using the same shared order bundle and the relationship path orders -> order_lines -> products, Atlas Springs absorbs the most freight-and-rebate drag at $1,486. The finding is traceable to the joined bundle rows, so Annona's advantage here is orchestration and relationship-aware reasoning, not hidden data.",
+      mustContainAll: [
+        "same shared order bundle",
+        "Atlas Springs",
+        "relationship path",
+      ],
+      mustContainOneOf: [
+        ["1,486", "1486"],
+        ["traceable", "joined bundle rows", "relationship-aware"],
+        ["orchestration", "not hidden data"],
+      ],
+      requiredTools: ["annona_query_supplier_margin_leakage_snapshot"],
+      mockToolInvocations: [
+        {
+          toolName: "annona_query_supplier_margin_leakage_snapshot",
+          args: {
+            top_n: 1,
+          },
+          result: {
+            supplier: "Atlas Springs",
+            leakage_amount: 1486,
+            relationship_trace: [
+              "orders.order_id -> order_lines.order_id",
+              "order_lines.sku -> products.sku",
+            ],
           },
         },
       ],

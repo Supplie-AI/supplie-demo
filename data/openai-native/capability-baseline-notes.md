@@ -22,8 +22,12 @@ Bundled files in this shared baseline:
 
 - `capability-baseline-notes.md`: this note.
 - `global_freight_benchmarks.csv`: a small illustrative supply-chain benchmark table.
-- `demo_order_margin_snapshot.csv`: a small illustrative order-margin table.
-- `demo_order_margin_reference.md`: the worked margin formula and numbers.
+- `demo_order_margin_bundle_manifest.json`: the declared multi-table bundle schema and relationships.
+- `demo_order_margin_customers.csv`: customer dimension rows for the order bundle.
+- `demo_order_margin_orders.csv`: order headers with freight and rebates.
+- `demo_order_margin_order_lines.csv`: order lines with revenue and COGS.
+- `demo_order_margin_products.csv`: SKU dimension rows used for supplier joins.
+- `demo_order_margin_reference.md`: the worked relationship path, margin formula, and expected numbers.
 
 Annona's differentiation is not hidden data access. It is the dataset-adaptive
 orchestration layer applied on top of the same shared baseline.
