@@ -4,18 +4,20 @@ import {
 } from "./demo-capabilities";
 import type { DemoProvider } from "./demo-config";
 import { getChatModel } from "./chat-model";
-import { createStreamingTextAgent } from "./demo-agent-runner";
+import {
+  createStreamingTextAgent,
+  instrumentDemoAgent,
+  type DemoAgent,
+} from "./demo-agent-runner";
 import { createOpenAINativeUngroundedAgent } from "./openai-native-ungrounded-agent";
+import { logWarn } from "./app-logger.ts";
 
 interface UngroundedAgentOptions {
   model: string;
   provider: DemoProvider;
 }
 
-const agentCache = new Map<
-  string,
-  ReturnType<typeof createStreamingTextAgent>
->();
+const agentCache = new Map<string, DemoAgent>();
 
 function buildSystemPrompt(): string {
   return [
@@ -32,12 +34,20 @@ function buildSystemPrompt(): string {
 
 export function assertProviderIsConfigured(provider: DemoProvider) {
   if (provider === "anthropic" && !process.env.ANTHROPIC_API_KEY) {
+    logWarn("provider_not_configured", {
+      provider,
+      missing_env: "ANTHROPIC_API_KEY",
+    });
     throw new Error(
       "Anthropic API key not configured. Please contact the demo administrator.",
     );
   }
 
   if (provider === "openai" && !process.env.OPENAI_API_KEY) {
+    logWarn("provider_not_configured", {
+      provider,
+      missing_env: "OPENAI_API_KEY",
+    });
     throw new Error(
       "OpenAI API key not configured. Please contact the demo administrator.",
     );
@@ -51,13 +61,22 @@ export function getUngroundedAgent(options: UngroundedAgentOptions) {
     return cached;
   }
 
-  const agent =
+  const baseAgent =
     options.provider === "openai"
       ? createOpenAINativeUngroundedAgent(options.model)
       : createStreamingTextAgent({
           model: getChatModel(options),
           systemPrompt: buildSystemPrompt(),
         });
+  const agent = instrumentDemoAgent(baseAgent, {
+    backend:
+      options.provider === "openai"
+        ? "OpenAI Responses raw agent"
+        : "LangChain ungrounded agent",
+    provider: options.provider,
+    model: options.model,
+    agentMode: "ungrounded",
+  });
 
   agentCache.set(cacheKey, agent);
   return agent;

@@ -2,8 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
-// Node's built-in test runner needs the explicit .ts suffix here.
-// @ts-expect-error TypeScript does not allow TS extensions without allowImportingTsExtensions.
 import { getChatModel } from "./chat-model.ts";
 
 test("getChatModel returns a concrete OpenAI chat model instance", () => {

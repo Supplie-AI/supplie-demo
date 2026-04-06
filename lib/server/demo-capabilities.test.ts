@@ -1,6 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-// @ts-expect-error TypeScript does not allow TS extensions without allowImportingTsExtensions.
 import { getGroundedCapabilities, getUngroundedCapabilities } from "./demo-capabilities.ts";
 
 function enabledCapabilityIds(

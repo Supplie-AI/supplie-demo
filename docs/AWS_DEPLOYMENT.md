@@ -35,6 +35,7 @@
 npm install
 npm run lint
 npm run typecheck
+npm test
 DEMO_PASSWORD=test OPENAI_API_KEY=test npm run build
 ```
 
@@ -56,4 +57,6 @@ Only these application secrets are injected:
 ## Notes
 
 - Anthropic is optional at deploy time. The UI exposes Claude models, but the backend returns a clear configuration error if the key is missing.
-- The current slice intentionally does not mount code-execution, search, or file capabilities.
+- OpenAI-backed dev/prod deploys emit structured JSON logs with request IDs, trace IDs, capability snapshots, tool activity, and model-run summaries. See [`docs/LOGGING.md`](/home/jack/workspace/supplie-demo-issue5/docs/LOGGING.md).
+- On successful deploys, the workflows print recent app logs with `kubectl logs deployment/supplie-demo -n <namespace> --tail=80`.
+- On deploy failures, the workflows run `scripts/collect-k8s-diagnostics.sh` to capture rollout state, pod descriptions, current and previous pod logs, services, ingress, and recent events.

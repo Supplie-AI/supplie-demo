@@ -11,10 +11,12 @@ import {
   SHARED_OPENAI_NATIVE_FILES,
 } from "./openai-native-bundle";
 import {
+  getResponseFunctionCalls,
   responseToDemoAgentEvents,
   toInputMessages,
   type ResponseCreateResult,
 } from "./openai-responses-utils";
+import { logInfo } from "./app-logger.ts";
 
 export function buildOpenAINativeUngroundedSystemPrompt(): string {
   return [
@@ -43,6 +45,12 @@ export function createOpenAINativeUngroundedAgent(model: string): DemoAgent {
     async *streamResponse({ messages, signal }) {
       const client = getOpenAIClient();
       const bundle = await prepareOpenAIBundle();
+      logInfo("openai_response_request_started", {
+        agent_mode: "ungrounded",
+        model,
+        tool_types: ["web_search_preview", "file_search", "code_interpreter"],
+        input_messages: messages.length,
+      });
       const response = (await client.responses.create(
         {
           model,
@@ -80,6 +88,13 @@ export function createOpenAINativeUngroundedAgent(model: string): DemoAgent {
         } as any,
         { signal },
       )) as ResponseCreateResult;
+      logInfo("openai_response_received", {
+        agent_mode: "ungrounded",
+        model,
+        response_id: response.id ?? null,
+        output_items: response.output?.length ?? 0,
+        function_call_count: getResponseFunctionCalls(response).length,
+      });
 
       for (const event of responseToDemoAgentEvents(response)) {
         yield event;

@@ -44,6 +44,7 @@ Open `http://localhost:3000`.
 ```bash
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
 
@@ -54,9 +55,16 @@ npm run build
 - Non-trivial changes are expected to ship through the full GitHub loop: local validation, commit, push, PR, review, deploy, and smoke-test.
 - Work is only done when the deployed result still matches the canonical specs and acceptance docs.
 
+## Logging
+
+- Structured JSON app logs: [`docs/LOGGING.md`](/home/jack/workspace/supplie-demo-issue5/docs/LOGGING.md)
+- API responses include `X-Request-Id` and `X-Trace-Id` so dev/prod requests can be correlated with server logs.
+- Capability state, tool activity, and model-run summaries are logged without printing raw secrets, tokens, or passwords.
+
 ## AWS EKS Deployment
 
 - Dev CI/CD: [`.github/workflows/dev.yml`](/home/jack/workspace/supplie-demo/.github/workflows/dev.yml)
 - Main/prod EKS deploy: [`.github/workflows/deploy-eks.yml`](/home/jack/workspace/supplie-demo/.github/workflows/deploy-eks.yml)
 - Kubernetes manifests: [`k8s/`](/home/jack/workspace/supplie-demo/k8s)
 - Notes: [`docs/AWS_DEPLOYMENT.md`](/home/jack/workspace/supplie-demo/docs/AWS_DEPLOYMENT.md)
+- Logging and diagnostics: [`docs/LOGGING.md`](/home/jack/workspace/supplie-demo/docs/LOGGING.md)

@@ -18,6 +18,7 @@ spec:
       containers:
         - name: supplie-demo
           image: SUPPLIE_IMAGE  # replaced by CI/CD
+          terminationMessagePolicy: FallbackToLogsOnError
           ports:
             - containerPort: 3000
           env:
@@ -39,6 +40,10 @@ spec:
                   key: DEMO_PASSWORD
             - name: NODE_ENV
               value: "production"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: LOG_FORMAT
+              value: "json"
           readinessProbe:
             httpGet:
               path: /api/config

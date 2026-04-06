@@ -7,7 +7,11 @@ import {
 } from "./demo-capabilities";
 import type { DemoProvider } from "./demo-config";
 import { getChatModel } from "./chat-model";
-import { createToolAgent } from "./demo-agent-runner";
+import {
+  createToolAgent,
+  instrumentDemoAgent,
+  type DemoAgent,
+} from "./demo-agent-runner";
 import { createOpenAINativeGroundedAgent } from "./openai-native-grounded-agent";
 
 interface GroundedAgentOptions {
@@ -15,7 +19,7 @@ interface GroundedAgentOptions {
   provider: DemoProvider;
 }
 
-const agentCache = new Map<string, ReturnType<typeof createToolAgent>>();
+const agentCache = new Map<string, DemoAgent>();
 
 function buildAnthropicGroundedSystemPrompt(): string {
   return [
@@ -38,7 +42,7 @@ export function getGroundedAgent(options: GroundedAgentOptions) {
     return cached;
   }
 
-  const agent =
+  const baseAgent =
     options.provider === "openai"
       ? createOpenAINativeGroundedAgent(options.model)
       : createToolAgent({
@@ -46,6 +50,15 @@ export function getGroundedAgent(options: GroundedAgentOptions) {
           tools: [...annonaGroundedTools],
           systemPrompt: buildAnthropicGroundedSystemPrompt(),
         });
+  const agent = instrumentDemoAgent(baseAgent, {
+    backend:
+      options.provider === "openai"
+        ? "OpenAI Responses grounded Annona agent"
+        : "Annona grounded demo agent",
+    provider: options.provider,
+    model: options.model,
+    agentMode: "grounded",
+  });
 
   agentCache.set(cacheKey, agent);
   return agent;

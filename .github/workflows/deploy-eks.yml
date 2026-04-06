@@ -61,6 +61,12 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --name ${{ env.EKS_CLUSTER }}
 
+      - name: Cluster snapshot
+        run: |
+          kubectl config current-context
+          kubectl get nodes -o wide
+          kubectl get namespace "${K8S_NAMESPACE}" -o wide
+
       - name: Apply namespace & secrets
         run: |
           sed "s|SUPPLIE_NAMESPACE|${K8S_NAMESPACE}|g" \
@@ -103,6 +109,16 @@ jobs:
             sleep 10
           done
 
+      - name: Show recent app logs
+        if: success()
+        run: |
+          kubectl logs deployment/supplie-demo -n "${K8S_NAMESPACE}" --tail=80 || true
+
+      - name: Collect Kubernetes diagnostics on failure
+        if: failure()
+        run: |
+          bash scripts/collect-k8s-diagnostics.sh "${K8S_NAMESPACE}" "supplie-demo"
+
       - name: Summary
         run: |
           echo "## Deploy Summary" >> $GITHUB_STEP_SUMMARY
@@ -110,3 +126,5 @@ jobs:
           echo "- **supplie-demo image:** \`${{ steps.tags.outputs.supplie_image }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Namespace:** \`${K8S_NAMESPACE}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **URL:** https://${PROD_HOST}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Recent logs:** \`kubectl logs deployment/supplie-demo -n ${K8S_NAMESPACE} --tail=80\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Failure diagnostics:** \`bash scripts/collect-k8s-diagnostics.sh ${K8S_NAMESPACE} supplie-demo\`" >> $GITHUB_STEP_SUMMARY

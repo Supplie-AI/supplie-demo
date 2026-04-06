@@ -22,6 +22,7 @@ import {
   toInputMessages,
   type ResponseCreateResult,
 } from "./openai-responses-utils";
+import { logInfo } from "./app-logger.ts";
 
 const MAX_TOOL_TURNS = 6;
 
@@ -54,6 +55,18 @@ export function createOpenAINativeGroundedAgent(model: string): DemoAgent {
     async *streamResponse({ messages, signal }) {
       const client = getOpenAIClient();
       const bundle = await prepareOpenAIBundle();
+      logInfo("openai_response_request_started", {
+        agent_mode: "grounded",
+        model,
+        turn: 0,
+        tool_types: [
+          "web_search_preview",
+          "file_search",
+          "code_interpreter",
+          "annona_function_tools",
+        ],
+        input_messages: messages.length,
+      });
 
       let response = (await client.responses.create(
         {
@@ -93,6 +106,14 @@ export function createOpenAINativeGroundedAgent(model: string): DemoAgent {
         } as any,
         { signal },
       )) as ResponseCreateResult;
+      logInfo("openai_response_received", {
+        agent_mode: "grounded",
+        model,
+        turn: 0,
+        response_id: response.id ?? null,
+        output_items: response.output?.length ?? 0,
+        function_call_count: getResponseFunctionCalls(response).length,
+      });
 
       for (let turn = 0; turn < MAX_TOOL_TURNS; turn += 1) {
         for (const event of responseToDemoAgentEvents(response)) {
@@ -184,6 +205,14 @@ export function createOpenAINativeGroundedAgent(model: string): DemoAgent {
           } as any,
           { signal },
         )) as ResponseCreateResult;
+        logInfo("openai_response_received", {
+          agent_mode: "grounded",
+          model,
+          turn: turn + 1,
+          response_id: response.id ?? null,
+          output_items: response.output?.length ?? 0,
+          function_call_count: getResponseFunctionCalls(response).length,
+        });
       }
 
       throw new Error("Grounded OpenAI agent exceeded the tool iteration limit.");

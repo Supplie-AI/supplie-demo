@@ -1,6 +1,11 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import OpenAI, { toFile } from "openai";
+import {
+  logError,
+  logInfo,
+  serializeError,
+} from "./app-logger.ts";
 
 const SHARED_BUNDLE_ID = "supplie-demo-openai-native-shared-bundle-v2";
 const SHARED_VECTOR_STORE_NAME = "supplie-demo-openai-native-reference-files";
@@ -82,9 +87,17 @@ async function waitForVectorStoreReady(
   client: OpenAI,
   vectorStoreId: string,
 ): Promise<void> {
+  logInfo("openai_bundle_vector_store_wait_started", {
+    vector_store_id: vectorStoreId,
+  });
+
   for (let attempt = 0; attempt < 60; attempt += 1) {
     const vectorStore = await client.vectorStores.retrieve(vectorStoreId);
     if (vectorStore.status === "completed") {
+      logInfo("openai_bundle_vector_store_ready", {
+        vector_store_id: vectorStoreId,
+        attempts: attempt + 1,
+      });
       return;
     }
 
@@ -97,6 +110,9 @@ async function waitForVectorStoreReady(
 async function findExistingBundle(
   client: OpenAI,
 ): Promise<PreparedOpenAIBundle | null> {
+  logInfo("openai_bundle_lookup_started", {
+    expected_bundle_id: SHARED_BUNDLE_ID,
+  });
   const vectorStores = await client.vectorStores.list({ limit: 100 });
   const existing = vectorStores.data.find(
     (store) => store.metadata?.bundle_id === SHARED_BUNDLE_ID,
@@ -131,10 +147,17 @@ async function findExistingBundle(
 async function createBundledFiles(
   client: OpenAI,
 ): Promise<PreparedOpenAIBundle> {
+  logInfo("openai_bundle_creation_started", {
+    file_count: SHARED_OPENAI_NATIVE_FILES.length,
+    bundle_id: SHARED_BUNDLE_ID,
+  });
   const uploadedFiles = await Promise.all(
     SHARED_OPENAI_NATIVE_FILES.map(async (file) => {
       const contents = await readFile(file.absolutePath);
 
+      logInfo("openai_bundle_file_upload_started", {
+        file_name: file.fileName,
+      });
       const uploaded = await client.files.create({
         file: await toFile(contents, file.fileName),
         purpose: "assistants",
@@ -145,6 +168,10 @@ async function createBundledFiles(
         maxWait: 120000,
       });
 
+      logInfo("openai_bundle_file_ready", {
+        file_name: file.fileName,
+        file_id: uploaded.id,
+      });
       return uploaded;
     }),
   );
@@ -173,12 +200,24 @@ export async function prepareOpenAIBundle(): Promise<PreparedOpenAIBundle> {
       const client = getOpenAIClient();
       const existing = await findExistingBundle(client);
       if (existing) {
+        logInfo("openai_bundle_reused", {
+          vector_store_id: existing.vectorStoreId,
+          file_count: existing.fileIds.length,
+        });
         return existing;
       }
 
-      return createBundledFiles(client);
+      const created = await createBundledFiles(client);
+      logInfo("openai_bundle_ready", {
+        vector_store_id: created.vectorStoreId,
+        file_count: created.fileIds.length,
+      });
+      return created;
     })().catch((error) => {
       preparedBundlePromise = null;
+      logError("openai_bundle_failed", {
+        error: serializeError(error),
+      });
       throw error;
     });
   }
