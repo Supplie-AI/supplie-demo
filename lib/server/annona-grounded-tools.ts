@@ -1,5 +1,11 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import {
+  getDatasetTable,
+  getDemoOrderMarginBundle,
+  getRelatedRows,
+  getSingleRelatedRow,
+} from "./demo-dataset-bundle.ts";
 
 export interface DemoOrderSnapshot {
   order_id: string;
@@ -31,40 +37,157 @@ export interface DemoSupplierLeakage {
   supporting_detail: string;
 }
 
+function toNumber(value: string, fieldName: string) {
+  const parsed = Number(value);
+
+  if (Number.isNaN(parsed)) {
+    throw new Error(`Expected numeric value for ${fieldName}, received "${value}".`);
+  }
+
+  return parsed;
+}
+
+function buildOrderSnapshotRows() {
+  const bundle = getDemoOrderMarginBundle();
+  const orderRows = getDatasetTable(bundle, "orders").rows;
+
+  return orderRows.map((orderRow) => {
+    const customerRow = getSingleRelatedRow(bundle, "orders_to_customers", orderRow);
+    const lineRows = getRelatedRows(bundle, "orders_to_order_lines", orderRow);
+    const revenue = lineRows.reduce(
+      (sum, lineRow) => sum + toNumber(lineRow.revenue, "order_lines.revenue"),
+      0,
+    );
+    const cogs = lineRows.reduce(
+      (sum, lineRow) => sum + toNumber(lineRow.cogs, "order_lines.cogs"),
+      0,
+    );
+
+    return {
+      order_id: orderRow.order_id,
+      booked_at: orderRow.booked_at,
+      customer: customerRow.customer_name,
+      revenue,
+      cogs,
+      freight: toNumber(orderRow.freight, "orders.freight"),
+      rebates: toNumber(orderRow.rebates, "orders.rebates"),
+    };
+  });
+}
+
+function buildSupplierLeakageRows() {
+  const bundle = getDemoOrderMarginBundle();
+  const orderRows = getDatasetTable(bundle, "orders").rows;
+  const supplierSummary = new Map<
+    string,
+    {
+      revenue: number;
+      cogs: number;
+      allocated_freight: number;
+      allocated_rebates: number;
+      perOrderNetMargins: number[];
+      skus: Set<string>;
+    }
+  >();
+
+  for (const orderRow of orderRows) {
+    const lineRows = getRelatedRows(bundle, "orders_to_order_lines", orderRow);
+    const orderRevenue = lineRows.reduce(
+      (sum, lineRow) => sum + toNumber(lineRow.revenue, "order_lines.revenue"),
+      0,
+    );
+    const orderFreight = toNumber(orderRow.freight, "orders.freight");
+    const orderRebates = toNumber(orderRow.rebates, "orders.rebates");
+    const supplierOrderNetMargins = new Map<string, number>();
+
+    for (const lineRow of lineRows) {
+      const productRow = getSingleRelatedRow(
+        bundle,
+        "order_lines_to_products",
+        lineRow,
+      );
+      const supplier = productRow.supplier;
+      const lineRevenue = toNumber(lineRow.revenue, "order_lines.revenue");
+      const lineCogs = toNumber(lineRow.cogs, "order_lines.cogs");
+      const revenueShare = orderRevenue > 0 ? lineRevenue / orderRevenue : 0;
+      const allocatedFreight = orderFreight * revenueShare;
+      const allocatedRebates = orderRebates * revenueShare;
+      const summary = supplierSummary.get(supplier) ?? {
+        revenue: 0,
+        cogs: 0,
+        allocated_freight: 0,
+        allocated_rebates: 0,
+        perOrderNetMargins: [],
+        skus: new Set<string>(),
+      };
+
+      summary.revenue += lineRevenue;
+      summary.cogs += lineCogs;
+      summary.allocated_freight += allocatedFreight;
+      summary.allocated_rebates += allocatedRebates;
+      summary.skus.add(lineRow.sku);
+
+      const lineNetMargin =
+        lineRevenue - lineCogs - allocatedFreight - allocatedRebates;
+      supplierOrderNetMargins.set(
+        supplier,
+        (supplierOrderNetMargins.get(supplier) ?? 0) + lineNetMargin,
+      );
+      supplierSummary.set(supplier, summary);
+    }
+
+    for (const [supplier, netMargin] of supplierOrderNetMargins) {
+      const summary = supplierSummary.get(supplier);
+      summary?.perOrderNetMargins.push(netMargin);
+    }
+  }
+
+  return [...supplierSummary.entries()]
+    .map(([supplier, summary]) => {
+      const totalLeakage = Math.round(
+        summary.allocated_freight + summary.allocated_rebates,
+      );
+      const netMargin =
+        summary.revenue -
+        summary.cogs -
+        summary.allocated_freight -
+        summary.allocated_rebates;
+      const meanMarginPct =
+        summary.revenue > 0
+          ? Number(((netMargin / summary.revenue) * 100).toFixed(1))
+          : 0;
+
+      return {
+        supplier,
+        leakage_amount: totalLeakage,
+        mean_margin_pct: meanMarginPct,
+        negative_margin_orders: summary.perOrderNetMargins.filter(
+          (value) => value <= 0,
+        ).length,
+        primary_driver:
+          summary.allocated_freight >= summary.allocated_rebates
+            ? "Freight drag allocated from order headers"
+            : "Rebate drag allocated from order headers",
+        supporting_detail:
+          `Derived from shared bundle joins across orders, order lines, and products for ${[...summary.skus].join(", ")}.`,
+      };
+    })
+    .sort((left, right) => right.leakage_amount - left.leakage_amount);
+}
+
+const annonaBundle = getDemoOrderMarginBundle();
+
 export const ANNONA_DEMO_SNAPSHOT = {
-  snapshot_id: "annona-demo-snapshot-2026-03-22",
-  captured_at: "2026-03-22T18:00:00Z",
-  disclosure:
-    "This is a static Annona demo snapshot bundled with the app. It is not live production data.",
-  orders: [
-    {
-      order_id: "SK-240317-01",
-      booked_at: "2026-03-17",
-      customer: "Suspension King",
-      revenue: 18420,
-      cogs: 11980,
-      freight: 920,
-      rebates: 460,
-    },
-    {
-      order_id: "SK-240319-02",
-      booked_at: "2026-03-19",
-      customer: "Suspension King",
-      revenue: 14280,
-      cogs: 10140,
-      freight: 1180,
-      rebates: 520,
-    },
-    {
-      order_id: "SK-240321-03",
-      booked_at: "2026-03-21",
-      customer: "Suspension King",
-      revenue: 11240,
-      cogs: 9360,
-      freight: 980,
-      rebates: 410,
-    },
-  ] satisfies DemoOrderSnapshot[],
+  bundle_id: annonaBundle.manifest.bundle_id,
+  snapshot_id: annonaBundle.manifest.snapshot_id,
+  captured_at: annonaBundle.manifest.captured_at,
+  disclosure: annonaBundle.manifest.disclosure,
+  relationships: annonaBundle.manifest.relationships.map((relationship) => ({
+    name: relationship.name,
+    description: relationship.description,
+    cardinality: relationship.cardinality,
+  })),
+  orders: buildOrderSnapshotRows() satisfies DemoOrderSnapshot[],
   stock_risks: [
     {
       sku: "COIL-PRADO-450",
@@ -107,35 +230,7 @@ export const ANNONA_DEMO_SNAPSHOT = {
       recommended_action: "Watch daily sell-through and stage a small replenishment.",
     },
   ] satisfies DemoStockRisk[],
-  supplier_leakage: [
-    {
-      supplier: "Atlas Springs",
-      leakage_amount: 11200,
-      mean_margin_pct: 11.8,
-      negative_margin_orders: 4,
-      primary_driver: "Freight variance on bulky coil lines",
-      supporting_detail:
-        "Expedited inbound freight and rebate slippage are compressing margin on high-volume lift-kit orders.",
-    },
-    {
-      supplier: "North Ridge Fabrication",
-      leakage_amount: 8400,
-      mean_margin_pct: 13.4,
-      negative_margin_orders: 2,
-      primary_driver: "Late cost updates",
-      supporting_detail:
-        "Quoted sell prices lagged revised supplier costs on premium Ranger kits.",
-    },
-    {
-      supplier: "Motion Damping Co",
-      leakage_amount: 5900,
-      mean_margin_pct: 15.1,
-      negative_margin_orders: 1,
-      primary_driver: "Rebate under-collection",
-      supporting_detail:
-        "Expected promo rebates were not fully accrued on bundled shock packages.",
-    },
-  ] satisfies DemoSupplierLeakage[],
+  supplier_leakage: buildSupplierLeakageRows() satisfies DemoSupplierLeakage[],
 };
 
 function calculateMarginBridge({
@@ -165,13 +260,16 @@ function calculateMarginBridge({
 
 export function getAnnonaSnapshotContext() {
   return {
+    bundle_id: ANNONA_DEMO_SNAPSHOT.bundle_id,
     snapshot_id: ANNONA_DEMO_SNAPSHOT.snapshot_id,
     captured_at: ANNONA_DEMO_SNAPSHOT.captured_at,
     disclosure: ANNONA_DEMO_SNAPSHOT.disclosure,
+    relationships: ANNONA_DEMO_SNAPSHOT.relationships,
     supported_questions: [
       "Suspension King net margin after freight and rebates for last week's orders",
+      "Suppliers with the most freight and rebate drag after joining shared bundled tables",
       "SKUs at risk of stockout over the next 30 days",
-      "Suppliers contributing the most margin leakage",
+      "Suppliers contributing the most margin leakage from the shared order bundle",
     ],
   };
 }
@@ -204,8 +302,14 @@ export function queryAnnonaOrderMarginSnapshot({
   });
 
   return {
+    bundle_id: ANNONA_DEMO_SNAPSHOT.bundle_id,
     snapshot_id: ANNONA_DEMO_SNAPSHOT.snapshot_id,
     disclosure: ANNONA_DEMO_SNAPSHOT.disclosure,
+    source_tables: [
+      "demo_order_margin_orders.csv",
+      "demo_order_margin_order_lines.csv",
+      "demo_order_margin_customers.csv",
+    ],
     period: period ?? "last_week",
     customer: customer ?? "All customers in snapshot",
     total_orders: filteredOrders.length,
@@ -249,8 +353,18 @@ export function queryAnnonaSupplierMarginLeakageSnapshot({
   const top = ranked[0];
 
   return {
+    bundle_id: ANNONA_DEMO_SNAPSHOT.bundle_id,
     snapshot_id: ANNONA_DEMO_SNAPSHOT.snapshot_id,
     disclosure: ANNONA_DEMO_SNAPSHOT.disclosure,
+    source_tables: [
+      "demo_order_margin_orders.csv",
+      "demo_order_margin_order_lines.csv",
+      "demo_order_margin_products.csv",
+    ],
+    relationship_trace: [
+      "orders.order_id -> order_lines.order_id",
+      "order_lines.sku -> products.sku",
+    ],
     supplier_count: ranked.length,
     supplier: top?.supplier ?? null,
     leakage_amount: top?.leakage_amount ?? 0,

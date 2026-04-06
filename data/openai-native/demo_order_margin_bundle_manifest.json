@@ -1,0 +1,73 @@
+{
+  "bundle_id": "supplie-demo-order-margin-bundle-v1",
+  "snapshot_id": "annona-demo-snapshot-2026-03-22",
+  "captured_at": "2026-03-22T18:00:00Z",
+  "disclosure": "This is a static Annona demo dataset bundle bundled with the app. It is not live production data.",
+  "tables": [
+    {
+      "name": "customers",
+      "description": "Customer dimension rows used to resolve customer names, segments, and regions for the order-margin demo.",
+      "primary_key": ["customer_id"],
+      "source": {
+        "type": "csv_file",
+        "file_name": "demo_order_margin_customers.csv"
+      }
+    },
+    {
+      "name": "orders",
+      "description": "Order header rows with booking date plus order-level freight and rebate values.",
+      "primary_key": ["order_id"],
+      "source": {
+        "type": "csv_file",
+        "file_name": "demo_order_margin_orders.csv"
+      }
+    },
+    {
+      "name": "order_lines",
+      "description": "Order line rows with SKU-level revenue and COGS facts that roll up into order margin.",
+      "primary_key": ["order_id", "line_id"],
+      "source": {
+        "type": "csv_file",
+        "file_name": "demo_order_margin_order_lines.csv"
+      }
+    },
+    {
+      "name": "products",
+      "description": "Product dimension rows that map SKUs to supplier and category for cross-table reasoning.",
+      "primary_key": ["sku"],
+      "source": {
+        "type": "csv_file",
+        "file_name": "demo_order_margin_products.csv"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "name": "orders_to_customers",
+      "description": "Join each order header to its customer dimension row.",
+      "from_table": "orders",
+      "from_columns": ["customer_id"],
+      "to_table": "customers",
+      "to_columns": ["customer_id"],
+      "cardinality": "many_to_one"
+    },
+    {
+      "name": "orders_to_order_lines",
+      "description": "Join each order header to its line items.",
+      "from_table": "orders",
+      "from_columns": ["order_id"],
+      "to_table": "order_lines",
+      "to_columns": ["order_id"],
+      "cardinality": "one_to_many"
+    },
+    {
+      "name": "order_lines_to_products",
+      "description": "Join each order line SKU to the product dimension row.",
+      "from_table": "order_lines",
+      "from_columns": ["sku"],
+      "to_table": "products",
+      "to_columns": ["sku"],
+      "cardinality": "many_to_one"
+    }
+  ]
+}

@@ -6,8 +6,9 @@ import {
   logInfo,
   serializeError,
 } from "./app-logger.ts";
+import { DEMO_ORDER_MARGIN_BUNDLE_SHARED_FILES } from "./demo-dataset-bundle.ts";
 
-const SHARED_BUNDLE_ID = "supplie-demo-openai-native-shared-bundle-v2";
+const SHARED_BUNDLE_ID = "supplie-demo-openai-native-shared-bundle-v3";
 const SHARED_VECTOR_STORE_NAME = "supplie-demo-openai-native-reference-files";
 
 export const SHARED_OPENAI_NATIVE_FILES = [
@@ -33,17 +34,7 @@ export const SHARED_OPENAI_NATIVE_FILES = [
     description:
       "A shared illustrative freight benchmark CSV available to both panels through native OpenAI file and code workflows.",
   },
-  {
-    fileName: "demo_order_margin_snapshot.csv",
-    absolutePath: path.join(
-      /* turbopackIgnore: true */ process.cwd(),
-      "data",
-      "openai-native",
-      "demo_order_margin_snapshot.csv",
-    ),
-    description:
-      "Static demo order snapshot rows for the Suspension King margin scenario, including revenue, COGS, freight, and rebates.",
-  },
+  ...DEMO_ORDER_MARGIN_BUNDLE_SHARED_FILES,
   {
     fileName: "demo_order_margin_reference.md",
     absolutePath: path.join(
@@ -53,7 +44,7 @@ export const SHARED_OPENAI_NATIVE_FILES = [
       "demo_order_margin_reference.md",
     ),
     description:
-      "Reference notes for calculating demo net margin from the bundled order snapshot CSV.",
+      "Reference notes for calculating demo net margin and supplier drag from the bundled multi-table order bundle.",
   },
 ] as const;
 
