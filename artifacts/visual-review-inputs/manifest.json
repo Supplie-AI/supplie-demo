@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-06T07:22:24.216Z",
+  "generatedAt": "2026-04-06T07:39:50.935Z",
   "rubricPath": "docs/site-prd-demo-plan.md",
   "screenshots": [
     {
@@ -60,13 +60,13 @@
       "sharedBundleAnswerable": true,
       "screenshot": "03-blocker-traceability.png",
       "raw": {
-        "answerText": "Raw blocker answer: using the shared demo_order_margin_snapshot.csv and margin reference, the main blocker to protecting margin is freight-and-rebate drag concentrated in the weakest order pattern. The exact row to trace first is SK-240321-03, which falls to $490 of net margin, or 4.4 percent, after $980 freight and $410 rebates. SK-240319-02 shows the same pressure at $2,440 net margin, so the blocker is visible in the shared order rows rather than hidden Annona-only data.",
+        "answerText": "Raw blocker answer: using the shared order bundle tables and the margin reference, the main blocker to protecting margin is freight-and-rebate drag concentrated in the weakest order pattern. The exact order to trace first is SK-240321-03, which falls to $490 of net margin, or 4.4 percent, after $980 freight and $410 rebates. SK-240319-02 shows the same pressure at $2,440 net margin, so the blocker is visible in the shared order bundle rows rather than hidden Annona-only data.",
         "toolNames": [
           "openai_code_interpreter"
         ]
       },
       "grounded": {
-        "answerText": "Annona blocker view: the blocker is not lack of revenue, it is traceable freight-and-rebate drag in the weakest order pattern. Evidence: SK-240321-03 resolves to only $490 of net margin, or 4.4 percent, after $980 freight and $410 rebates, and SK-240319-02 shows the same direction at $2,440 net margin. Traceability: this comes directly from the same shared order rows, so the first action is to review lookalike orders before that blocker repeats.",
+        "answerText": "Annona blocker view: the blocker is not lack of revenue, it is traceable freight-and-rebate drag in the weakest order pattern. Evidence: SK-240321-03 resolves to only $490 of net margin, or 4.4 percent, after $980 freight and $410 rebates, and SK-240319-02 shows the same direction at $2,440 net margin. Traceability: this comes directly from the same shared order bundle rows, so the first action is to review lookalike orders before that blocker repeats.",
         "toolNames": [
           "annona_trace_margin_blocker",
           "annona_evaluate_recommendation"
