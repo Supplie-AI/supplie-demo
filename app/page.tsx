@@ -36,7 +36,7 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
   sharedLimitations: [
     "No live ERP or warehouse connectivity.",
     "Both panels share the same bundled CSV/reference baseline and the same native OpenAI web, sandbox, and file workflow surface.",
-    "Only the right panel has Annona-specific grounded tools, calculators, datasets, and grounded analysis over the bundled Annona snapshot.",
+    "Only the right panel adds Annona-specific grounding, calculators, and model-backed orchestration over that same bundled baseline.",
   ],
   panels: [
     {
@@ -91,7 +91,7 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
       badgeColor: "teal",
       backendLabel: "OpenAI Responses grounded Annona agent",
       description:
-        "Shares the same native OpenAI web, file, and code baseline as the raw panel, then adds Annona tools, calculators, datasets, and grounded analysis.",
+        "Shares the same native OpenAI web, file, and code baseline as the raw panel, then adds Annona grounding, calculators, and model-backed analysis over that same bundled baseline.",
       emptyStateTitle: "Grounded tool-backed answers appear here",
       emptyStateDetail:
         "This panel can use Annona tools and should say when a question falls outside the bundled Annona data. Shared native provider tools appear when available.",
@@ -134,7 +134,7 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
           enabled: true,
           availability: "available",
           description:
-            "The grounded panel exposes Annona-specific tool calls over the bundled Annona demo snapshot.",
+            "The grounded panel adds Annona-specific tool calls over the same bundled baseline shown to both panels.",
         },
         {
           id: "annona_calculators",
@@ -146,11 +146,11 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
         },
         {
           id: "annona_datasets",
-          label: "Annona demo datasets",
+          label: "Annona traceability views",
           enabled: true,
           availability: "available",
           description:
-            "The grounded panel can query the bundled Annona snapshot datasets for orders, stock risk, and supplier leakage.",
+            "The grounded panel adds Annona-specific row and entity traceability over the same bundled baseline.",
         },
         {
           id: "annona_model_analysis",
@@ -158,7 +158,7 @@ const DEFAULT_CONFIG: Omit<DemoConfig, "anthropicAvailable"> = {
           enabled: true,
           availability: "available",
           description:
-            "The grounded panel can synthesize Annona findings with model-backed analysis over Annona tools and datasets.",
+            "The grounded panel can synthesize findings with model-backed analysis over the shared baseline plus Annona tools.",
         },
       ],
     },

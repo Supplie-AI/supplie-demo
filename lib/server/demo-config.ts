@@ -57,8 +57,8 @@ export function getDemoPanelConfigs(
         ? "OpenAI Responses grounded Annona agent"
         : "Annona grounded demo agent",
       description: openaiNativeToolsEnabled
-        ? "Shares the same native OpenAI web, file, and code baseline as the raw panel, then adds Annona tools, calculators, datasets, and grounded analysis."
-        : "Uses Annona-specific grounded tools and datasets against a static bundled snapshot.",
+        ? "Shares the same native OpenAI web, file, and code baseline as the raw panel, then adds Annona grounding, calculators, and model-backed analysis over that same bundled baseline."
+        : "Uses Annona-specific grounding and calculators over the static bundled baseline.",
       emptyStateTitle: "Grounded tool-backed answers appear here",
       emptyStateDetail: openaiNativeToolsEnabled
         ? "This panel can use the shared native baseline plus Annona tools, and it should say when a question falls outside the bundled Annona data."
@@ -87,7 +87,7 @@ export function getPublicDemoConfig(
       openaiNativeToolsEnabled
         ? "Both panels share the same bundled CSV/reference baseline and the same native OpenAI web, sandbox, and file workflow surface."
         : "With the current provider selection, neither panel should claim native provider web search, code sandbox, or file workflows.",
-      "Only the right panel has Annona-specific grounded tools, calculators, datasets, and grounded analysis over the bundled Annona snapshot.",
+      "Only the right panel adds Annona-specific grounding, calculators, and model-backed orchestration over that same bundled baseline.",
     ],
   };
 }
