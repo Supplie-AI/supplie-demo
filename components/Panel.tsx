@@ -214,20 +214,20 @@ export function Panel({
                     (inv) => inv.toolName !== "__output_file__"
                   ).length > 0 && (
                     panelId === "grounded" ? (
-                      <details
+                      <div
                         className="rounded-2xl border"
                         style={{
                           borderColor: "rgba(0, 95, 119, 0.1)",
                           background: "rgba(255,255,255,0.76)",
                         }}
                       >
-                        <summary
-                          className="cursor-pointer list-none px-4 py-3 text-sm font-medium"
-                          style={{ color: "var(--text-secondary)" }}
+                        <div
+                          className="px-4 pt-3 text-[11px] uppercase tracking-[0.2em]"
+                          style={{ color: "var(--text-muted)" }}
                         >
                           Tool trace
-                        </summary>
-                        <div className="space-y-1 px-3 pb-3">
+                        </div>
+                        <div className="space-y-1 px-3 pb-3 pt-2">
                           {msg.toolInvocations
                             .filter((inv) => inv.toolName !== "__output_file__")
                             .map((inv, i) => {
@@ -250,7 +250,7 @@ export function Panel({
                               );
                             })}
                         </div>
-                      </details>
+                      </div>
                     ) : (
                       <div className="space-y-1">
                         {msg.toolInvocations
