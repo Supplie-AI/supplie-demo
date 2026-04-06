@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "@/hooks/useStreamingChat";
+import { AnswerEvidencePanel } from "./AnswerEvidencePanel";
 import { ToolCallCard } from "./ToolCallCard";
 
 interface PanelProps {
@@ -189,34 +190,16 @@ export function Panel({
               <div
                 className={`space-y-3 rounded-[24px] border px-4 py-4 ${accent.message}`}
               >
-                {msg.toolInvocations &&
-                  msg.toolInvocations.filter(
-                    (inv) => inv.toolName !== "__output_file__"
-                  ).length > 0 && (
-                    <div className="space-y-1">
-                      {msg.toolInvocations
-                        .filter((inv) => inv.toolName !== "__output_file__")
-                        .map((inv, i) => {
-                          const result =
-                            "result" in inv ? inv.result : undefined;
-                          const hasError =
-                            result &&
-                            typeof result === "object" &&
-                            "error" in result;
-                          return (
-                            <ToolCallCard
-                              key={inv.toolCallId}
-                              toolName={inv.toolName}
-                              args={inv.args}
-                              result={result}
-                              index={i}
-                              hasError={!!hasError}
-                              testId={`panel-${panelId}-tool-${messageIndex}-${i}`}
-                            />
-                          );
-                        })}
-                    </div>
-                )}
+                {panelId === "grounded" &&
+                  msg.toolInvocations &&
+                  msg.content && (
+                    <AnswerEvidencePanel
+                      panelId={panelId}
+                      messageIndex={messageIndex}
+                      content={msg.content}
+                      toolInvocations={msg.toolInvocations}
+                    />
+                  )}
                 {msg.content && (
                   <div
                     data-testid={`panel-${panelId}-assistant-text-${messageIndex}`}
@@ -225,6 +208,74 @@ export function Panel({
                   >
                     {msg.content}
                   </div>
+                )}
+                {msg.toolInvocations &&
+                  msg.toolInvocations.filter(
+                    (inv) => inv.toolName !== "__output_file__"
+                  ).length > 0 && (
+                    panelId === "grounded" ? (
+                      <details
+                        className="rounded-2xl border"
+                        style={{
+                          borderColor: "rgba(0, 95, 119, 0.1)",
+                          background: "rgba(255,255,255,0.76)",
+                        }}
+                      >
+                        <summary
+                          className="cursor-pointer list-none px-4 py-3 text-sm font-medium"
+                          style={{ color: "var(--text-secondary)" }}
+                        >
+                          Tool trace
+                        </summary>
+                        <div className="space-y-1 px-3 pb-3">
+                          {msg.toolInvocations
+                            .filter((inv) => inv.toolName !== "__output_file__")
+                            .map((inv, i) => {
+                              const result =
+                                "result" in inv ? inv.result : undefined;
+                              const hasError =
+                                result &&
+                                typeof result === "object" &&
+                                "error" in result;
+                              return (
+                                <ToolCallCard
+                                  key={inv.toolCallId}
+                                  toolName={inv.toolName}
+                                  args={inv.args}
+                                  result={result}
+                                  index={i}
+                                  hasError={!!hasError}
+                                  testId={`panel-${panelId}-tool-${messageIndex}-${i}`}
+                                />
+                              );
+                            })}
+                        </div>
+                      </details>
+                    ) : (
+                      <div className="space-y-1">
+                        {msg.toolInvocations
+                          .filter((inv) => inv.toolName !== "__output_file__")
+                          .map((inv, i) => {
+                            const result =
+                              "result" in inv ? inv.result : undefined;
+                            const hasError =
+                              result &&
+                              typeof result === "object" &&
+                              "error" in result;
+                            return (
+                              <ToolCallCard
+                                key={inv.toolCallId}
+                                toolName={inv.toolName}
+                                args={inv.args}
+                                result={result}
+                                index={i}
+                                hasError={!!hasError}
+                                testId={`panel-${panelId}-tool-${messageIndex}-${i}`}
+                              />
+                            );
+                          })}
+                      </div>
+                    )
                 )}
               </div>
             )}
