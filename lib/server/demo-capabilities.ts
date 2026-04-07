@@ -44,11 +44,11 @@ export function getUngroundedCapabilities(
     },
     {
       id: "annona_datasets",
-      label: "Annona demo datasets",
+      label: "Annona traceability views",
       enabled: false,
       availability: "planned",
       description:
-        "The raw panel does not expose Annona-only snapshot datasets.",
+        "The raw panel does not expose Annona-specific traceability over the shared bundled baseline.",
     },
     {
       id: "annona_calculators",
@@ -64,7 +64,7 @@ export function getUngroundedCapabilities(
       enabled: false,
       availability: "planned",
       description:
-        "The raw panel does not provide grounded Annona analysis over Annona-specific datasets.",
+        "The raw panel does not provide grounded Annona analysis over the shared baseline.",
     },
     {
       id: "live_systems",
@@ -133,15 +133,15 @@ export function getGroundedCapabilities(
       enabled: true,
       availability: "available",
       description:
-        "The grounded panel exposes Annona-specific tool calls over the bundled Annona demo snapshot.",
+        "The grounded panel adds Annona-specific tool calls over the same bundled baseline shown to both panels.",
     },
     {
       id: "annona_datasets",
-      label: "Annona demo datasets",
+      label: "Annona traceability views",
       enabled: true,
       availability: "available",
       description:
-        "The grounded panel can query the bundled Annona snapshot datasets for orders, stock risk, and supplier leakage.",
+        "The grounded panel adds Annona-specific row and entity traceability over the same bundled baseline.",
     },
     {
       id: "annona_calculators",
@@ -157,7 +157,7 @@ export function getGroundedCapabilities(
       enabled: true,
       availability: "available",
       description:
-        "The grounded panel can synthesize Annona findings with model-backed analysis over Annona tools and datasets.",
+        "The grounded panel can synthesize findings with model-backed analysis over the shared baseline plus Annona tools.",
     },
     {
       id: "live_systems",
@@ -165,7 +165,7 @@ export function getGroundedCapabilities(
       enabled: false,
       availability: "planned",
       description:
-        "No live operational systems are connected. Grounded answers are limited to the bundled Annona demo snapshot.",
+        "No live operational systems are connected. Grounded answers are limited to the bundled demo baseline.",
     },
     {
       id: "native_web_search",
