@@ -11,6 +11,8 @@ analytical substrate are defined here.
 This spec defines:
 
 - the dedicated Annona backend / container architecture separate from the UI
+- the read-only operational ingestion and transformation stack for pilot source
+  systems such as NetSuite, Focus, and S3
 - the Universal Schema Interpreter as the foundational compile step
 - the Universal Analytical Toolkit as the default capability-registry substrate
 - the dataset-adaptive capability registry and tool-template binding model
@@ -48,6 +50,10 @@ remain portable to TypeScript, Rust, or Go services.
 - Tool-first, LLM-last is the default. Deterministic analysis tools should
   produce the facts; the LLM should primarily handle planning under uncertainty,
   explanation, and final narrative synthesis.
+- Operational source access is read-only during the pilot. Annona may extract
+  from source systems, but it must not write back statuses, acknowledgements,
+  or planning changes into NetSuite, Focus, S3, or any adjacent operational
+  system as part of this stack.
 - Missing point-of-use truth must downgrade the contract, not break it. When a
   pilot such as Zeder's lacks perfect scan-level confirmation, Annona should
   emit estimated state with explicit caveats rather than pretending exact
@@ -86,6 +92,8 @@ remain portable to TypeScript, Rust, or Go services.
 ### External Dependencies
 
 - object storage for uploaded datasets and generated artifacts
+- read-only source connectivity for operational systems such as NetSuite,
+  Focus, and S3-backed file drops
 - cache / KV store for compiled dataset assets and hot session state
 - relational or document persistence for traces, plans, evaluations, and answer
   metadata
@@ -230,6 +238,140 @@ The engine must remain deployable independently from the UI so that:
 For the demo, the backend may run as a single container image with modular
 packages. The architectural boundary still applies even if deployed in one
 cluster namespace.
+
+## Read-Only Operational Ingestion And Transformation Stack
+
+The canonical pilot stack for operational data refresh is:
+
+- read-only extraction from NetSuite, Focus, and S3-backed file drops
+- immutable raw landing into object storage
+- DuckDB normalization and snapshot assembly
+- dbt transformations over DuckDB
+- Prefect orchestration for extraction, transformation, publication, and
+  failure handling
+- Annona compilation and prompt-time consumption against published dataset
+  versions only
+
+This stack is upstream of prompt execution. The engine may use the published
+artifacts from a refresh run, but it must not query NetSuite, Focus, or S3
+directly during answer generation.
+
+### Scope And Guardrails
+
+- The pilot ingestion layer is read-only end to end.
+- Prompt-time answers operate on a published dataset version, not on mutable
+  source-system state.
+- Every refresh run must produce versioned provenance, including source refs,
+  landed objects, transformation outputs, and publish status.
+- Landing and transformation failures must fail closed. The engine should keep
+  using the last accepted dataset version rather than publishing partial or
+  contradictory snapshots.
+- Manual triggering is acceptable for the pilot. Scheduled Prefect runs are
+  also acceptable. In both cases the output contract stays the same.
+
+### Canonical Runtime Placement
+
+- `annona-ui` never runs extraction, DuckDB, dbt, or Prefect logic.
+- `annona-engine` owns dataset compilation and prompt-time reasoning over the
+  published dataset bundle.
+- Prefect flows and DuckDB/dbt jobs may run in a companion worker container or
+  as engine-adjacent jobs, but they remain outside the browser-facing UI
+  surface.
+- The engine's prompt path is intentionally decoupled from refresh jobs so a
+  slow source extract does not block operator questions.
+
+### Canonical Flow
+
+1. `Extract`
+   - NetSuite, Focus, and S3 sources are read through read-only credentials,
+     exports, or API contracts.
+   - Each source extract is stamped with a run ID, source timestamp, and pilot
+     environment metadata.
+
+2. `Land`
+   - Raw source files are written unchanged into an immutable landing prefix in
+     object storage.
+   - A `LandingManifest` records file paths, row counts when available, source
+     freshness, extraction method, and checksum metadata.
+
+3. `Normalize In DuckDB`
+   - DuckDB reads the landed raw objects directly from object storage or a
+     mounted cache.
+   - Normalization standardizes IDs, timestamps, units, status enums, null
+     handling, and source-specific key shapes into consistent source schemas.
+   - DuckDB also emits lightweight diagnostics such as freshness gaps, failed
+     joins, duplicate keys, and type coercion warnings.
+
+4. `Transform In dbt`
+   - dbt runs on top of DuckDB using explicit staging, intermediate, and mart
+     layers.
+   - `stg_*` models preserve source-grain cleanup, `int_*` models resolve joins
+     and dependency edges, and `mart_*` models expose pilot-ready analytical
+     tables for compilation.
+   - dbt run artifacts such as manifests, run results, tests, and docs are
+     preserved as publishable artifacts.
+
+5. `Publish Dataset Version`
+   - The refresh flow materializes a versioned DuckDB snapshot or equivalent
+     exported tables plus dbt artifacts.
+   - Annona creates a `DatasetManifest`, `CompiledDataset`, `DatasetProfile`,
+     and `SemanticModel` from the transformed mart surface.
+   - Only an accepted publish step makes the new dataset version eligible for
+     prompt use.
+
+6. `Consume In Annona`
+   - Prompt execution loads the latest approved dataset version or an explicitly
+     requested historical version.
+   - Planner, bound capabilities, evidence, and answer traces all reference
+     the immutable published dataset version rather than mutable source APIs.
+
+### Canonical Artifact Flow
+
+The pilot artifact chain is:
+
+`NetSuite / Focus / S3 -> LandingManifest -> DuckDB normalized source schemas -> dbt staging/intermediate/marts -> DatasetManifest -> CompiledDataset -> Evidence / Trace / AnswerEnvelope`
+
+Minimum artifacts per accepted run:
+
+- `LandingManifest`
+- `IngestionRun`
+- landed raw source snapshots
+- DuckDB normalization snapshot or exported normalized tables
+- dbt `manifest.json`, `run_results.json`, and relevant test outputs
+- `DatasetManifest`
+- `CompiledDataset`
+- downstream prompt traces and answer artifacts that reference the published
+  dataset version
+
+### Concrete Pilot Scenario: Zeder Shadow Factory Daily Refresh
+
+This issue's concrete pilot dataflow scenario is a daily or manually triggered
+`zeder_shadow_factory_refresh` run:
+
+1. Prefect extracts NetSuite sales-order, work-order, purchase-order, and item
+   status data using read-only credentials.
+2. Prefect pulls Focus schedule, dispatch, and exception exports using a
+   read-only contract.
+3. Prefect registers S3 drops such as carrier ETA files, installer handoff
+   files, or other pilot-approved shadow-signal feeds.
+4. All three sources land unchanged in object storage under a run-scoped
+   prefix such as `landing/<pilot>/<source>/<run_id>/...`.
+5. DuckDB normalizes entity IDs, timestamps, quantity units, and status labels
+   across those landed files into source-clean tables such as
+   `src_netsuite_orders`, `src_focus_schedule`, and `src_s3_eta_events`.
+6. dbt builds staging and intermediate models that reconcile order lines,
+   work-order progress, purchase dependencies, and external ETA signals, then
+   publishes marts such as:
+   - `mart_sales_order_readiness`
+   - `mart_supply_blockers`
+   - `mart_shadow_factory_status`
+   - `mart_management_priority_queue`
+7. Annona compiles those marts into the published dataset version consumed by
+   the engine's dependency tracing, progress inference, management-status
+   mapping, and recommendation layers.
+8. When an operator asks which kits are blocked or which units need leadership
+   intervention in the next 24 hours, the engine answers from that published
+   dataset version and cites the exact refresh run used.
 
 ## Virtual MES / Shadow Factory Pilot Model
 
@@ -377,7 +519,7 @@ acceptance do not blur.
 | --- | --- | --- | --- |
 | `Pilot PM` | Own issue sequencing, acceptance criteria, rollout scope, and release decisions. | GitHub issues, canonical spec docs, pull requests, release checklist. | Split into multi-pilot program management and portfolio planning once several pilots run in parallel. |
 | `Domain Researcher` | Translate operator questions, source-system semantics, and risk assumptions into canonical scenarios and dataset expectations. | `docs/demo-acceptance.md`, scenario fixtures, semantic notes, failure-analysis briefs. | Split by industry/domain once pilots span different operational archetypes. |
-| `Data Pipeline` | Normalize source extracts into versioned manifests, freshness checks, and compile-ready bundles. | `DatasetManifest`, storage refs, upload contracts, ingestion diagnostics. | Move to scheduled or event-driven ingestion with automated data-quality gates. |
+| `Data Pipeline` | Run read-only extraction, immutable landing, DuckDB normalization, dbt publication, and compile-ready bundle assembly. | `LandingManifest`, `IngestionRun`, `DatasetManifest`, storage refs, dbt artifacts, ingestion diagnostics. | Move to scheduled or event-driven ingestion with automated data-quality gates. |
 | `Semantic Modeler` | Curate dataset profile, entity meanings, graph assumptions, and reusable compiled assets. | `DatasetProfile`, `SemanticModel`, `CompiledDataset`, dataset helper artifacts. | Split schema-interpreter tuning from dataset-compiler operations. |
 | `Capability Engineer` | Bind and extend deterministic tools, templates, and dataset-aware capability contracts. | `CapabilityTemplate`, `BoundCapability`, tool schemas, capability registry entries. | Specialize by capability family and worker-backed analytical services. |
 | `Orchestration Engineer` | Own planner policy, answer scaffolds, evidence thresholds, and confidence posture. | `Plan`, `Recommendation`, `AnswerEnvelope`, policy configs, orchestration traces. | Separate planner policy, answer-quality, and recommendation-policy services. |
@@ -394,7 +536,7 @@ informal prompts:
    canonical spec files.
 2. `Domain Researcher` defines the target operator question, success rubric,
    and dataset assumptions.
-3. `Data Pipeline` produces a versioned dataset intake contract.
+3. `Data Pipeline` produces a versioned landing and transformation contract.
 4. `Semantic Modeler` turns that intake into stable interpreted dataset assets.
 5. `Capability Engineer` binds or extends the eligible deterministic tool
    surface for the dataset.
@@ -861,60 +1003,76 @@ All system objects must be:
 1. `DatasetManifest`
    - dataset identity, source files, owner, timestamps, storage references
 
-2. `DatasetProfile`
+2. `LandingManifest`
+   - immutable raw landed objects, source provenance, extraction method,
+     checksums, and freshness metadata
+
+3. `IngestionRun`
+   - source-system read summary, landing status, diagnostics, orchestration
+     metadata, and publish eligibility
+
+4. `TransformationRun`
+   - DuckDB normalization outputs, dbt manifest refs, dbt test results, and
+     transformation status
+
+5. `CompiledDataset`
+   - published analytical bundle linking transformed marts, semantic assets,
+     capability bindings, and immutable version metadata
+
+6. `DatasetProfile`
    - row counts, column stats, missingness, key candidates, detected time axes,
      units, value ranges, and quality warnings
 
-3. `SemanticModel`
+7. `SemanticModel`
    - semantic roles, entities, measures, dimensions, grains, join assumptions,
      target candidates, and confidence annotations
 
-4. `Artifact`
+8. `Artifact`
    - generated tables, plots, fitted models, notebooks, feature stores, or
      exports
 
-5. `CapabilityTemplate`
+9. `CapabilityTemplate`
    - generic registry declaration
 
-6. `BoundCapability`
+10. `BoundCapability`
    - dataset-specific capability with resolved inputs and execution contract
 
-7. `Plan`
+11. `Plan`
    - prompt, intent classification, ordered `PlanStep` list, budget, and plan
      status
 
-8. `ToolInvocation`
+12. `ToolInvocation`
    - step ID, capability ID, parameters, runtime metadata, outputs, and errors
 
-9. `Evidence`
+13. `Evidence`
    - evidence claims, supporting metrics, supporting artifacts, provenance, and
      confidence
    - for estimated states, also preserves `traceabilityMode`, supporting
      signals, counter-signals, and missing-data caveats
 
-10. `Recommendation`
+14. `Recommendation`
    - action candidate, rationale, expected impact, priority, assumptions, and
      guardrails
 
-11. `Evaluation`
+15. `Evaluation`
    - answer quality checks such as support coverage, hallucination risk, action
      clarity, policy compliance, confidence, and calibration between exact and
      estimated states
 
-12. `Trace`
+16. `Trace`
    - end-to-end execution record linking datasets, plans, invocations,
      evidence, evaluations, and answer versions
 
-13. `AnswerEnvelope`
+17. `AnswerEnvelope`
    - final user-facing response, structured recommendations, evidence summary,
      traceability mode, estimated-state caveats when applicable, answer status,
      and trace references
 
-14. `DependencyGraphModel`
+18. `DependencyGraphModel`
    - compiled graph nodes, edges, path semantics, and blocker-impact traversal
      rules for datasets that support multi-level dependency reasoning
 
-15. `ShadowFactoryStatus`
+19. `ShadowFactoryStatus`
    - pilot-facing Virtual MES status object linking entity identity, estimated
      execution state, management status, blocker or wobble posture, signal
      coverage, and recommended next action

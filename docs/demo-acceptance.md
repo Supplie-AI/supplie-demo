@@ -13,6 +13,8 @@ The demo is accepted only when it presents a truthful side-by-side comparison:
 
 - both panels receive the same baseline of CSV / tabular data, web search, and
   code execution
+- when a pilot operational refresh is configured, both panels still consume the
+  same published read-only dataset snapshot rather than prompt-time ERP queries
 - the left panel shows what a generic model does with that baseline
 - the right panel shows how Annona turns the same baseline into a clearer,
   earlier, more operational recommendation
@@ -38,20 +40,61 @@ In the current test harness, the shared dataset baseline may be represented by a
 canonical bundled fixture rather than a live upload UI. That does not change the
 spec: the baseline is shared tabular data.
 
+If a pilot read-only ingestion stack is configured, the baseline becomes a
+published dataset version produced upstream from NetSuite, Focus, and S3 via
+landing, DuckDB normalization, dbt transformation, and Prefect orchestration.
+That also does not change the comparison contract: both panels still start from
+the same published dataset version.
+
 ## Annona Flow Requirement
 
 The grounded Annona panel is accepted only if the spec, prompts, and review
 rubric all align on this flow:
 
 1. Dataset intake and profiling
-2. Semantic understanding of the tabular inputs
-3. Capability-template binding and stable analysis primitive selection
-4. Orchestration and answer planning
-5. Tool execution with evidence capture
-6. Answer evaluation before final response
+2. Read-only operational refresh, when configured, lands and normalizes source
+   extracts before compilation
+3. Semantic understanding of the tabular inputs
+4. Capability-template binding and stable analysis primitive selection
+5. Orchestration and answer planning
+6. Tool execution with evidence capture
+7. Answer evaluation before final response
 
 The final answer should read like a high-trust operational recommendation, not a
 tool dump or dashboard summary.
+
+## Read-Only Operational Ingestion Requirement
+
+The pilot ingestion stack is accepted only if the canonical docs make these
+points explicit:
+
+1. Source scope is read-only for NetSuite, Focus, and S3-backed drops.
+2. Raw extracts land immutably before transformation.
+3. DuckDB is the normalization runtime for the pilot.
+4. dbt is the transformation contract over DuckDB.
+5. Prefect orchestrates extraction, landing, transformation, and publication.
+6. `annona-engine` answers from published dataset versions and does not query
+   operational systems directly during prompt execution.
+7. Published artifacts include provenance for landing, transformation, and the
+   dataset version consumed by a trace or answer.
+
+## Concrete Pilot Scenario Requirement
+
+The accepted spec set must include at least one concrete dataflow scenario that
+walks through:
+
+1. NetSuite read-only extraction
+2. Focus read-only extraction
+3. S3 shadow-signal registration
+4. landing to immutable storage
+5. DuckDB normalization
+6. dbt staging / intermediate / mart publication
+7. Prefect orchestration and publish gating
+8. Annona compilation and prompt-time consumption from the published snapshot
+
+The scenario does not need a live implementation in this repo yet, but it must
+be pilot-realistic and must not invent writeback or autonomous source-system
+mutation.
 
 ## Canonical Scenario Structure
 
@@ -130,6 +173,8 @@ For every canonical scenario:
 A demo change is done only when:
 
 - the canonical spec files are updated together where relevant
+- issue-linked implementation-plan docs are updated when the slice is
+  architectural or cross-cutting
 - local validation passes at the strongest relevant level
 - non-trivial work is committed on a dedicated issue branch and linked to a PR
 - the branch is pushed and reviewed
