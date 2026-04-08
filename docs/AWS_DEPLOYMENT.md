@@ -9,7 +9,7 @@
 
 ## Required GitHub Config
 
-### Dev workflow
+### Dev workflow (active)
 
 - `AWS_ACCOUNT_ID`
 - `AWS_ACCESS_KEY_ID_DEV`
@@ -21,9 +21,14 @@
 - `DEV_DEMO_HOST`
 - `DEV_ACM_CERT_ARN`
 
-### Main/prod workflow
+### Production workflow (manual-only placeholder)
 
-Set these on the GitHub `production` environment unless you intentionally want repo-wide defaults.
+The repository does not currently operate a real production EKS environment.
+`.github/workflows/deploy-eks.yml` is manual-only and disabled by default so
+normal merges to `main` do not trigger a misleading red production deploy.
+
+Keep these values ready for the future production lane on the GitHub
+`production` environment unless you intentionally want repo-wide defaults.
 
 - `AWS_ACCOUNT_ID`
 - `AWS_ACCESS_KEY_ID`
@@ -62,9 +67,11 @@ Only these application secrets are injected:
 
 ## Notes
 
-- The production workflow validates its AWS credential inputs before deploy. It uses `AWS_DEPLOY_ROLE_ARN` when present, otherwise falls back to `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`.
-- The production workflow also requires `EKS_CLUSTER_PROD` and reads it from the GitHub `production` environment variable first, then the same-named secret if needed. The repo’s documented production region remains `us-east-1`.
+- The active deploy path today is the dev workflow in `.github/workflows/dev.yml`.
+- The production workflow only runs through `workflow_dispatch`, and only when `confirm_production_deploy=true` is explicitly supplied after a real production environment exists.
+- When production is eventually armed, the workflow validates its AWS credential inputs before deploy. It uses `AWS_DEPLOY_ROLE_ARN` when present, otherwise falls back to `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`.
+- When production is eventually armed, the workflow also requires `EKS_CLUSTER_PROD` and reads it from the GitHub `production` environment variable first, then the same-named secret if needed. The repo’s documented production region remains `us-east-1`.
 - Anthropic is optional at deploy time. The UI exposes Claude models, but the backend returns a clear configuration error if the key is missing.
-- OpenAI-backed dev/prod deploys emit structured JSON logs with request IDs, trace IDs, capability snapshots, tool activity, and model-run summaries. See [`docs/LOGGING.md`](/home/jack/workspace/supplie-demo-issue5/docs/LOGGING.md).
+- OpenAI-backed dev deploys, and future production deploys once enabled, emit structured JSON logs with request IDs, trace IDs, capability snapshots, tool activity, and model-run summaries. See [`docs/LOGGING.md`](/home/jack/workspace/supplie-demo-issue5/docs/LOGGING.md).
 - On successful deploys, the workflows print recent app logs with `kubectl logs deployment/supplie-demo -n <namespace> --tail=80`.
 - On deploy failures, the workflows run `scripts/collect-k8s-diagnostics.sh` to capture rollout state, pod descriptions, current and previous pod logs, services, ingress, and recent events.
