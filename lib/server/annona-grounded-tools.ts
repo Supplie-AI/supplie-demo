@@ -8,6 +8,11 @@ import {
   getRelatedRows,
   getSingleRelatedRow,
 } from "./demo-dataset-bundle.ts";
+import {
+  propagateManufacturingGraphImpact,
+  traceManufacturingGraphDependencies,
+  type DependencyEntityType,
+} from "./demo-dependency-graph.ts";
 
 export interface DemoOrderSnapshot {
   order_id: string;
@@ -319,6 +324,7 @@ export function getAnnonaSnapshotContext() {
       "Suppliers contributing the most margin leakage from the shared order bundle",
       "Which freight lane is the strongest predictive service risk next month",
       "What should the team prioritize first in the next 24 hours and what is the next action",
+      "What upstream dependency blocks sales order SO-240501-01 and how does that impact other orders",
     ],
   };
 }
@@ -577,6 +583,59 @@ export function prioritizeAnnonaNextAction({
       "Review pending lookalike orders for freight pass-through and rebate approval",
     explanation:
       "Act on the weakest lookalike margin pattern first because the margin hit is already live and controllable, while the freight-lane risk is still a next-month signal.",
+  };
+}
+
+export function traceAnnonaGraphDependencies({
+  dataset,
+  root_entity_type,
+  root_entity_id,
+  objective,
+  max_hops,
+}: {
+  dataset?: string;
+  root_entity_type?: DependencyEntityType;
+  root_entity_id?: string;
+  objective?: string;
+  max_hops?: number;
+}) {
+  const trace = traceManufacturingGraphDependencies({
+    root_entity_type,
+    root_entity_id,
+    max_hops,
+  });
+
+  return {
+    dataset: dataset ?? "demo_manufacturing_dependency_bundle_manifest.json",
+    objective:
+      objective ??
+      "trace the blocker through BOM, work orders, and purchase orders",
+    traceability_mode: "exact",
+    ...trace,
+  };
+}
+
+export function propagateAnnonaDependencyImpact({
+  dataset,
+  source_entity_type,
+  source_entity_id,
+  max_hops,
+}: {
+  dataset?: string;
+  source_entity_type?: DependencyEntityType;
+  source_entity_id?: string;
+  max_hops?: number;
+}) {
+  const impact = propagateManufacturingGraphImpact({
+    source_entity_type,
+    source_entity_id,
+    max_hops,
+  });
+
+  return {
+    dataset: dataset ?? "demo_manufacturing_dependency_bundle_manifest.json",
+    traceability_mode: "exact",
+    ...impact,
   };
 }
 
@@ -857,6 +916,62 @@ export const annonaGroundedTools = [
         .describe("Operational prioritization horizon."),
     }),
   }),
+  tool(async (args) => traceAnnonaGraphDependencies(args), {
+    name: "annona_trace_graph_dependencies",
+    description:
+      "Trace a multi-level manufacturing blocker across sales orders, work orders, BOM levels, and purchase orders in the canonical dependency graph bundle.",
+    schema: z.object({
+      dataset: z
+        .string()
+        .optional()
+        .describe("Dependency bundle manifest, for example demo_manufacturing_dependency_bundle_manifest.json."),
+      root_entity_type: z
+        .enum(["sales_order", "work_order", "part"])
+        .optional()
+        .describe("Root entity type to trace from. Default is sales_order."),
+      root_entity_id: z
+        .string()
+        .optional()
+        .describe("Root entity identifier, for example SO-240501-01."),
+      objective: z
+        .string()
+        .optional()
+        .describe("Trace objective, for example identify the blocker and dependency path."),
+      max_hops: z
+        .number()
+        .int()
+        .min(1)
+        .max(16)
+        .optional()
+        .describe("Maximum dependency hops to traverse."),
+    }),
+  }),
+  tool(async (args) => propagateAnnonaDependencyImpact(args), {
+    name: "annona_propagate_dependency_impact",
+    description:
+      "Propagate downstream impact from a blocked shared component or purchase order across affected work orders and sales orders.",
+    schema: z.object({
+      dataset: z
+        .string()
+        .optional()
+        .describe("Dependency bundle manifest, for example demo_manufacturing_dependency_bundle_manifest.json."),
+      source_entity_type: z
+        .enum(["purchase_order", "purchase_order_line", "part"])
+        .optional()
+        .describe("Blocked source entity type. Default is purchase_order."),
+      source_entity_id: z
+        .string()
+        .optional()
+        .describe("Blocked source entity identifier, for example PO-7712."),
+      max_hops: z
+        .number()
+        .int()
+        .min(1)
+        .max(16)
+        .optional()
+        .describe("Maximum impact-propagation hops to traverse."),
+    }),
+  }),
   tool(async (args) => estimateAnnonaShadowProgress(args), {
     name: "annona_estimate_shadow_progress",
     description:
@@ -1070,6 +1185,71 @@ export const annonaOpenAIFunctionTools = [
   },
   {
     type: "function",
+    name: "annona_trace_graph_dependencies",
+    description:
+      "Trace a multi-level manufacturing blocker across sales orders, work orders, BOM levels, and purchase orders in the canonical dependency graph bundle.",
+    parameters: {
+      type: "object",
+      properties: {
+        dataset: {
+          type: "string",
+          description:
+            "Dependency bundle manifest, for example demo_manufacturing_dependency_bundle_manifest.json.",
+        },
+        root_entity_type: {
+          type: "string",
+          enum: ["sales_order", "work_order", "part"],
+          description: "Root entity type to trace from. Default is sales_order.",
+        },
+        root_entity_id: {
+          type: "string",
+          description: "Root entity identifier, for example SO-240501-01.",
+        },
+        objective: {
+          type: "string",
+          description:
+            "Trace objective, for example identify the blocker and dependency path.",
+        },
+        max_hops: {
+          type: "number",
+          description: "Maximum dependency hops to traverse.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "annona_propagate_dependency_impact",
+    description:
+      "Propagate downstream impact from a blocked shared component or purchase order across affected work orders and sales orders.",
+    parameters: {
+      type: "object",
+      properties: {
+        dataset: {
+          type: "string",
+          description:
+            "Dependency bundle manifest, for example demo_manufacturing_dependency_bundle_manifest.json.",
+        },
+        source_entity_type: {
+          type: "string",
+          enum: ["purchase_order", "purchase_order_line", "part"],
+          description: "Blocked source entity type. Default is purchase_order.",
+        },
+        source_entity_id: {
+          type: "string",
+          description: "Blocked source entity identifier, for example PO-7712.",
+        },
+        max_hops: {
+          type: "number",
+          description: "Maximum impact-propagation hops to traverse.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
     name: "annona_estimate_shadow_progress",
     description:
       "Estimate operational progress when point-of-use confirmation is missing by combining shadow signals into a probabilistic traceability view.",
@@ -1167,6 +1347,14 @@ export async function invokeAnnonaTool(name: string, args: unknown) {
     case "annona_prioritize_next_action":
       return prioritizeAnnonaNextAction(
         (args ?? {}) as Parameters<typeof prioritizeAnnonaNextAction>[0],
+      );
+    case "annona_trace_graph_dependencies":
+      return traceAnnonaGraphDependencies(
+        (args ?? {}) as Parameters<typeof traceAnnonaGraphDependencies>[0],
+      );
+    case "annona_propagate_dependency_impact":
+      return propagateAnnonaDependencyImpact(
+        (args ?? {}) as Parameters<typeof propagateAnnonaDependencyImpact>[0],
       );
     case "annona_estimate_shadow_progress":
       return estimateAnnonaShadowProgress(

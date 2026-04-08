@@ -79,6 +79,11 @@ const DEMO_ORDER_MARGIN_BUNDLE_MANIFEST_PATH = path.join(
   "demo_order_margin_bundle_manifest.json",
 );
 
+const DEMO_MANUFACTURING_DEPENDENCY_BUNDLE_MANIFEST_PATH = path.join(
+  DEMO_DATASET_DIR,
+  "demo_manufacturing_dependency_bundle_manifest.json",
+);
+
 function parseCsvLine(line: string): string[] {
   const fields: string[] = [];
   let current = "";
@@ -160,33 +165,58 @@ const DEMO_ORDER_MARGIN_BUNDLE_MANIFEST = JSON.parse(
   readFileSync(DEMO_ORDER_MARGIN_BUNDLE_MANIFEST_PATH, "utf8"),
 ) as DatasetBundleManifest;
 
-export const DEMO_ORDER_MARGIN_BUNDLE_SHARED_FILES: SharedBundleFileDescriptor[] = [
-  {
-    fileName: path.basename(DEMO_ORDER_MARGIN_BUNDLE_MANIFEST_PATH),
-    absolutePath: DEMO_ORDER_MARGIN_BUNDLE_MANIFEST_PATH,
-    description:
-      "Manifest declaring the multi-table order-margin bundle, including explicit join relationships.",
-  },
-  ...DEMO_ORDER_MARGIN_BUNDLE_MANIFEST.tables.map((table) => {
-    const fileName = resolveSourceFileName(table.source);
-    return {
-      fileName,
-      absolutePath: path.join(DEMO_DATASET_DIR, fileName),
-      description: table.description,
-    };
-  }),
-];
+const DEMO_MANUFACTURING_DEPENDENCY_BUNDLE_MANIFEST = JSON.parse(
+  readFileSync(DEMO_MANUFACTURING_DEPENDENCY_BUNDLE_MANIFEST_PATH, "utf8"),
+) as DatasetBundleManifest;
 
-let cachedDemoOrderMarginBundle: LoadedDatasetBundle | null = null;
+function buildSharedFiles(
+  manifestPath: string,
+  manifest: DatasetBundleManifest,
+  manifestDescription: string,
+) {
+  return [
+    {
+      fileName: path.basename(manifestPath),
+      absolutePath: manifestPath,
+      description: manifestDescription,
+    },
+    ...manifest.tables.map((table) => {
+      const fileName = resolveSourceFileName(table.source);
+      return {
+        fileName,
+        absolutePath: path.join(DEMO_DATASET_DIR, fileName),
+        description: table.description,
+      };
+    }),
+  ] satisfies SharedBundleFileDescriptor[];
+}
 
-export function getDemoOrderMarginBundle(): LoadedDatasetBundle {
-  if (cachedDemoOrderMarginBundle) {
-    return cachedDemoOrderMarginBundle;
+export const DEMO_ORDER_MARGIN_BUNDLE_SHARED_FILES = buildSharedFiles(
+  DEMO_ORDER_MARGIN_BUNDLE_MANIFEST_PATH,
+  DEMO_ORDER_MARGIN_BUNDLE_MANIFEST,
+  "Manifest declaring the multi-table order-margin bundle, including explicit join relationships.",
+);
+
+export const DEMO_MANUFACTURING_DEPENDENCY_BUNDLE_SHARED_FILES = buildSharedFiles(
+  DEMO_MANUFACTURING_DEPENDENCY_BUNDLE_MANIFEST_PATH,
+  DEMO_MANUFACTURING_DEPENDENCY_BUNDLE_MANIFEST,
+  "Manifest declaring the graph-backed manufacturing dependency bundle, including BOM, work-order, and purchase-order relationships.",
+);
+
+const cachedBundlesByManifestPath = new Map<string, LoadedDatasetBundle>();
+
+function loadBundle(
+  manifestPath: string,
+  manifest: DatasetBundleManifest,
+): LoadedDatasetBundle {
+  const cached = cachedBundlesByManifestPath.get(manifestPath);
+  if (cached) {
+    return cached;
   }
 
   const tablesByName = new Map<string, LoadedDatasetTable>();
 
-  for (const table of DEMO_ORDER_MARGIN_BUNDLE_MANIFEST.tables) {
+  for (const table of manifest.tables) {
     const fileName = resolveSourceFileName(table.source);
     const absolutePath = path.join(DEMO_DATASET_DIR, fileName);
     const rows = parseCsv(readFileSync(absolutePath, "utf8"));
@@ -205,7 +235,7 @@ export function getDemoOrderMarginBundle(): LoadedDatasetBundle {
 
   const relationshipsByName = new Map<string, DatasetRelationshipIndex>();
 
-  for (const relationship of DEMO_ORDER_MARGIN_BUNDLE_MANIFEST.relationships) {
+  for (const relationship of manifest.relationships) {
     const toTable = tablesByName.get(relationship.to_table);
 
     if (!toTable) {
@@ -229,13 +259,28 @@ export function getDemoOrderMarginBundle(): LoadedDatasetBundle {
     });
   }
 
-  cachedDemoOrderMarginBundle = {
-    manifest: DEMO_ORDER_MARGIN_BUNDLE_MANIFEST,
+  const loadedBundle = {
+    manifest,
     tablesByName,
     relationshipsByName,
   };
+  cachedBundlesByManifestPath.set(manifestPath, loadedBundle);
 
-  return cachedDemoOrderMarginBundle;
+  return loadedBundle;
+}
+
+export function getDemoOrderMarginBundle(): LoadedDatasetBundle {
+  return loadBundle(
+    DEMO_ORDER_MARGIN_BUNDLE_MANIFEST_PATH,
+    DEMO_ORDER_MARGIN_BUNDLE_MANIFEST,
+  );
+}
+
+export function getDemoManufacturingDependencyBundle(): LoadedDatasetBundle {
+  return loadBundle(
+    DEMO_MANUFACTURING_DEPENDENCY_BUNDLE_MANIFEST_PATH,
+    DEMO_MANUFACTURING_DEPENDENCY_BUNDLE_MANIFEST,
+  );
 }
 
 export function getDatasetTable(

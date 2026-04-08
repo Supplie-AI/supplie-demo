@@ -1,0 +1,3 @@
+purchase_order_id,supplier_name,factory_id,status,eta_date,expedite_available
+PO-7712,North Ridge Steel,FCT-BNE,late,2026-05-10,yes
+PO-7713,FastenRight,FCT-BNE,confirmed,2026-05-02,no

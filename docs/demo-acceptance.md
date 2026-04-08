@@ -73,9 +73,19 @@ also declare:
 - the expected inferred-progress or wobble signal path
 - the expected confidence and caveat posture for estimated state
 
+For manufacturing dependency scenarios where deep traceability is required, the
+fixture must also declare:
+
+- the root entity and blocker entity being traced
+- the expected multi-hop path across BOM levels, work orders, and purchase
+  orders
+- the expected impact propagation to other work orders or sales orders when a
+  shared component or purchase order slips
+
 The accepted prompt pack must include all of the following:
 
-- one blocker plus traceability prompt
+- one blocker plus traceability prompt, including a multi-level manufacturing
+  dependency case when the canonical fixture requires it
 - one predictive-risk prompt
 - one prioritization plus next-action prompt
 
@@ -84,6 +94,8 @@ scenarios covering:
 
 - inferred progress when point-of-use confirmation is missing
 - wobble detection when estimated progress becomes unstable
+- deep dependency traceability across sales orders, work orders, purchase
+  orders, and BOM levels
 
 The prompt set is not accepted if it collapses into simple descriptive or
 retrospective lookups.

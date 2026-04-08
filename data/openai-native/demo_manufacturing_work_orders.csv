@@ -1,0 +1,6 @@
+work_order_id,part_id,sales_order_line_id,parent_work_order_id,factory_id,machine_id,status,qty_required,qty_completed,blocking_reason
+WO-1001,KIT-ZED-LIFT,SOL-240501-01,,FCT-BNE,MC-KIT-02,blocked,2,0,waiting_on_child_work_order
+WO-1002,ASM-COIL-PACK,SOL-240501-01,WO-1001,FCT-BNE,MC-COIL-01,blocked,2,0,missing_component
+WO-1003,ASM-HARDWARE-PACK,SOL-240501-01,WO-1001,FCT-BNE,MC-KIT-02,released,2,2,
+WO-1004,KIT-ZED-LIFT,SOL-240501-02,,FCT-BNE,MC-KIT-02,at_risk,1,0,shared_component_shortage
+WO-1005,ASM-COIL-PACK,SOL-240501-02,WO-1004,FCT-BNE,MC-COIL-01,at_risk,1,0,shared_component_shortage

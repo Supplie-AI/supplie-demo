@@ -324,6 +324,9 @@ Examples:
   `margin_pct` by supplier and week
 - a generic `driver_decomposition` template binds to `late_delivery_rate`
   against route, carrier, and warehouse predictors
+- a generic `dependency_graph_trace` template becomes a bound capability over a
+  manufacturing graph that links sales orders, work orders, BOM levels,
+  purchase orders, machines, and factories
 
 ### Binding Requirements
 
@@ -332,6 +335,69 @@ Examples:
 - Binding must fail closed when semantic roles are missing or ambiguous.
 - The engine may expose fewer capabilities for weak datasets rather than
   pretending full coverage.
+
+## Graph-Backed Manufacturing Dependency Reasoning
+
+For manufacturing-style datasets, the compiler should materialize a
+`DependencyGraphModel` from the tabular schema so Annona can reason over
+multi-level production and supply dependencies without re-deriving the path on
+every prompt.
+
+### Domain Model
+
+The canonical manufacturing graph model should be able to represent at least:
+
+- parts and assemblies
+- BOM parent-child edges and BOM levels
+- sales orders and sales-order lines
+- work orders and parent-child work-order chains
+- purchase orders and purchase-order lines
+- customers
+- machines or workcenters
+- factories or sites
+
+### Graph Edge Expectations
+
+The compiled dependency graph should capture edges such as:
+
+- sales order to sales-order line
+- sales-order line to root work order
+- work order to child work order
+- work order to required BOM component or subassembly
+- component to purchase-order line
+- purchase-order line to purchase order
+- work order to machine
+- work order to factory
+- sales order to customer
+
+The precise internal representation may vary, but the engine must preserve a
+stable path model that deterministic tools can traverse and explain.
+
+### Required Graph Capabilities
+
+Manufacturing datasets with the needed semantics should expose deterministic
+capabilities for:
+
+- multi-hop dependency tracing from a root sales order, work order, or part to
+  the blocking upstream dependency
+- impact propagation from a blocked purchase order or shared component into
+  affected work orders and sales orders
+- path narration that makes the hop sequence explicit enough for an operator to
+  act without reconstructing the graph manually
+
+### Required Output Shape
+
+Externally visible deep-trace outputs should include fields equivalent to:
+
+- `rootEntityType`
+- `rootEntityId`
+- `criticalPath`
+- `pathHops`
+- `blockerPartId`
+- `blockerPurchaseOrderId`
+- `impactedSalesOrders`
+- `impactedWorkOrders`
+- machine and factory context for the blocked branch when available
 
 ## Algorithmic Capability Families
 
@@ -427,6 +493,9 @@ The planner must prefer this order:
 - Require at least one evidence-bearing step before any recommendation.
 - Prefer independently invocable substrate tools over monolithic fixed
   workflows.
+- When a prompt explicitly asks for blocker or traceability reasoning across
+  BOM levels, work orders, or purchase orders, prefer compiled dependency-graph
+  path queries over ad hoc first-level joins.
 - Escalate from descriptive to predictive or prescriptive only when the prompt
   or data justifies it.
 - Attach explicit assumptions when the prompt requires unavailable fields or
@@ -628,6 +697,10 @@ All system objects must be:
      traceability mode, estimated-state caveats when applicable, answer status,
      and trace references
 
+14. `DependencyGraphModel`
+   - compiled graph nodes, edges, path semantics, and blocker-impact traversal
+     rules for datasets that support multi-level dependency reasoning
+
 ### Canonical Envelope Pattern
 
 Every externally visible object should follow a shape equivalent to:
@@ -712,6 +785,8 @@ The implementation is only aligned with the canonical spec when:
 - tool-first / LLM-last execution is observable in traces
 - tools remain independently invocable and composable rather than forced into a
   mandatory pipeline
+- graph-backed dependency tracing and impact propagation are available for
+  manufacturing datasets with BOM, work-order, and purchase-order semantics
 - the agent-team eval loop iterates on top of the substrate per dataset
 - schemas are versioned and polymorphic across datasets, capabilities, plans,
   invocations, evidence, recommendations, evaluations, traces, artifacts, and
