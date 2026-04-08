@@ -10,7 +10,9 @@ The repo now targets AWS EKS workflows instead of Vercel.
 - [`.github/workflows/deploy-eks.yml`](/home/jack/workspace/supplie-demo/.github/workflows/deploy-eks.yml)
   - Builds and deploys `main` to the production EKS namespace.
 
-## Secrets To Maintain
+## GitHub Config To Maintain
+
+Shared repo secrets:
 
 - `AWS_ACCOUNT_ID`
 - `AWS_ACCESS_KEY_ID_DEV`
@@ -19,7 +21,6 @@ The repo now targets AWS EKS workflows instead of Vercel.
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_DEPLOY_ROLE_ARN` (optional; enables prod OIDC instead of static prod keys)
 - `EKS_CLUSTER_DEV`
-- `EKS_CLUSTER_PROD`
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY`
 - `DEMO_PASSWORD_DEV`
@@ -27,3 +28,7 @@ The repo now targets AWS EKS workflows instead of Vercel.
 - `DEV_DEMO_HOST`
 - `DEV_ACM_CERT_ARN`
 - `ACM_CERT_ARN`
+
+Production environment (`production`) config:
+
+- `EKS_CLUSTER_PROD` as a GitHub Actions variable (preferred) or secret
