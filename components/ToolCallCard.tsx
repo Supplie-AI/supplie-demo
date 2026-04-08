@@ -22,6 +22,15 @@ export function ToolCallCard({
 }: ToolCallCardProps) {
   const [expanded, setExpanded] = useState(false);
 
+  const formatPercent = (value: unknown) => {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return null;
+    }
+
+    const normalized = value > 0 && value <= 1 ? value * 100 : value;
+    return `${Math.round(normalized)}%`;
+  };
+
   const toolSource =
     toolName.startsWith("openai_")
       ? {
@@ -69,6 +78,13 @@ export function ToolCallCard({
       if (toolName === "openai_code_interpreter") {
         const outputs = Array.isArray(r.outputs) ? r.outputs.length : 0;
         return `${outputs} sandbox outputs`;
+      }
+      if (r.traceability_mode === "probabilistic") {
+        const progress = formatPercent(r.inferred_progress_pct);
+        if (r.wobble_detected === true) {
+          return progress ? `Wobble at ${progress}` : "Wobble detected";
+        }
+        return progress ? `Estimated progress ${progress}` : "Probabilistic traceability";
       }
       if ("margin_pct" in r) return `Margin: ${r.margin_pct}%`;
       if ("days_remaining" in r)

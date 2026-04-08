@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  detectAnnonaShadowWobble,
+  estimateAnnonaShadowProgress,
   evaluateAnnonaRecommendation,
   prioritizeAnnonaNextAction,
   rankAnnonaServiceRisk,
@@ -54,6 +56,35 @@ test("prioritizeAnnonaNextAction keeps the next-24-hours decision on the margin 
   );
 });
 
+test("estimateAnnonaShadowProgress marks missing point-of-use truth as probabilistic", () => {
+  const result = estimateAnnonaShadowProgress({
+    dataset: "zeder_shadow_progress_snapshot.json",
+    entity_id: "ZED-KIT-1042",
+    horizon_hours: 24,
+  });
+
+  assert.equal(result.traceability_mode, "probabilistic");
+  assert.equal(result.point_of_use_data_status, "missing");
+  assert.equal(result.entity_id, "ZED-KIT-1042");
+  assert.equal(result.inferred_progress_pct, 72);
+  assert.equal(result.wobble_detected, false);
+  assert.match(result.caveats.join(" "), /estimated from shadow signals/i);
+});
+
+test("detectAnnonaShadowWobble flags unstable inferred progress without claiming scan truth", () => {
+  const result = detectAnnonaShadowWobble({
+    dataset: "zeder_shadow_progress_snapshot.json",
+    entity_id: "ZED-KIT-2088",
+  });
+
+  assert.equal(result.traceability_mode, "probabilistic");
+  assert.equal(result.entity_id, "ZED-KIT-2088");
+  assert.equal(result.wobble_detected, true);
+  assert.equal(result.wobble_score, 0.73);
+  assert.match(result.wobble_reasons.join(" "), /eta moved backward/i);
+  assert.match(result.caveats.join(" "), /manual confirmation/i);
+});
+
 test("evaluateAnnonaRecommendation returns scenario-specific quality checks", () => {
   assert.deepEqual(
     evaluateAnnonaRecommendation({ check: "early-signal framing" }),
@@ -71,6 +102,16 @@ test("evaluateAnnonaRecommendation returns scenario-specific quality checks", ()
       grounded: true,
       action_oriented: true,
       prioritization_clear: true,
+    },
+  );
+  assert.deepEqual(
+    evaluateAnnonaRecommendation({ check: "probabilistic estimated-state disclosure" }),
+    {
+      check: "probabilistic estimated-state disclosure",
+      grounded: true,
+      estimated_state_labeled: true,
+      caveats_present: true,
+      confidence_downgraded: true,
     },
   );
 });

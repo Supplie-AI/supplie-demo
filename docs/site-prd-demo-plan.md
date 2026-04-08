@@ -47,6 +47,9 @@ against screenshots.
   baseline.
 - The grounded panel includes tool evidence for dataset profiling, analysis, or
   answer evaluation rather than reading like a plain lookup.
+- When the grounded panel is showing an estimated state rather than confirmed
+  point-of-use truth, the confidence/evidence UI explicitly marks it as
+  estimated or wobbling instead of presenting it like an exact observation.
 - When the prompt is prescriptive, the grounded result resolves to a clear
   recommendation with context.
 
@@ -61,6 +64,9 @@ against screenshots.
   other missing capabilities.
 - `grounded_evidence_visibility`: the grounded panel makes its tool-backed
   orchestration evidence visually distinct from the raw panel.
+- `estimated_state_disclosure`: estimated-state answers are visibly labeled as
+  estimated or wobbling, and the caveat about missing point-of-use confirmation
+  is readable in the grounded panel.
 - `operational_recommendation_shape`: Annona answers read as operational
   recommendations with context, not dashboard sprawl.
 - `readability_and_polish`: text is readable, contrast is acceptable, spacing is
@@ -74,6 +80,8 @@ against screenshots.
 - The password gate exposes protected content before authentication.
 - The grounded panel does not visually distinguish Annona orchestration evidence
   from the raw panel.
+- An estimated-state answer is rendered as if it were exact observed truth, or
+  the caveat about missing point-of-use confirmation is absent.
 - The prompt set shown in the UI omits any of the required harder prompt
   classes: blocker plus traceability, predictive risk, or prioritization plus
   next action.

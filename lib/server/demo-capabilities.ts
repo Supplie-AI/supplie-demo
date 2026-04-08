@@ -141,7 +141,7 @@ export function getGroundedCapabilities(
       enabled: true,
       availability: "available",
       description:
-        "The grounded panel adds Annona-specific row and entity traceability over the same bundled baseline.",
+        "The grounded panel adds Annona-specific row and entity traceability over the same bundled baseline, plus estimated-state heuristics when point-of-use confirmation is missing.",
     },
     {
       id: "annona_calculators",

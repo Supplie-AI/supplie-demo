@@ -34,7 +34,19 @@ export function AnswerEvidencePanel({
             border: "rgba(163, 73, 73, 0.18)",
             background: "rgba(163, 73, 73, 0.08)",
             color: "#8f3e3e",
-          };
+        };
+  const stateStyles =
+    insights.confidence.stateLabel === "Estimated"
+      ? {
+          border: "rgba(199, 134, 47, 0.2)",
+          background: "rgba(199, 134, 47, 0.1)",
+          color: "#8a5618",
+        }
+      : {
+          border: "rgba(0, 95, 119, 0.18)",
+          background: "rgba(0, 210, 255, 0.08)",
+          color: "#005f77",
+        };
 
   return (
     <div
@@ -59,6 +71,13 @@ export function AnswerEvidencePanel({
           style={confidenceStyles}
         >
           {insights.confidence.label}
+        </span>
+        <span
+          data-testid={`panel-${panelId}-state-mode-${messageIndex}`}
+          className="rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+          style={stateStyles}
+        >
+          {insights.confidence.stateLabel}
         </span>
       </div>
 
@@ -104,6 +123,33 @@ export function AnswerEvidencePanel({
                 >
                   {item.sourceLabel}
                 </span>
+                {item.stateLabel && (
+                  <span
+                    className="rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]"
+                    style={{
+                      borderColor:
+                        item.tone === "warning"
+                          ? "rgba(163, 73, 73, 0.16)"
+                          : item.stateLabel === "Estimated"
+                            ? "rgba(199, 134, 47, 0.18)"
+                            : "rgba(0, 95, 119, 0.1)",
+                      background:
+                        item.tone === "warning"
+                          ? "rgba(163, 73, 73, 0.08)"
+                          : item.stateLabel === "Estimated"
+                            ? "rgba(199, 134, 47, 0.1)"
+                            : "rgba(0, 210, 255, 0.08)",
+                      color:
+                        item.tone === "warning"
+                          ? "#8f3e3e"
+                          : item.stateLabel === "Estimated"
+                            ? "#8a5618"
+                            : "#005f77",
+                    }}
+                  >
+                    {item.stateLabel}
+                  </span>
+                )}
               </div>
               <p
                 className="mt-1 text-sm leading-6"
