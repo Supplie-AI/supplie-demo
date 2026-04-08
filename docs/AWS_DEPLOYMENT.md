@@ -7,7 +7,7 @@
 - No LiteLLM sidecar
 - No file-upload bootstrap step
 
-## Required GitHub Secrets
+## Required GitHub Config
 
 ### Dev workflow
 
@@ -23,11 +23,13 @@
 
 ### Main/prod workflow
 
+Set these on the GitHub `production` environment unless you intentionally want repo-wide defaults.
+
 - `AWS_ACCOUNT_ID`
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_DEPLOY_ROLE_ARN` (optional; if set, the workflow prefers OIDC over static keys)
-- `EKS_CLUSTER_PROD`
+- `EKS_CLUSTER_PROD` as a variable (preferred) or secret
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY` (optional)
 - `DEMO_PASSWORD`
@@ -61,7 +63,7 @@ Only these application secrets are injected:
 ## Notes
 
 - The production workflow validates its AWS credential inputs before deploy. It uses `AWS_DEPLOY_ROLE_ARN` when present, otherwise falls back to `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`.
-- The production workflow also requires `EKS_CLUSTER_PROD` and uses it for `aws eks update-kubeconfig` instead of guessing a hardcoded cluster name. The repo’s documented production region remains `us-east-1`.
+- The production workflow also requires `EKS_CLUSTER_PROD` and reads it from the GitHub `production` environment variable first, then the same-named secret if needed. The repo’s documented production region remains `us-east-1`.
 - Anthropic is optional at deploy time. The UI exposes Claude models, but the backend returns a clear configuration error if the key is missing.
 - OpenAI-backed dev/prod deploys emit structured JSON logs with request IDs, trace IDs, capability snapshots, tool activity, and model-run summaries. See [`docs/LOGGING.md`](/home/jack/workspace/supplie-demo-issue5/docs/LOGGING.md).
 - On successful deploys, the workflows print recent app logs with `kubectl logs deployment/supplie-demo -n <namespace> --tail=80`.

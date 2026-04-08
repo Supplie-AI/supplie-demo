@@ -50,10 +50,13 @@ jobs:
       - name: Resolve production cluster target
         id: prod-target
         env:
-          EKS_CLUSTER_PROD: ${{ secrets.EKS_CLUSTER_PROD }}
+          EKS_CLUSTER_PROD_VAR: ${{ vars.EKS_CLUSTER_PROD }}
+          EKS_CLUSTER_PROD_SECRET: ${{ secrets.EKS_CLUSTER_PROD }}
         run: |
+          EKS_CLUSTER_PROD="${EKS_CLUSTER_PROD_VAR:-${EKS_CLUSTER_PROD_SECRET}}"
+
           if [ -z "${EKS_CLUSTER_PROD}" ]; then
-            echo "::error::Production deploy requires EKS_CLUSTER_PROD. The workflow no longer guesses a hardcoded cluster name."
+            echo "::error::Production deploy requires EKS_CLUSTER_PROD. Set it on the GitHub production environment as a variable (preferred) or secret."
             exit 1
           fi
 
