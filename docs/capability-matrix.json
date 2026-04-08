@@ -1,5 +1,5 @@
 {
-  "version": "2026-04-05",
+  "version": "2026-04-08",
   "brandName": "Annona",
   "category": "decision_intelligence_for_operations",
   "corePromise": "See clearly. Act early.",
@@ -100,6 +100,7 @@
       "clear recommendation with context",
       "situation_impact_action structure when a decision is required",
       "explainable and traceable reasoning",
+      "estimated states explicitly labeled when point-of-use truth is missing",
       "no dashboard sprawl or black-box claims"
     ]
   },
@@ -144,7 +145,7 @@
       {
         "id": "answer_evaluation",
         "label": "Answer evaluation",
-        "outcome": "Check whether the recommendation is supported, scoped, and operationally usable before finalizing it."
+        "outcome": "Check whether the recommendation is supported, scoped, operationally usable, and correctly calibrated between observed and estimated state before finalizing it."
       },
       {
         "id": "translation_narration",
@@ -159,9 +160,33 @@
       "variance ranking",
       "service-risk ranking",
       "future-state risk framing",
+      "inferred progress heuristics",
+      "probabilistic traceability",
+      "wobble detection",
       "recommendation synthesis",
       "answer self-check"
-    ]
+    ],
+    "traceabilityModel": {
+      "exactMode": "Use exact traceability only when point-of-use confirmation exists.",
+      "probabilisticMode": "When point-of-use confirmation is missing, infer progress from shadow signals and label the result as estimated.",
+      "requiredOutputs": [
+        "traceability_mode",
+        "point_of_use_data_status",
+        "estimated_state",
+        "progress_pct_low",
+        "inferred_progress_pct",
+        "progress_pct_high",
+        "evidence_coverage_pct",
+        "wobble_detected",
+        "caveats"
+      ],
+      "wobbleSignals": [
+        "eta_regression",
+        "quantity_reversal",
+        "stall_after_forward_progress",
+        "conflicting_adjacent_system_signals"
+      ]
+    }
   },
   "registry": {
     "model": "capability_template_registry_with_dataset_adaptive_binding",

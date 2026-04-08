@@ -46,6 +46,10 @@ remain portable to TypeScript, Rust, or Go services.
 - Tool-first, LLM-last is the default. Deterministic analysis tools should
   produce the facts; the LLM should primarily handle planning under uncertainty,
   explanation, and final narrative synthesis.
+- Missing point-of-use truth must downgrade the contract, not break it. When a
+  pilot such as Zeder's lacks perfect scan-level confirmation, Annona should
+  emit estimated state with explicit caveats rather than pretending exact
+  completion telemetry exists.
 - Contracts are explicit and portable. Every cross-service payload must be
   versioned, discriminated, and safe to serialize over HTTP, queues, or storage.
 - The system must preserve explainability. Recommendations require evidence,
@@ -454,6 +458,77 @@ narrate` sequence when the prompt only needs a subset.
 - If evaluation fails, the engine should revise, narrow, or downgrade the answer
   before responding.
 
+### Missing Point-Of-Use Data, Inferred Progress, And Wobble Detection
+
+Some deployments, including Zeder's pilot, cannot rely on perfect point-of-use
+or scan-level truth. The engine must support an explicit estimated-state path
+for these cases rather than collapsing to either false precision or no answer.
+
+#### Inferred Progress / Shadow Progress Model
+
+When point-of-use truth is missing, the engine may infer progress from shadow
+signals such as:
+
+- dispatch and handoff events
+- carrier ETA movement
+- installer or crew bookings
+- quantity acknowledgements
+- exception, reopen, or rework events
+- inventory decrements or reservations adjacent to the point of use
+
+The inferred-progress model must:
+
+- mark the trace as `probabilistic`, not exact
+- distinguish observed facts from inferred state
+- emit an `estimatedState` label rather than a confirmed completion label
+- emit a bounded progress range such as `progressPctLow`, `inferredProgressPct`,
+  and `progressPctHigh`
+- emit `evidenceCoveragePct` or an equivalent measure of shadow-signal coverage
+- attach counter-signals, missing-data warnings, and operator caveats
+
+#### Wobble Detection
+
+The engine should detect wobble when inferred progress becomes directionally
+unstable. Wobble is not a confirmed reversal at point of use. It is a heuristic
+warning that competing signals make the inferred state unreliable.
+
+Wobble detection should trigger when signals show patterns such as:
+
+- ETA regression after forward movement
+- quantity or booking reversals
+- long stalls after earlier forward progress
+- conflicting evidence from adjacent systems
+- reopen or exception events inconsistent with the current estimated state
+
+When wobble is detected, the engine must:
+
+- lower confidence below the equivalent exact-state answer
+- label the answer as unstable or verify-now rather than completed
+- surface the competing signals directly in evidence
+- recommend manual confirmation before operational commitment
+
+#### Probabilistic Traceability Output Contract
+
+When point-of-use truth is missing, externally visible trace and answer objects
+must preserve the distinction between exact and estimated state. The canonical
+probabilistic-traceability output should include fields equivalent to:
+
+- `traceabilityMode`
+- `pointOfUseDataStatus`
+- `estimatedState`
+- `progressPctLow`
+- `inferredProgressPct`
+- `progressPctHigh`
+- `evidenceCoveragePct`
+- `wobbleDetected`
+- `wobbleScore`
+- `supportingSignals`
+- `counterSignals`
+- `caveats`
+
+The engine must never translate these outputs into exact state language unless
+confirmed point-of-use evidence arrives later.
+
 ## Token And Latency Optimization
 
 Token use is a first-class architectural concern.
@@ -532,6 +607,8 @@ All system objects must be:
 9. `Evidence`
    - evidence claims, supporting metrics, supporting artifacts, provenance, and
      confidence
+   - for estimated states, also preserves `traceabilityMode`, supporting
+     signals, counter-signals, and missing-data caveats
 
 10. `Recommendation`
    - action candidate, rationale, expected impact, priority, assumptions, and
@@ -539,7 +616,8 @@ All system objects must be:
 
 11. `Evaluation`
    - answer quality checks such as support coverage, hallucination risk, action
-     clarity, policy compliance, and confidence
+     clarity, policy compliance, confidence, and calibration between exact and
+     estimated states
 
 12. `Trace`
    - end-to-end execution record linking datasets, plans, invocations,
@@ -547,7 +625,8 @@ All system objects must be:
 
 13. `AnswerEnvelope`
    - final user-facing response, structured recommendations, evidence summary,
-     answer status, and trace references
+     traceability mode, estimated-state caveats when applicable, answer status,
+     and trace references
 
 ### Canonical Envelope Pattern
 
@@ -582,6 +661,9 @@ contain:
 - `evidenceSummary`
 - `assumptions`
 - `confidence`
+- `traceabilityMode`
+- `estimatedState`
+- `caveats`
 - `traceId`
 
 If the prompt is descriptive only, the answer may omit prescriptive fields, but

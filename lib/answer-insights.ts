@@ -4,11 +4,14 @@ export interface AnswerEvidenceItem {
   label: string;
   sourceLabel: string;
   detail: string;
+  stateLabel?: "Observed" | "Estimated" | "Wobble";
+  tone?: "neutral" | "warning";
 }
 
 export interface AnswerConfidence {
   label: "High" | "Medium" | "Low";
   summary: string;
+  stateLabel: "Observed" | "Estimated";
 }
 
 export interface AnswerInsights {
@@ -43,6 +46,17 @@ function formatCount(value: unknown, noun: string) {
   return `${value} ${noun}${value === 1 ? "" : "s"}`;
 }
 
+function formatPercent(value: unknown) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+
+  const normalized = value > 0 && value <= 1 ? value * 100 : value;
+  const rounded = normalized >= 10 ? Math.round(normalized) : Number(normalized.toFixed(1));
+
+  return `${rounded}%`;
+}
+
 function truncate(value: string, max = 120) {
   return value.length > max ? `${value.slice(0, max - 1).trimEnd()}…` : value;
 }
@@ -53,6 +67,10 @@ function humanizeToolName(toolName: string) {
     .replace(/^annona_/, "Annona ")
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function humanizeValue(value: string) {
+  return value.replace(/_/g, " ");
 }
 
 function extractLogs(result: JsonRecord) {
@@ -140,6 +158,44 @@ function evidenceFromResult(
     };
   }
 
+  if (
+    result.traceability_mode === "probabilistic" &&
+    typeof result.estimated_state === "string"
+  ) {
+    const progressMid = formatPercent(result.inferred_progress_pct);
+    const progressLow = formatPercent(result.progress_pct_low);
+    const progressHigh = formatPercent(result.progress_pct_high);
+    const progressBand =
+      progressLow && progressHigh
+        ? `${progressLow}-${progressHigh} inferred progress`
+        : progressMid
+          ? `${progressMid} inferred progress`
+          : null;
+    const coverage = formatPercent(result.evidence_coverage_pct);
+    const wobble =
+      result.wobble_detected === true
+        ? "wobble detected"
+        : typeof result.wobble_flag === "string" &&
+            result.wobble_flag !== "stable"
+          ? `wobble ${humanizeValue(result.wobble_flag)}`
+          : null;
+
+    return {
+      label: result.wobble_detected === true ? "Wobble alert" : "Estimated progress",
+      sourceLabel: "Annona heuristic",
+      stateLabel: result.wobble_detected === true ? "Wobble" : "Estimated",
+      tone: result.wobble_detected === true ? "warning" : "neutral",
+      detail: [
+        humanizeValue(result.estimated_state),
+        progressBand,
+        coverage ? `${coverage} signal coverage` : null,
+        wobble,
+      ]
+        .filter(Boolean)
+        .join(" | "),
+    };
+  }
+
   if (Array.isArray(result.orders)) {
     const orderCount =
       formatCount(result.total_orders, "order") ??
@@ -153,6 +209,7 @@ function evidenceFromResult(
       label: "Order snapshot",
       sourceLabel: "Annona snapshot",
       detail: [orderCount, netMargin, marginPct].filter(Boolean).join(" | "),
+      stateLabel: "Observed",
     };
   }
 
@@ -167,6 +224,7 @@ function evidenceFromResult(
       label: "Stock risk rows",
       sourceLabel: "Annona snapshot",
       detail: [skuCount, urgentCount].filter(Boolean).join(" | "),
+      stateLabel: "Observed",
     };
   }
 
@@ -179,6 +237,7 @@ function evidenceFromResult(
       label: "Leakage ranking",
       sourceLabel: "Annona snapshot",
       detail: [topSupplier, leakage].filter(Boolean).join(" | "),
+      stateLabel: "Observed",
     };
   }
 
@@ -187,6 +246,7 @@ function evidenceFromResult(
       label: "Grounding scope",
       sourceLabel: "Annona snapshot",
       detail: truncate(result.disclosure, 110),
+      stateLabel: "Observed",
     };
   }
 
@@ -208,6 +268,7 @@ function evidenceFromResult(
         label: humanizeToolName(toolName),
         sourceLabel: toolName.startsWith("annona_") ? "Annona tool" : "Tool output",
         detail: fragments.join(" | "),
+        stateLabel: toolName.startsWith("annona_") ? "Observed" : undefined,
       };
     }
   }
@@ -223,6 +284,7 @@ function evidenceFromResult(
       label: "Blocking row",
       sourceLabel: "Annona analysis",
       detail: [result.weakest_row, netMargin, marginPct].filter(Boolean).join(" | "),
+      stateLabel: "Observed",
     };
   }
 
@@ -249,6 +311,7 @@ function evidenceFromResult(
       ]
         .filter(Boolean)
         .join(" | "),
+      stateLabel: "Observed",
     };
   }
 
@@ -262,6 +325,7 @@ function evidenceFromResult(
       ]
         .filter(Boolean)
         .join(" | "),
+      stateLabel: "Observed",
     };
   }
 
@@ -298,6 +362,30 @@ function collectCaveats(content: string, toolInvocations: ToolInvocation[]) {
       continue;
     }
 
+    if (Array.isArray(result.caveats)) {
+      for (const caveat of result.caveats) {
+        if (typeof caveat === "string") {
+          caveats.push(caveat);
+        }
+      }
+    }
+
+    if (
+      result.traceability_mode === "probabilistic" ||
+      result.point_of_use_data_status === "missing" ||
+      result.missing_point_of_use_data === true
+    ) {
+      caveats.push(
+        "Point-of-use confirmation is missing, so the grounded state is estimated from indirect signals rather than exact scan truth.",
+      );
+    }
+
+    if (result.wobble_detected === true) {
+      caveats.push(
+        "Wobble indicates the inferred progress direction is unstable and needs manual confirmation before execution.",
+      );
+    }
+
     if (typeof result.disclosure === "string") {
       caveats.push(result.disclosure);
       continue;
@@ -332,6 +420,17 @@ function buildConfidence(
     invocation.toolName.startsWith("openai_"),
   );
   const lowerContent = content.toLowerCase();
+  const probabilisticTraceability = successfulTools.some(
+    (invocation) =>
+      isRecord(invocation.result) &&
+      (invocation.result.traceability_mode === "probabilistic" ||
+        invocation.result.point_of_use_data_status === "missing"),
+  );
+  const wobbleDetected = successfulTools.some(
+    (invocation) =>
+      isRecord(invocation.result) && invocation.result.wobble_detected === true,
+  );
+  const stateLabel = probabilisticTraceability ? "Estimated" : "Observed";
 
   if (annonaTools.length > 0) {
     score += 0.26;
@@ -345,13 +444,21 @@ function buildConfidence(
     score += 0.08;
   }
 
+  if (probabilisticTraceability) {
+    score -= 0.08;
+  }
+
+  if (wobbleDetected) {
+    score -= 0.1;
+  }
+
   if (
     lowerContent.includes("may ") ||
     lowerContent.includes("might ") ||
     lowerContent.includes("could ") ||
     lowerContent.includes("likely")
   ) {
-    score -= 0.12;
+    score -= probabilisticTraceability ? 0.04 : 0.12;
   }
 
   if (successfulTools.length === 0) {
@@ -373,9 +480,12 @@ function buildConfidence(
     return {
       label: "High",
       summary:
-        annonaTools.length > 0
-          ? "Grounded on structured Annona results with supporting evidence."
-          : "Backed by multiple supporting tool results.",
+        probabilisticTraceability
+          ? "Backed by structured heuristic signals, but still estimated because point-of-use confirmation is missing."
+          : annonaTools.length > 0
+            ? "Grounded on structured Annona results with supporting evidence."
+            : "Backed by multiple supporting tool results.",
+      stateLabel,
     };
   }
 
@@ -383,15 +493,21 @@ function buildConfidence(
     return {
       label: "Medium",
       summary:
-        successfulTools.length > 0
-          ? "Supported by some tool output, but parts of the answer remain interpretive."
-          : "Reasonable answer, but the grounding trail is limited.",
+        probabilisticTraceability
+          ? "Supported by heuristic signals, but the operational state remains estimated rather than confirmed at point of use."
+          : successfulTools.length > 0
+            ? "Supported by some tool output, but parts of the answer remain interpretive."
+            : "Reasonable answer, but the grounding trail is limited.",
+      stateLabel,
     };
   }
 
   return {
     label: "Low",
-    summary: "The answer is lightly supported and should be verified before acting on it.",
+    summary: probabilisticTraceability
+      ? "The state is inferred from sparse or unstable signals and should be manually verified before acting on it."
+      : "The answer is lightly supported and should be verified before acting on it.",
+    stateLabel,
   };
 }
 

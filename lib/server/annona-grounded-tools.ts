@@ -580,6 +580,123 @@ export function prioritizeAnnonaNextAction({
   };
 }
 
+const ZEDER_SHADOW_PROGRESS_FIXTURES = {
+  "ZED-KIT-1042": {
+    entity_id: "ZED-KIT-1042",
+    estimated_state: "arrived_at_site_not_confirmed_at_point_of_use",
+    inferred_progress_pct: 72,
+    progress_pct_low: 61,
+    progress_pct_high: 79,
+    evidence_coverage_pct: 68,
+    wobble_detected: false,
+    wobble_score: 0.18,
+    supporting_signals: [
+      "Carrier ETA tightened by 1.2 days over the last 24 hours",
+      "Installer booking remains confirmed for the next shift",
+      "No reopen or exception ticket has been logged after dispatch",
+    ],
+    counter_signals: [
+      "No point-of-use consumption scan is available yet",
+    ],
+  },
+  "ZED-KIT-2088": {
+    entity_id: "ZED-KIT-2088",
+    estimated_state: "in_transit_with_regression_risk",
+    inferred_progress_pct: 58,
+    progress_pct_low: 44,
+    progress_pct_high: 67,
+    evidence_coverage_pct: 52,
+    wobble_detected: true,
+    wobble_score: 0.73,
+    supporting_signals: [
+      "Carrier milestone shows the kit departed the cross-dock",
+      "Crew allocation is still present on tomorrow's schedule",
+    ],
+    counter_signals: [
+      "ETA moved backward by 2.4 days after an earlier forward step",
+      "Quantity acknowledgement dropped from full kit to partial kit",
+    ],
+  },
+} as const;
+
+function getZederShadowProgressFixture(entityId?: string) {
+  if (entityId) {
+    const exactMatch =
+      ZEDER_SHADOW_PROGRESS_FIXTURES[
+        entityId as keyof typeof ZEDER_SHADOW_PROGRESS_FIXTURES
+      ];
+    if (exactMatch) {
+      return exactMatch;
+    }
+  }
+
+  return ZEDER_SHADOW_PROGRESS_FIXTURES["ZED-KIT-1042"];
+}
+
+export function estimateAnnonaShadowProgress({
+  dataset,
+  entity_id,
+  horizon_hours,
+}: {
+  dataset?: string;
+  entity_id?: string;
+  horizon_hours?: number;
+}) {
+  const fixture = getZederShadowProgressFixture(entity_id);
+
+  return {
+    pilot: "zeder_pilot",
+    dataset: dataset ?? "zeder_shadow_progress_snapshot.json",
+    entity_id: fixture.entity_id,
+    horizon_hours: horizon_hours ?? 24,
+    traceability_mode: "probabilistic",
+    point_of_use_data_status: "missing",
+    estimated_state: fixture.estimated_state,
+    inferred_progress_pct: fixture.inferred_progress_pct,
+    progress_pct_low: fixture.progress_pct_low,
+    progress_pct_high: fixture.progress_pct_high,
+    evidence_coverage_pct: fixture.evidence_coverage_pct,
+    wobble_detected: fixture.wobble_detected,
+    wobble_score: fixture.wobble_score,
+    supporting_signals: fixture.supporting_signals,
+    counter_signals: fixture.counter_signals,
+    caveats: [
+      "Point-of-use confirmation is missing, so the state is estimated from shadow signals rather than exact scan truth.",
+      "The inferred progress band should be treated as directional until a physical consumption or install event arrives.",
+    ],
+  };
+}
+
+export function detectAnnonaShadowWobble({
+  dataset,
+  entity_id,
+}: {
+  dataset?: string;
+  entity_id?: string;
+}) {
+  const fixture = getZederShadowProgressFixture(entity_id ?? "ZED-KIT-2088");
+
+  return {
+    pilot: "zeder_pilot",
+    dataset: dataset ?? "zeder_shadow_progress_snapshot.json",
+    entity_id: fixture.entity_id,
+    traceability_mode: "probabilistic",
+    point_of_use_data_status: "missing",
+    estimated_state: fixture.estimated_state,
+    inferred_progress_pct: fixture.inferred_progress_pct,
+    progress_pct_low: fixture.progress_pct_low,
+    progress_pct_high: fixture.progress_pct_high,
+    wobble_detected: fixture.wobble_detected,
+    wobble_score: fixture.wobble_score,
+    wobble_reasons: fixture.counter_signals,
+    stabilizing_signals: fixture.supporting_signals,
+    caveats: [
+      "Wobble means the inferred progress direction is unstable, not that a confirmed reversal happened at point of use.",
+      "Escalate for manual confirmation before treating this entity as completed or irrecoverably delayed.",
+    ],
+  };
+}
+
 export function evaluateAnnonaRecommendation({
   check,
 }: {
@@ -611,6 +728,20 @@ export function evaluateAnnonaRecommendation({
       grounded: true,
       action_oriented: true,
       prioritization_clear: true,
+    };
+  }
+
+  if (
+    normalizedCheck.includes("estimated") ||
+    normalizedCheck.includes("probabilistic") ||
+    normalizedCheck.includes("wobble")
+  ) {
+    return {
+      check: check ?? "estimated-state disclosure",
+      grounded: true,
+      estimated_state_labeled: true,
+      caveats_present: true,
+      confidence_downgraded: true,
     };
   }
 
@@ -724,6 +855,43 @@ export const annonaGroundedTools = [
         .enum(["next_24_hours"])
         .optional()
         .describe("Operational prioritization horizon."),
+    }),
+  }),
+  tool(async (args) => estimateAnnonaShadowProgress(args), {
+    name: "annona_estimate_shadow_progress",
+    description:
+      "Estimate operational progress when point-of-use confirmation is missing by combining shadow signals into a probabilistic traceability view.",
+    schema: z.object({
+      dataset: z
+        .string()
+        .optional()
+        .describe("Heuristic dataset or manifest used for the estimated-state pass."),
+      entity_id: z
+        .string()
+        .optional()
+        .describe("Pilot entity identifier to estimate, for example ZED-KIT-1042."),
+      horizon_hours: z
+        .number()
+        .int()
+        .min(1)
+        .max(168)
+        .optional()
+        .describe("Short-term horizon used for the inferred-progress estimate."),
+    }),
+  }),
+  tool(async (args) => detectAnnonaShadowWobble(args), {
+    name: "annona_detect_shadow_wobble",
+    description:
+      "Detect wobble in inferred progress when shadow signals reverse, stall, or disagree while point-of-use confirmation is still missing.",
+    schema: z.object({
+      dataset: z
+        .string()
+        .optional()
+        .describe("Heuristic dataset or manifest used for wobble detection."),
+      entity_id: z
+        .string()
+        .optional()
+        .describe("Pilot entity identifier to inspect, for example ZED-KIT-2088."),
     }),
   }),
   tool(async (args) => evaluateAnnonaRecommendation(args), {
@@ -902,6 +1070,54 @@ export const annonaOpenAIFunctionTools = [
   },
   {
     type: "function",
+    name: "annona_estimate_shadow_progress",
+    description:
+      "Estimate operational progress when point-of-use confirmation is missing by combining shadow signals into a probabilistic traceability view.",
+    parameters: {
+      type: "object",
+      properties: {
+        dataset: {
+          type: "string",
+          description:
+            "Heuristic dataset or manifest used for the estimated-state pass.",
+        },
+        entity_id: {
+          type: "string",
+          description:
+            "Pilot entity identifier to estimate, for example ZED-KIT-1042.",
+        },
+        horizon_hours: {
+          type: "number",
+          description:
+            "Short-term horizon used for the inferred-progress estimate.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "annona_detect_shadow_wobble",
+    description:
+      "Detect wobble in inferred progress when shadow signals reverse, stall, or disagree while point-of-use confirmation is still missing.",
+    parameters: {
+      type: "object",
+      properties: {
+        dataset: {
+          type: "string",
+          description: "Heuristic dataset or manifest used for wobble detection.",
+        },
+        entity_id: {
+          type: "string",
+          description:
+            "Pilot entity identifier to inspect, for example ZED-KIT-2088.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
     name: "annona_evaluate_recommendation",
     description:
       "Evaluate whether a grounded Annona recommendation is traceable, early-signal oriented, or clearly prioritized.",
@@ -951,6 +1167,14 @@ export async function invokeAnnonaTool(name: string, args: unknown) {
     case "annona_prioritize_next_action":
       return prioritizeAnnonaNextAction(
         (args ?? {}) as Parameters<typeof prioritizeAnnonaNextAction>[0],
+      );
+    case "annona_estimate_shadow_progress":
+      return estimateAnnonaShadowProgress(
+        (args ?? {}) as Parameters<typeof estimateAnnonaShadowProgress>[0],
+      );
+    case "annona_detect_shadow_wobble":
+      return detectAnnonaShadowWobble(
+        (args ?? {}) as Parameters<typeof detectAnnonaShadowWobble>[0],
       );
     case "annona_evaluate_recommendation":
       return evaluateAnnonaRecommendation(

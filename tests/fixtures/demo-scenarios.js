@@ -391,6 +391,190 @@ export const DEMO_SCENARIOS = [
   },
 ];
 
+/** @type {DemoScenario[]} */
+export const PROBABILISTIC_TRACEABILITY_SCENARIOS = [
+  {
+    id: "missing-point-of-use-inferred-progress",
+    prompt:
+      "We do not have point-of-use scans for Zeder yet. Which kit looks farthest along anyway, and how certain is that estimate?",
+    promptClass: "predictive",
+    sharedBundleAnswerable: false,
+    dataPrerequisites: [
+      "Shadow progress signals such as ETA changes, installer bookings, and exception activity",
+      "Explicit absence of point-of-use confirmation",
+      "Confidence and caveat framing for estimated state rather than exact truth",
+    ],
+    expectedRawBehavior:
+      "Raw should admit the shared baseline does not provide confirmed point-of-use truth and avoid pretending it can name an exact completion state.",
+    expectedAnnonaBehavior:
+      "Annona should surface an estimated state only, expose the probabilistic traceability range, and attach the missing point-of-use caveat directly to the answer.",
+    correctnessRubric: [
+      "Marks the state as estimated rather than exact.",
+      "Names ZED-KIT-1042 as the farthest-along kit from the heuristic signal set.",
+      "Explains that the progress band is directional because point-of-use confirmation is missing.",
+    ],
+    expectedRaw: {
+      answerPath: "insufficient-shared-baseline-for-exact-point-of-use-truth",
+      rubric:
+        "Raw should decline exact traceability and say the shared baseline lacks point-of-use confirmation for Zeder.",
+      canonicalAnswer:
+        "Raw heuristic answer: I cannot honestly identify an exact point-of-use state from the shared baseline because the Zeder pilot does not include confirmed point-of-use scans. The best I can say is that some indirect signals may suggest progress, but that would still need manual verification before anyone treats a kit as completed.",
+      mustContainAll: ["shared baseline", "point-of-use", "manual verification"],
+      mustContainOneOf: [
+        ["cannot honestly identify", "cannot confirm", "do not have confirmed point-of-use scans"],
+        ["indirect signals", "estimated", "suggest progress"],
+      ],
+    },
+    expectedGrounded: {
+      answerPath: "annona-probabilistic-traceability",
+      rubric:
+        "Annona should show the estimated state, quantify the inferred progress band, and disclose that the traceability is probabilistic because point-of-use truth is missing.",
+      canonicalAnswer:
+        "Annona estimated-state view: ZED-KIT-1042 looks farthest along, but this is probabilistic traceability rather than exact scan truth. Estimated state: arrived at site, not confirmed at point of use, with roughly 61 to 79 percent inferred progress. Confidence: medium, because the ETA tightened and the installer booking stayed intact, but point-of-use confirmation is still missing. Caveat: treat this as directional until a physical consumption or install event lands.",
+      mustContainAll: [
+        "ZED-KIT-1042",
+        "Estimated state:",
+        "probabilistic traceability",
+        "point-of-use confirmation is still missing",
+      ],
+      mustContainOneOf: [
+        ["61 to 79 percent", "61-79 percent", "61%-79%"],
+        ["medium", "Confidence: medium"],
+        ["directional", "not exact scan truth", "probabilistic"],
+      ],
+      requiredTools: [
+        "annona_estimate_shadow_progress",
+        "annona_evaluate_recommendation",
+      ],
+      mockToolInvocations: [
+        {
+          toolName: "annona_estimate_shadow_progress",
+          args: {
+            dataset: "zeder_shadow_progress_snapshot.json",
+            entity_id: "ZED-KIT-1042",
+            horizon_hours: 24,
+          },
+          result: {
+            traceability_mode: "probabilistic",
+            point_of_use_data_status: "missing",
+            entity_id: "ZED-KIT-1042",
+            estimated_state: "arrived_at_site_not_confirmed_at_point_of_use",
+            inferred_progress_pct: 72,
+            progress_pct_low: 61,
+            progress_pct_high: 79,
+            evidence_coverage_pct: 68,
+            wobble_detected: false,
+          },
+        },
+        {
+          toolName: "annona_evaluate_recommendation",
+          args: {
+            check: "probabilistic estimated-state disclosure",
+          },
+          result: {
+            grounded: true,
+            estimated_state_labeled: true,
+            caveats_present: true,
+            confidence_downgraded: true,
+          },
+        },
+      ],
+    },
+  },
+  {
+    id: "shadow-progress-wobble",
+    prompt:
+      "Without point-of-use truth, which Zeder kit looks wobbly enough that the team should verify it before treating progress as real?",
+    promptClass: "predictive",
+    sharedBundleAnswerable: false,
+    dataPrerequisites: [
+      "Shadow progress signals with both forward and regressing movements",
+      "Explicit absence of point-of-use confirmation",
+      "Heuristic wobble scoring and escalation caveats",
+    ],
+    expectedRawBehavior:
+      "Raw should say the baseline cannot prove a wobble without confirmed point-of-use data and should avoid naming a false exact reversal.",
+    expectedAnnonaBehavior:
+      "Annona should flag the unstable entity as a wobble case, explain the conflicting signals, and downgrade confidence instead of overclaiming certainty.",
+    correctnessRubric: [
+      "Flags ZED-KIT-2088 as the wobble case.",
+      "Names the ETA reversal and partial-quantity acknowledgement as the conflicting signals.",
+      "Downgrades confidence and asks for manual verification.",
+    ],
+    expectedRaw: {
+      answerPath: "insufficient-shared-baseline-for-wobble-proof",
+      rubric:
+        "Raw should not claim a confirmed reversal when the pilot lacks point-of-use truth.",
+      canonicalAnswer:
+        "Raw wobble answer: without confirmed point-of-use data, I cannot prove that any Zeder kit truly reversed or stalled. The safest answer is that conflicting indirect signals may indicate instability, but the team would still need a manual check before treating that as real progress wobble.",
+      mustContainAll: ["point-of-use data", "manual check"],
+      mustContainOneOf: [
+        ["cannot prove", "cannot confirm", "do not have confirmed point-of-use data"],
+        ["conflicting indirect signals", "instability", "wobble"],
+      ],
+    },
+    expectedGrounded: {
+      answerPath: "annona-probabilistic-wobble-detection",
+      rubric:
+        "Annona should flag the wobble case as an unstable estimated state rather than a confirmed reversal and push the operator toward manual verification.",
+      canonicalAnswer:
+        "Annona wobble view: ZED-KIT-2088 is the strongest verify-now case. Estimated state: in transit with regression risk, not a confirmed point-of-use reversal. Wobble signal: the ETA moved backward after an earlier forward step and the acknowledgement shifted from a full kit to a partial kit, so confidence should stay low. Next move: verify the kit manually before the team books it as real progress.",
+      mustContainAll: [
+        "ZED-KIT-2088",
+        "Estimated state:",
+        "Wobble signal:",
+        "verify the kit manually",
+      ],
+      mustContainOneOf: [
+        ["regression risk", "wobble", "unstable"],
+        ["ETA moved backward", "eta moved backward"],
+        ["partial kit", "partial-quantity acknowledgement", "partial quantity"],
+        ["confidence should stay low", "low confidence", "confidence: low"],
+      ],
+      requiredTools: [
+        "annona_detect_shadow_wobble",
+        "annona_evaluate_recommendation",
+      ],
+      mockToolInvocations: [
+        {
+          toolName: "annona_detect_shadow_wobble",
+          args: {
+            dataset: "zeder_shadow_progress_snapshot.json",
+            entity_id: "ZED-KIT-2088",
+          },
+          result: {
+            traceability_mode: "probabilistic",
+            point_of_use_data_status: "missing",
+            entity_id: "ZED-KIT-2088",
+            estimated_state: "in_transit_with_regression_risk",
+            inferred_progress_pct: 58,
+            progress_pct_low: 44,
+            progress_pct_high: 67,
+            wobble_detected: true,
+            wobble_score: 0.73,
+            wobble_reasons: [
+              "ETA moved backward by 2.4 days after an earlier forward step",
+              "Quantity acknowledgement dropped from full kit to partial kit",
+            ],
+          },
+        },
+        {
+          toolName: "annona_evaluate_recommendation",
+          args: {
+            check: "wobble disclosure and confidence downgrade",
+          },
+          result: {
+            grounded: true,
+            estimated_state_labeled: true,
+            caveats_present: true,
+            confidence_downgraded: true,
+          },
+        },
+      ],
+    },
+  },
+];
+
 export const DEMO_PROMPTS = DEMO_SCENARIOS.map((scenario) => scenario.prompt);
 
 export const DEMO_SCENARIOS_BY_ID = new Map(

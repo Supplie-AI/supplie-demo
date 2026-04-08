@@ -66,11 +66,24 @@ Every canonical scenario in the fixture must declare:
 - correctness rubric
 - authoritative raw and grounded expectations for automated review
 
+For heuristic scenarios where point-of-use truth is missing, the fixture must
+also declare:
+
+- whether the grounded answer is exact or probabilistic traceability
+- the expected inferred-progress or wobble signal path
+- the expected confidence and caveat posture for estimated state
+
 The accepted prompt pack must include all of the following:
 
 - one blocker plus traceability prompt
 - one predictive-risk prompt
 - one prioritization plus next-action prompt
+
+In addition to the live prompt pack, the repo must carry example heuristic eval
+scenarios covering:
+
+- inferred progress when point-of-use confirmation is missing
+- wobble detection when estimated progress becomes unstable
 
 The prompt set is not accepted if it collapses into simple descriptive or
 retrospective lookups.
@@ -86,8 +99,11 @@ For every canonical scenario:
   context
 - both panels must stay explainable and honest about what came from the dataset
   versus the web
+- if the grounded answer is estimated rather than observed, the UI and fixture
+  expectations must say so directly and show the missing point-of-use caveat
 - automated review must check the expected answer path, key facts, tool
-  evidence, and recommendation quality
+  evidence, recommendation quality, and correct confidence downgrades for
+  estimated states
 
 ## Done Criteria
 
