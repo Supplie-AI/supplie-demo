@@ -1,0 +1,92 @@
+{
+  "generatedAt": "2026-04-08T07:13:11.719Z",
+  "baseUrl": "http://a2b494ddd44594284b4d169bec49d2b9-1825691264.us-east-1.elb.amazonaws.com",
+  "promptButtons": [
+    "What is the main blocker to protecting margin in this bundle, and trace it to the exact rows driving it?",
+    "Which freight lane is the strongest predictive service risk next month, and what signal makes it risky before failure shows up?",
+    "If the team can only act on one thing in the next 24 hours, what should they prioritize first, and what is the next action?"
+  ],
+  "screenshots": [
+    "/home/jack/workspace/supplie-demo-issue-46/artifacts/live-qa-2026-04-08-refresh/01-password-gate.png",
+    "/home/jack/workspace/supplie-demo-issue-46/artifacts/live-qa-2026-04-08-refresh/02-authenticated-home.png",
+    "/home/jack/workspace/supplie-demo-issue-46/artifacts/live-qa-2026-04-08-refresh/03-blocker-traceability.png",
+    "/home/jack/workspace/supplie-demo-issue-46/artifacts/live-qa-2026-04-08-refresh/04-predictive-service-risk.png",
+    "/home/jack/workspace/supplie-demo-issue-46/artifacts/live-qa-2026-04-08-refresh/05-prioritization-next-action.png"
+  ],
+  "summaries": [
+    {
+      "id": "blocker-traceability",
+      "prompt": "What is the main blocker to protecting margin in this bundle, and trace it to the exact rows driving it?",
+      "screenshotPath": "/home/jack/workspace/supplie-demo-issue-46/artifacts/live-qa-2026-04-08-refresh/03-blocker-traceability.png",
+      "raw": {
+        "confidence": "",
+        "evidenceCount": 0,
+        "toolNames": [
+          "openai_file_search",
+          "openai_file_search"
+        ],
+        "answerSnippet": "The main blocker to protecting margin in this bundle is freight-plus-rebate drag, with Atlas Springs showing up as the top supplier behind that drag. The reference file states the bundle’s net margin formula is revenue minus COGS minus freight minus rebates, and specifically call"
+      },
+      "grounded": {
+        "confidence": "High",
+        "evidenceCount": 3,
+        "toolNames": [
+          "annona_get_demo_snapshot_context",
+          "annona_query_supplier_margin_leakage_snapshot",
+          "openai_file_search",
+          "annona_query_order_margin_snapshot",
+          "annona_query_order_margin_snapshot"
+        ],
+        "answerSnippet": "The main blocker to protecting margin in this bundle is freight drag, not COGS. The bundled reference explicitly says the top supplier by allocated freight-plus-rebate drag is Atlas Springs with 1,486 of drag, and the Annona supplier-leakage snapshot also names Atlas Springs as t"
+      }
+    },
+    {
+      "id": "predictive-service-risk",
+      "prompt": "Which freight lane is the strongest predictive service risk next month, and what signal makes it risky before failure shows up?",
+      "screenshotPath": "/home/jack/workspace/supplie-demo-issue-46/artifacts/live-qa-2026-04-08-refresh/04-predictive-service-risk.png",
+      "raw": {
+        "confidence": "",
+        "evidenceCount": 0,
+        "toolNames": [
+          "openai_file_search"
+        ],
+        "answerSnippet": "I can’t determine a “freight lane” risk for next month from the bundled demo files I have. The retrieved files only show a small freight benchmark table with lanes, transit times, costs, and reliability, plus an order-margin sample for a different Suspensions King scenario; they "
+      },
+      "grounded": {
+        "confidence": "High",
+        "evidenceCount": 3,
+        "toolNames": [
+          "annona_get_demo_snapshot_context",
+          "openai_file_search",
+          "annona_query_stockout_risk_snapshot",
+          "annona_query_supplier_margin_leakage_snapshot",
+          "annona_query_order_margin_snapshot"
+        ],
+        "answerSnippet": "The strongest predictive service-risk lane for next month is the Shanghai–Sydney ocean lane in the shared freight benchmark file: it combines relatively long transit time with the lowest reliability in the set at 91%, which makes it the clearest “early warning” lane before actual"
+      }
+    },
+    {
+      "id": "prioritization-next-action",
+      "prompt": "If the team can only act on one thing in the next 24 hours, what should they prioritize first, and what is the next action?",
+      "screenshotPath": "/home/jack/workspace/supplie-demo-issue-46/artifacts/live-qa-2026-04-08-refresh/05-prioritization-next-action.png",
+      "raw": {
+        "confidence": "",
+        "evidenceCount": 0,
+        "toolNames": [
+          "openai_file_search"
+        ],
+        "answerSnippet": "If the team can only do one thing in the next 24 hours, prioritize the Suspension King order-margin issue: the bundled sample shows net margin is only 7,990 after 43,940 revenue, 31,480 COGS, 3,080 freight, and 1,390 rebates, so the fastest leverage is to reduce freight-plus-reba"
+      },
+      "grounded": {
+        "confidence": "Medium",
+        "evidenceCount": 3,
+        "toolNames": [
+          "annona_get_demo_snapshot_context",
+          "annona_query_stockout_risk_snapshot",
+          "annona_query_supplier_margin_leakage_snapshot"
+        ],
+        "answerSnippet": "If the team can only act on one thing in the next 24 hours, prioritize the urgent stockout risk on COIL-PRADO-450 from Atlas Springs. It has only 12 days of supply remaining against 42 forecast units in the next 30 days, and the demo snapshot explicitly recommends: expedite PO 77"
+      }
+    }
+  ]
+}
