@@ -19,8 +19,8 @@ This spec defines:
 - the translation / narration layer that turns tool outputs into operator-ready
   language
 - planner / orchestrator rules for selecting, composing, and evaluating work
-- the agent-team iteration loop that evolves the scaffold and tooling per
-  dataset
+- the pilot autonomous data-team architecture that operates the engine,
+  evolves the scaffold, and owns delivery handoffs per dataset
 - token and latency optimization requirements
 - wire-safe, versioned, polymorphic schemas used across the system
 
@@ -224,6 +224,80 @@ The engine must remain deployable independently from the UI so that:
 For the demo, the backend may run as a single container image with modular
 packages. The architectural boundary still applies even if deployed in one
 cluster namespace.
+
+## Pilot Autonomous Data-Team Architecture
+
+For pilot operations, Annona is run by a nine-role autonomous data team layered
+on top of the `annona-ui` and `annona-engine` runtime boundary. This operating
+model does not replace the engine architecture. It owns dataset onboarding,
+semantic interpretation, capability evolution, evaluation, release gating, and
+pilot feedback loops around that architecture.
+
+During the pilot, one person or one execution lane may cover multiple logical
+roles. The role boundaries still remain explicit so ownership, handoffs, and
+acceptance do not blur.
+
+### Role Model
+
+| Role | Pilot responsibility boundary | Primary interfaces | Later-phase split |
+| --- | --- | --- | --- |
+| `Pilot PM` | Own issue sequencing, acceptance criteria, rollout scope, and release decisions. | GitHub issues, canonical spec docs, pull requests, release checklist. | Split into multi-pilot program management and portfolio planning once several pilots run in parallel. |
+| `Domain Researcher` | Translate operator questions, source-system semantics, and risk assumptions into canonical scenarios and dataset expectations. | `docs/demo-acceptance.md`, scenario fixtures, semantic notes, failure-analysis briefs. | Split by industry/domain once pilots span different operational archetypes. |
+| `Data Pipeline` | Normalize source extracts into versioned manifests, freshness checks, and compile-ready bundles. | `DatasetManifest`, storage refs, upload contracts, ingestion diagnostics. | Move to scheduled or event-driven ingestion with automated data-quality gates. |
+| `Semantic Modeler` | Curate dataset profile, entity meanings, graph assumptions, and reusable compiled assets. | `DatasetProfile`, `SemanticModel`, `CompiledDataset`, dataset helper artifacts. | Split schema-interpreter tuning from dataset-compiler operations. |
+| `Capability Engineer` | Bind and extend deterministic tools, templates, and dataset-aware capability contracts. | `CapabilityTemplate`, `BoundCapability`, tool schemas, capability registry entries. | Specialize by capability family and worker-backed analytical services. |
+| `Orchestration Engineer` | Own planner policy, answer scaffolds, evidence thresholds, and confidence posture. | `Plan`, `Recommendation`, `AnswerEnvelope`, policy configs, orchestration traces. | Separate planner policy, answer-quality, and recommendation-policy services. |
+| `Evaluation And QA` | Run fixture evals, regression review, trace inspection, visual review, and acceptance gating. | `Evaluation`, `Trace`, review rubrics, QA artifacts, smoke-test evidence. | Expand into continuous eval pipelines and lane-specific certification gates. |
+| `Platform Ops` | Own environments, secrets, deployment, observability, rollback, and runtime health. | container images, Kubernetes manifests, logs, alerts, smoke tests. | Split runtime platform engineering from SRE/on-call operations. |
+| `Pilot Ops Analyst` | Review live pilot traces with operator context, capture misses, and turn field feedback into next issue candidates. | live answer reviews, failure-analysis notes, operator feedback, issue backlog. | Expand into customer success, enablement, and pilot-performance operations. |
+
+### Handoff Contracts
+
+The nine roles coordinate through explicit Annona contracts rather than
+informal prompts:
+
+1. `Pilot PM` scopes the next delivery lane as a GitHub issue tied to the
+   canonical spec files.
+2. `Domain Researcher` defines the target operator question, success rubric,
+   and dataset assumptions.
+3. `Data Pipeline` produces a versioned dataset intake contract.
+4. `Semantic Modeler` turns that intake into stable interpreted dataset assets.
+5. `Capability Engineer` binds or extends the eligible deterministic tool
+   surface for the dataset.
+6. `Orchestration Engineer` sets planner and answer-policy behavior on top of
+   the bound capabilities.
+7. `Evaluation And QA` proves the change against fixtures, traces, and review
+   rubrics before release.
+8. `Platform Ops` promotes the validated slice into the target environment and
+   verifies runtime health.
+9. `Pilot Ops Analyst` feeds live misses, operator language gaps, and false
+   confidence cases back into the next failure-analysis cycle.
+
+No role may silently bypass the canonical contracts owned by another role. For
+example, `Platform Ops` does not redefine answer behavior, `Capability
+Engineer` does not ship without evaluation evidence, and `Pilot PM` does not
+treat uncommitted local edits as accepted scope.
+
+### Pilot Vs Later-Phase Responsibilities
+
+The pilot implementation must include:
+
+- issue-scoped delivery on a dedicated branch and worktree
+- canonical spec updates before or with behavior changes
+- explicit dataset manifests and compiled dataset versions
+- deterministic tool contracts and bounded planner policy changes
+- human-reviewed evaluation, PR, deploy, and smoke-test gates
+- live-pilot feedback captured as failure analysis for the next issue
+
+Later phases may add, but the pilot does not require:
+
+- continuous live-system ingestion and autonomous refresh scheduling
+- always-on remediation agents that open or merge changes without a scoped
+  issue
+- tenant-isolated service fleets and specialized worker pools for each
+  capability family
+- closed-loop policy tuning from production telemetry without explicit review
+- fully automated release promotion across environments
 
 ## Universal Analytical Toolkit Substrate
 
@@ -742,10 +816,19 @@ contain:
 If the prompt is descriptive only, the answer may omit prescriptive fields, but
 the engine must still preserve trace and evidence objects.
 
-## Research Harness And Agent Team Loop
+## Research Harness And Pilot Data-Team Loop
 
 The Universal Analytical Toolkit is the substrate the research harness and agent
 team iterate on top of for each dataset family.
+
+Within the pilot operating model:
+
+- `Domain Researcher` and `Pilot Ops Analyst` primarily supply failure analysis
+- `Pilot PM` turns accepted gaps into scoped issue lanes
+- `Data Pipeline`, `Semantic Modeler`, `Capability Engineer`, and
+  `Orchestration Engineer` modify the scaffold and tooling
+- `Evaluation And QA` runs the acceptance loop
+- `Platform Ops` owns deployment and post-change runtime verification
 
 The expected loop is:
 
@@ -787,6 +870,8 @@ The implementation is only aligned with the canonical spec when:
   mandatory pipeline
 - graph-backed dependency tracing and impact propagation are available for
   manufacturing datasets with BOM, work-order, and purchase-order semantics
+- the pilot autonomous data-team roles, interfaces, and pilot-vs-later
+  boundaries are explicitly documented
 - the agent-team eval loop iterates on top of the substrate per dataset
 - schemas are versioned and polymorphic across datasets, capabilities, plans,
   invocations, evidence, recommendations, evaluations, traces, artifacts, and

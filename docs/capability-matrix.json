@@ -389,6 +389,180 @@
     ]
   },
   "researchHarness": {
+    "pilotAutonomousDataTeam": {
+      "teamModel": "nine_role_operational_and_data_team",
+      "roles": [
+        {
+          "id": "pilot_pm",
+          "name": "Pilot PM",
+          "responsibilities": [
+            "issue sequencing",
+            "acceptance criteria",
+            "release gating"
+          ],
+          "interfaces": [
+            "github_issue",
+            "canonical_specs",
+            "pull_request"
+          ],
+          "phaseBoundary": {
+            "pilot": "human approves scope and release",
+            "later": "portfolio planning across multiple pilots"
+          }
+        },
+        {
+          "id": "domain_researcher",
+          "name": "Domain Researcher",
+          "responsibilities": [
+            "operator question framing",
+            "dataset assumption capture",
+            "failure analysis inputs"
+          ],
+          "interfaces": [
+            "demo_acceptance",
+            "scenario_fixtures",
+            "semantic_notes"
+          ],
+          "phaseBoundary": {
+            "pilot": "shared researcher across one bounded pilot",
+            "later": "domain-specific research lanes per vertical"
+          }
+        },
+        {
+          "id": "data_pipeline",
+          "name": "Data Pipeline",
+          "responsibilities": [
+            "versioned source intake",
+            "freshness checks",
+            "compile-ready bundles"
+          ],
+          "interfaces": [
+            "DatasetManifest",
+            "storage_refs",
+            "ingestion_diagnostics"
+          ],
+          "phaseBoundary": {
+            "pilot": "manual or scheduled extract normalization",
+            "later": "automated ingestion and data-quality gating"
+          }
+        },
+        {
+          "id": "semantic_modeler",
+          "name": "Semantic Modeler",
+          "responsibilities": [
+            "dataset profile curation",
+            "semantic role mapping",
+            "compiled helper artifacts"
+          ],
+          "interfaces": [
+            "DatasetProfile",
+            "SemanticModel",
+            "CompiledDataset"
+          ],
+          "phaseBoundary": {
+            "pilot": "shared schema interpretation and compile ownership",
+            "later": "separate interpreter and compiler services"
+          }
+        },
+        {
+          "id": "capability_engineer",
+          "name": "Capability Engineer",
+          "responsibilities": [
+            "capability binding",
+            "deterministic tool contracts",
+            "registry evolution"
+          ],
+          "interfaces": [
+            "CapabilityTemplate",
+            "BoundCapability",
+            "tool_schemas"
+          ],
+          "phaseBoundary": {
+            "pilot": "single lane can cover multiple capability families",
+            "later": "specialized capability and worker-service ownership"
+          }
+        },
+        {
+          "id": "orchestration_engineer",
+          "name": "Orchestration Engineer",
+          "responsibilities": [
+            "planner policy",
+            "answer scaffolds",
+            "confidence posture"
+          ],
+          "interfaces": [
+            "Plan",
+            "Recommendation",
+            "AnswerEnvelope"
+          ],
+          "phaseBoundary": {
+            "pilot": "bounded planner updates with manual review",
+            "later": "separate planner, policy, and answer-quality services"
+          }
+        },
+        {
+          "id": "evaluation_qa",
+          "name": "Evaluation And QA",
+          "responsibilities": [
+            "fixture evals",
+            "trace review",
+            "acceptance gating"
+          ],
+          "interfaces": [
+            "Evaluation",
+            "Trace",
+            "review_rubrics"
+          ],
+          "phaseBoundary": {
+            "pilot": "human-reviewed eval and smoke gates",
+            "later": "continuous eval pipelines and certification lanes"
+          }
+        },
+        {
+          "id": "platform_ops",
+          "name": "Platform Ops",
+          "responsibilities": [
+            "environment health",
+            "deployment",
+            "observability and rollback"
+          ],
+          "interfaces": [
+            "container_images",
+            "kubernetes_manifests",
+            "smoke_tests"
+          ],
+          "phaseBoundary": {
+            "pilot": "shared platform lane with explicit deploy checks",
+            "later": "split platform engineering and SRE/on-call"
+          }
+        },
+        {
+          "id": "pilot_ops_analyst",
+          "name": "Pilot Ops Analyst",
+          "responsibilities": [
+            "live trace review",
+            "operator feedback capture",
+            "next-issue discovery"
+          ],
+          "interfaces": [
+            "live_answer_reviews",
+            "failure_analysis_notes",
+            "issue_backlog"
+          ],
+          "phaseBoundary": {
+            "pilot": "single feedback loop into the scoped backlog",
+            "later": "customer success and pilot-operations functions"
+          }
+        }
+      ],
+      "deliveryWorkflow": [
+        "issue_scoped_change_on_dedicated_branch_worktree",
+        "canonical_spec_update_before_or_with_behavior_change",
+        "run_strongest_relevant_validation",
+        "open_pull_request_linked_to_issue",
+        "deploy_and_smoke_test_before_live_pilot_adoption"
+      ]
+    },
     "agentTeamLoop": [
       "failure_analysis",
       "plan_changes",
