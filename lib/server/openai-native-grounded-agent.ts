@@ -32,7 +32,12 @@ type GroundedScenarioId =
   | "shadow-factory-management-status"
   | "shadow-factory-next-action";
 
-const GROUNDED_SCENARIO_TOOLSETS: Record<GroundedScenarioId, string[]> = {
+type AnnonaFunctionToolName = (typeof annonaOpenAIFunctionTools)[number]["name"];
+
+const GROUNDED_SCENARIO_TOOLSETS: Record<
+  GroundedScenarioId,
+  AnnonaFunctionToolName[]
+> = {
   "deep-dependency-traceability": [
     "annona_trace_graph_dependencies",
     "annona_propagate_dependency_impact",
@@ -153,7 +158,7 @@ export function getAnnonaToolsForPrompt(prompt: string | undefined) {
   const orderedToolNames = scenarioId
     ? GROUNDED_SCENARIO_TOOLSETS[scenarioId]
     : null;
-  const toolByName = new Map(
+  const toolByName = new Map<AnnonaFunctionToolName, (typeof annonaOpenAIFunctionTools)[number]>(
     annonaOpenAIFunctionTools.map((tool) => [tool.name, tool]),
   );
 
