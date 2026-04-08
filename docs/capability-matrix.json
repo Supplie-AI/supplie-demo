@@ -1,5 +1,5 @@
 {
-  "version": "2026-04-08",
+  "version": "2026-04-09",
   "brandName": "Annona",
   "category": "decision_intelligence_for_operations",
   "corePromise": "See clearly. Act early.",
@@ -55,7 +55,8 @@
     "data": [
       "uploaded CSV / tabular datasets",
       "canonical bundled fixture used as the upload surrogate in tests",
-      "canonical manufacturing dependency bundle with BOM, work-order, and purchase-order tables compiled into a graph trace"
+      "canonical manufacturing dependency bundle with BOM, work-order, and purchase-order tables compiled into a graph trace",
+      "canonical Zeder shadow progress snapshot used to model Virtual MES / Shadow Factory status over broken ERP / MRP data"
     ],
     "nativeProviderTools": [
       "web_search",
@@ -167,6 +168,8 @@
       "inferred progress heuristics",
       "probabilistic traceability",
       "wobble detection",
+      "virtual MES / shadow factory status synthesis",
+      "management-status mapping",
       "recommendation synthesis",
       "answer self-check"
     ],
@@ -176,6 +179,7 @@
       "requiredOutputs": [
         "traceability_mode",
         "point_of_use_data_status",
+        "management_status",
         "estimated_state",
         "progress_pct_low",
         "inferred_progress_pct",
@@ -189,6 +193,98 @@
         "quantity_reversal",
         "stall_after_forward_progress",
         "conflicting_adjacent_system_signals"
+      ]
+    },
+    "virtualMesShadowFactoryModel": {
+      "productDefinition": "management_facing_visibility_layer_over_broken_erp_mrp_data",
+      "systemRole": "compile_directional_factory_state_from_shadow_signals_without_claiming_exact_mes_truth",
+      "sourceSystems": [
+        "erp_or_mrp_status_snapshots",
+        "work_order_and_purchase_order_extracts",
+        "dispatch_and_handoff_events",
+        "carrier_eta_updates",
+        "booking_or_schedule_commits",
+        "exception_reopen_or_rework_signals"
+      ],
+      "coreEntities": {
+        "demand": [
+          "customers",
+          "sales_orders",
+          "sales_order_lines"
+        ],
+        "execution": [
+          "kits",
+          "work_orders",
+          "operation_steps",
+          "machines",
+          "work_centers",
+          "factories"
+        ],
+        "supply": [
+          "parts",
+          "assemblies",
+          "bom_edges",
+          "purchase_orders",
+          "purchase_order_lines",
+          "inventory_positions"
+        ],
+        "signals": [
+          "erp_or_mrp_status_snapshot",
+          "dispatch_or_handoff_event",
+          "carrier_eta_event",
+          "booking_or_schedule_commitment",
+          "quantity_acknowledgement",
+          "exception_reopen_or_rework_event"
+        ]
+      },
+      "inferredExecutionStates": [
+        "queued_not_started",
+        "material_constrained",
+        "ready_to_build",
+        "in_build",
+        "built_pending_handoff",
+        "in_transit",
+        "arrived_at_site_not_confirmed_at_point_of_use",
+        "installed_not_confirmed",
+        "blocked_on_dependency",
+        "exception_or_rework"
+      ],
+      "managementStatuses": [
+        {
+          "id": "on_track",
+          "meaning": "forward motion is visible and no active blocker or wobble is present"
+        },
+        {
+          "id": "watch",
+          "meaning": "directional progress exists but confidence or schedule slack is thinning"
+        },
+        {
+          "id": "verify_now",
+          "meaning": "conflicting signals make the apparent progress unsafe to commit without manual confirmation"
+        },
+        {
+          "id": "blocked",
+          "meaning": "a dependency or execution constraint is preventing the next operational step"
+        }
+      ],
+      "requiredOutputs": [
+        "entity_type",
+        "entity_id",
+        "virtual_mes_mode",
+        "traceability_mode",
+        "management_status",
+        "estimated_state",
+        "primary_constraint",
+        "status_reason",
+        "inferred_progress_pct",
+        "progress_pct_low",
+        "progress_pct_high",
+        "evidence_coverage_pct",
+        "wobble_detected",
+        "supporting_signals",
+        "counter_signals",
+        "recommended_action",
+        "caveats"
       ]
     },
     "dependencyGraphModel": {

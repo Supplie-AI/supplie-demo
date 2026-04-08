@@ -318,55 +318,55 @@ export const DEMO_SCENARIOS = [
     },
   },
   {
-    id: "predictive-service-risk",
+    id: "shadow-factory-management-status",
     prompt:
-      "Which freight lane is the strongest predictive service risk next month, and what signal makes it risky before failure shows up?",
+      "Zeder's ERP statuses are unreliable. In the Virtual MES / Shadow Factory view, which kit needs management attention first, what status should leadership see, and why before the floor reports a confirmed miss?",
     promptClass: "predictive",
     sharedBundleAnswerable: true,
     dataPrerequisites: [
-      "Shared tabular baseline with global_freight_benchmarks.csv",
-      "Ability to compare transit time, reliability, and cost",
-      "Future-state risk framing from the shared freight table",
+      "Shared Zeder shadow progress snapshot with ETA movement, bookings, acknowledgements, and exception activity",
+      "Explicit broken ERP / MRP status context plus missing point-of-use confirmation",
+      "Virtual MES / Shadow Factory status mapping from inferred state into management-facing labels",
     ],
     expectedRawBehavior:
-      "Raw should identify the top predictive service-risk lane from the shared freight benchmark and explain the early warning signal without implying hidden data.",
+      "Raw should use the same shared shadow-progress snapshot to identify the likely first management-attention case, but stay explicit that the status is directional rather than exact.",
     expectedAnnonaBehavior:
-      "Annona should identify the same lane but frame the answer as an early operational risk with a clear pre-failure signal and next move.",
+      "Annona should turn the same shadow signals into an explicit Virtual MES / Shadow Factory management status with a why-now explanation and caveat.",
     correctnessRubric: [
-      "Flags Ningbo-Rotterdam on HarborSpan as the strongest predictive service risk.",
-      "Uses the supporting signal of 28 transit days, 88 percent reliability, and $3,340 cost.",
-      "Annona answer explains why the risk matters before an actual failure lands.",
+      "Flags ZED-KIT-2088 as the first management-attention case.",
+      "Assigns a verify_now status because the ETA regressed and the quantity acknowledgement fell to partial kit.",
+      "Contrasts ZED-KIT-2088 with ZED-KIT-1042 as a watch case rather than the urgent case.",
     ],
     expectedRaw: {
-      answerPath: "shared-tabular-baseline",
+      answerPath: "shared-shadow-factory-baseline",
       rubric:
-        "Raw should use the shared freight benchmark CSV to rank predictive service risk and explain the signal directly from the benchmark rows.",
+        "Raw should use the shared Zeder shadow progress snapshot, identify the first management-attention case, and stay honest that the answer is directional rather than exact MES truth.",
       canonicalAnswer:
-        "Raw predictive-risk answer: from the shared global_freight_benchmarks.csv, Ningbo-Rotterdam on HarborSpan is the strongest service-risk watchpoint for next month because it already combines the longest transit at 28 days, the lowest reliability at 88 percent, and the highest cost at $3,340. Those three benchmark signals make it risky before failure shows up, so the earliest move is to review upcoming bookings on that lane now.",
+        "Raw Shadow Factory answer: using the shared Zeder shadow progress snapshot, ZED-KIT-2088 looks like the first management-attention case, but I would treat that as a verify-now signal rather than a confirmed floor miss. The reason is directional, not exact: its ETA moved backward after earlier progress and the acknowledgement dropped from full kit to partial kit, while point-of-use confirmation is still missing. By contrast, ZED-KIT-1042 looks more like a watch case because its ETA tightened and the booking held.",
       mustContainAll: [
-        "Ningbo-Rotterdam",
-        "HarborSpan",
-        "shared global_freight_benchmarks.csv",
+        "shared Zeder shadow progress snapshot",
+        "ZED-KIT-2088",
+        "verify-now",
+        "point-of-use",
       ],
       mustContainOneOf: [
-        ["28 days", "28-day", "28"],
-        ["88 percent", "88%", "88 percent reliability"],
-        ["3,340", "$3,340", "3340"],
-        ["review upcoming bookings", "earliest move", "watchpoint"],
+        ["ETA moved backward", "eta moved backward"],
+        ["partial kit", "partial quantity", "partial-quantity acknowledgement"],
+        ["ZED-KIT-1042", "watch case", "ETA tightened"],
       ],
-      requiredTools: ["openai_code_interpreter"],
+      requiredToolOneOf: [["openai_file_search", "openai_code_interpreter"]],
       mockToolInvocations: [
         {
           toolName: "openai_code_interpreter",
           args: {
-            task: "Rank freight lanes by predictive service risk using transit_days, reliability_pct, and cost_usd from global_freight_benchmarks.csv.",
+            task: "Use the shared Zeder shadow progress snapshot to identify the first management-attention case, then contrast it with the strongest watch case without claiming exact point-of-use truth.",
           },
           result: {
             outputs: [
               {
                 type: "logs",
                 content:
-                  "Top watchpoint=Ningbo-Rotterdam / HarborSpan, transit_days=28, reliability_pct=88, cost_usd=3340",
+                  "priority_case=ZED-KIT-2088 management_status=verify_now reasons=eta_regression|partial_acknowledgement contrast_case=ZED-KIT-1042 watch_signals=eta_tightened|booking_held",
               },
             ],
           },
@@ -374,104 +374,135 @@ export const DEMO_SCENARIOS = [
       ],
     },
     expectedGrounded: {
-      answerPath: "annona-orchestrated-shared-baseline",
+      answerPath: "annona-virtual-mes-shadow-factory",
       rubric:
-        "Annona should use the same shared freight table, explain the predictive signal before failure lands, and turn it into an early operational recommendation.",
+        "Annona should use the same shared shadow snapshot, map it into the Virtual MES / Shadow Factory status model, and make the management-facing status explicit.",
       canonicalAnswer:
-        "Annona predictive-risk view: Ningbo-Rotterdam on HarborSpan is the earliest service-risk watchpoint in the same shared freight benchmark. Early signal: the lane is already at 28 transit days, 88 percent reliability, and $3,340 cost, so it is where delay and cost pressure are most likely to show up before the team sees an actual failure. Action: review and pre-empt the next bookings on that lane now rather than waiting for service to slip.",
+        "Annona Virtual MES / Shadow Factory view: ZED-KIT-2088 is the first management-attention case. Management status: verify_now. Why now: the ETA moved backward after earlier forward progress and the quantity acknowledgement fell from full kit to partial kit, so the shadow signals wobble even though point-of-use truth is still missing. Contrast: ZED-KIT-1042 stays in watch because the ETA tightened and the installer booking held, but it is still not physically confirmed at point of use.",
       mustContainAll: [
-        "Early signal:",
-        "same shared freight benchmark",
-        "Ningbo-Rotterdam",
-        "HarborSpan",
+        "ZED-KIT-2088",
+        "Management status:",
+        "verify_now",
+        "Why now:",
+        "ZED-KIT-1042",
       ],
       mustContainOneOf: [
-        ["28 days", "28-day", "28"],
-        ["88 percent", "88%", "88 percent reliability"],
-        ["3,340", "$3,340", "3340"],
-        ["before the team sees an actual failure", "before failure", "pre-empt"],
+        ["Virtual MES / Shadow Factory", "Shadow Factory view"],
+        ["ETA moved backward", "eta moved backward"],
+        ["partial kit", "partial quantity", "partial-quantity acknowledgement"],
+        ["point-of-use truth is still missing", "not physically confirmed at point of use"],
       ],
       requiredTools: [
-        "annona_rank_service_risk",
+        "annona_detect_shadow_wobble",
+        "annona_estimate_shadow_progress",
         "annona_evaluate_recommendation",
       ],
       mockToolInvocations: [
         {
-          toolName: "annona_rank_service_risk",
+          toolName: "annona_detect_shadow_wobble",
           args: {
-            dataset: "global_freight_benchmarks.csv",
-            horizon: "next_month",
+            dataset: "zeder_shadow_progress_snapshot.json",
           },
           result: {
-            top_watchpoint: "Ningbo-Rotterdam",
-            carrier_family: "HarborSpan",
-            transit_days: 28,
-            reliability_pct: 88,
-            cost_usd: 3340,
-            risk_basis: "longest_transit_lowest_reliability_highest_cost",
+            entity_type: "kit",
+            entity_id: "ZED-KIT-2088",
+            virtual_mes_mode: "shadow_factory",
+            traceability_mode: "probabilistic",
+            management_status: "verify_now",
+            estimated_state: "in_transit_with_regression_risk",
+            primary_constraint: "eta_regression_and_partial_acknowledgement",
+            status_reason:
+              "Competing shadow signals make the apparent forward progress unsafe to commit without manual verification.",
+            inferred_progress_pct: 58,
+            progress_pct_low: 44,
+            progress_pct_high: 67,
+            evidence_coverage_pct: 52,
+            wobble_detected: true,
+          },
+        },
+        {
+          toolName: "annona_estimate_shadow_progress",
+          args: {
+            dataset: "zeder_shadow_progress_snapshot.json",
+            entity_id: "ZED-KIT-1042",
+            horizon_hours: 24,
+          },
+          result: {
+            entity_type: "kit",
+            entity_id: "ZED-KIT-1042",
+            virtual_mes_mode: "shadow_factory",
+            traceability_mode: "probabilistic",
+            management_status: "watch",
+            estimated_state: "arrived_at_site_not_confirmed_at_point_of_use",
+            primary_constraint: "point_of_use_confirmation_missing",
+            inferred_progress_pct: 72,
+            progress_pct_low: 61,
+            progress_pct_high: 79,
+            evidence_coverage_pct: 68,
+            wobble_detected: false,
           },
         },
         {
           toolName: "annona_evaluate_recommendation",
           args: {
-            check: "early-signal framing",
+            check: "shadow factory management status clarity",
           },
           result: {
             grounded: true,
-            early_warning_clear: true,
-            action_oriented: true,
+            management_status_clear: true,
+            caveats_present: true,
+            confidence_downgraded: true,
           },
         },
       ],
     },
   },
   {
-    id: "prioritization-next-action",
+    id: "shadow-factory-next-action",
     prompt:
-      "If the team can only act on one thing in the next 24 hours, what should they prioritize first, and what is the next action?",
+      "If the team can only act on one Shadow Factory case in the next 24 hours, what should they prioritize first, and what is the next action?",
     promptClass: "prescriptive",
     sharedBundleAnswerable: true,
     dataPrerequisites: [
-      "Shared multi-table order-margin bundle with explicit customer and order-line relationships",
-      "Shared tabular baseline with global_freight_benchmarks.csv",
-      "Ability to compare immediate margin risk against next-month service risk",
-      "Operational prioritization and next-action framing",
+      "Shared Zeder shadow progress snapshot with both watch and verify-now cases",
+      "Explicit missing point-of-use truth and broken ERP / MRP status context",
+      "Ability to prioritize between Shadow Factory management statuses and propose the next move",
     ],
     expectedRawBehavior:
-      "Raw should prioritize one action from the shared bundle, justify why it comes first, and give a concrete next step.",
+      "Raw should pick the highest-attention Shadow Factory case from the shared snapshot, justify why it comes first, and give a concrete next step without pretending to have exact MES truth.",
     expectedAnnonaBehavior:
-      "Annona should prioritize the same action but resolve it into a clearer why-first decision and immediate next action.",
+      "Annona should prioritize the same Shadow Factory case but resolve it into a clearer why-first decision and immediate next action from the pilot status model.",
     correctnessRubric: [
-      "Prioritizes the SK-240321-03 margin pattern ahead of the freight lane risk because the margin hit is immediate and controllable.",
-      "Uses the facts that SK-240321-03 is at $490 net margin or 4.4 percent while Ningbo-Rotterdam is a next-month watchpoint.",
-      "Annona answer gives a concrete next action in the next 24 hours.",
+      "Prioritizes ZED-KIT-2088 ahead of ZED-KIT-1042 because verify_now comes before watch.",
+      "Uses the ETA regression and partial acknowledgement as the why-first signals.",
+      "Annona answer gives a concrete next action of manual verification before booking progress or resequencing around it.",
     ],
     expectedRaw: {
-      answerPath: "shared-tabular-baseline",
+      answerPath: "shared-shadow-factory-baseline",
       rubric:
-        "Raw should use the shared margin and freight bundle to choose one first priority, justify the ordering, and stay explicit that the answer comes from the shared baseline.",
+        "Raw should use the shared Zeder shadow progress snapshot to choose one first priority, justify the ordering, and stay explicit that the answer is directional rather than exact.",
       canonicalAnswer:
-        "Raw prioritization answer: in the next 24 hours, prioritize the SK-240321-03 lookalike margin pattern before the Ningbo-Rotterdam lane watchpoint. The reason is immediacy: SK-240321-03 is already down to $490 of net margin, or 4.4 percent, so another similar order can erase margin now, while the HarborSpan lane risk is a next-month signal. The next action from the shared bundle is to review pending lookalike orders today for freight pass-through and rebate approval.",
-      mustContainAll: ["SK-240321-03", "next 24 hours", "Ningbo-Rotterdam"],
+        "Raw Shadow Factory prioritization answer: in the next 24 hours, prioritize ZED-KIT-2088 before ZED-KIT-1042. The reason is status: ZED-KIT-2088 looks like the verify-now case because its ETA moved backward and the acknowledgement dropped to a partial kit, while ZED-KIT-1042 still looks more like a watch case. The next action from the shared shadow snapshot is to verify ZED-KIT-2088 manually before the team books the progress as real.",
+      mustContainAll: ["ZED-KIT-2088", "next 24 hours", "ZED-KIT-1042"],
       mustContainOneOf: [
-        ["490", "$490"],
-        ["4.4", "4.4 percent", "4.4%"],
-        ["freight pass-through", "rebate approval", "pending lookalike orders"],
-        ["HarborSpan", "next-month signal", "lane watchpoint"],
+        ["verify-now", "verify now", "verify_now"],
+        ["ETA moved backward", "eta moved backward"],
+        ["partial kit", "partial quantity", "partial-quantity acknowledgement"],
+        ["verify ZED-KIT-2088 manually", "manual verification", "books the progress as real"],
       ],
-      requiredTools: ["openai_code_interpreter"],
+      requiredToolOneOf: [["openai_file_search", "openai_code_interpreter"]],
       mockToolInvocations: [
         {
           toolName: "openai_code_interpreter",
           args: {
-            task: "Compare the immediate action priority between the weakest bundled order-margin pattern and the top freight-lane service-risk watchpoint using the shared demo files.",
+            task: "Compare the highest-attention Shadow Factory cases in the shared Zeder shadow progress snapshot and recommend the first next-24-hours action without claiming exact point-of-use truth.",
           },
           result: {
             outputs: [
               {
                 type: "logs",
                 content:
-                  "Priority=SK-240321-03 margin pattern first, net_margin=490, margin_pct=4.4, alternate_watchpoint=Ningbo-Rotterdam / HarborSpan next_month",
+                  "priority=ZED-KIT-2088 reason=verify_now signals=eta_regression|partial_acknowledgement alternate=ZED-KIT-1042 watch next_action=manual_verification",
               },
             ],
           },
@@ -479,44 +510,62 @@ export const DEMO_SCENARIOS = [
       ],
     },
     expectedGrounded: {
-      answerPath: "annona-orchestrated-shared-baseline",
+      answerPath: "annona-virtual-mes-shadow-factory-prioritization",
       rubric:
-        "Annona should use the same shared bundle, justify why the first action comes before the alternate risk, and express the next step as a concrete operator move.",
+        "Annona should use the same shared shadow snapshot, justify why the verify-now case comes before the watch case, and express the next move as a concrete operator action.",
       canonicalAnswer:
-        "Annona prioritization: Priority now: act on the SK-240321-03 lookalike margin pattern before the freight-lane watchpoint. Why first: the shared order rows show only $490 of net margin, or 4.4 percent, so the account can lose margin on the very next similar shipment, whereas Ningbo-Rotterdam on HarborSpan is still a next-month risk signal. Next action: in the next 24 hours, review pending lookalike orders for freight pass-through and rebate approval, then queue the lane contingency review second. This ordering is traceable to the same shared bundle.",
+        "Annona Shadow Factory prioritization: Priority now: intervene on ZED-KIT-2088 first. Why first: its management status is verify_now, not watch, because the ETA moved backward after earlier progress and the acknowledgement slipped to partial kit, which means the apparent progress is unstable. Next action: verify ZED-KIT-2088 manually before the team books the progress as real or resequences work around it; keep ZED-KIT-1042 in watch behind it. This ordering comes from the Virtual MES / Shadow Factory status model, not exact MES truth.",
       mustContainAll: [
-        "SK-240321-03",
+        "ZED-KIT-2088",
         "Priority now:",
         "Why first:",
         "Next action:",
-        "same shared bundle",
+        "Virtual MES / Shadow Factory status model",
       ],
       mustContainOneOf: [
-        ["490", "$490"],
-        ["4.4", "4.4 percent", "4.4%"],
-        ["Ningbo-Rotterdam", "HarborSpan"],
-        ["traceable", "ordering is traceable", "same shared bundle"],
+        ["verify_now", "verify now", "verify-now"],
+        ["ETA moved backward", "eta moved backward"],
+        ["partial kit", "partial quantity", "partial-quantity acknowledgement"],
+        ["ZED-KIT-1042", "watch"],
       ],
       requiredTools: [
-        "annona_prioritize_next_action",
+        "annona_detect_shadow_wobble",
+        "annona_estimate_shadow_progress",
         "annona_evaluate_recommendation",
       ],
       mockToolInvocations: [
         {
-          toolName: "annona_prioritize_next_action",
+          toolName: "annona_detect_shadow_wobble",
           args: {
-            datasets: [
-              "demo_order_margin_bundle_manifest.json",
-              "global_freight_benchmarks.csv",
-            ],
-            horizon: "next_24_hours",
+            dataset: "zeder_shadow_progress_snapshot.json",
           },
           result: {
-            priority: "SK-240321-03_margin_pattern",
-            rationale: "immediate_controllable_margin_risk",
-            supporting_alternate: "Ningbo-Rotterdam_HarborSpan_watchpoint",
-            next_action:
-              "Review pending lookalike orders for freight pass-through and rebate approval",
+            entity_type: "kit",
+            entity_id: "ZED-KIT-2088",
+            virtual_mes_mode: "shadow_factory",
+            traceability_mode: "probabilistic",
+            management_status: "verify_now",
+            estimated_state: "in_transit_with_regression_risk",
+            primary_constraint: "eta_regression_and_partial_acknowledgement",
+            recommended_action:
+              "Verify the kit manually before the team books the progress as real or re-sequences work around it.",
+          },
+        },
+        {
+          toolName: "annona_estimate_shadow_progress",
+          args: {
+            dataset: "zeder_shadow_progress_snapshot.json",
+            entity_id: "ZED-KIT-1042",
+            horizon_hours: 24,
+          },
+          result: {
+            entity_type: "kit",
+            entity_id: "ZED-KIT-1042",
+            virtual_mes_mode: "shadow_factory",
+            traceability_mode: "probabilistic",
+            management_status: "watch",
+            estimated_state: "arrived_at_site_not_confirmed_at_point_of_use",
+            inferred_progress_pct: 72,
           },
         },
         {
@@ -551,7 +600,7 @@ export const PROBABILISTIC_TRACEABILITY_SCENARIOS = [
     expectedRawBehavior:
       "Raw should admit the shared baseline does not provide confirmed point-of-use truth and avoid pretending it can name an exact completion state.",
     expectedAnnonaBehavior:
-      "Annona should surface an estimated state only, expose the probabilistic traceability range, and attach the missing point-of-use caveat directly to the answer.",
+      "Annona should surface an estimated state, map it to a Shadow Factory management status, expose the probabilistic traceability range, and attach the missing point-of-use caveat directly to the answer.",
     correctnessRubric: [
       "Marks the state as estimated rather than exact.",
       "Names ZED-KIT-1042 as the farthest-along kit from the heuristic signal set.",
@@ -572,11 +621,13 @@ export const PROBABILISTIC_TRACEABILITY_SCENARIOS = [
     expectedGrounded: {
       answerPath: "annona-probabilistic-traceability",
       rubric:
-        "Annona should show the estimated state, quantify the inferred progress band, and disclose that the traceability is probabilistic because point-of-use truth is missing.",
+        "Annona should show the estimated state, map it to a watch status, quantify the inferred progress band, and disclose that the traceability is probabilistic because point-of-use truth is missing.",
       canonicalAnswer:
-        "Annona estimated-state view: ZED-KIT-1042 looks farthest along, but this is probabilistic traceability rather than exact scan truth. Estimated state: arrived at site, not confirmed at point of use, with roughly 61 to 79 percent inferred progress. Confidence: medium, because the ETA tightened and the installer booking stayed intact, but point-of-use confirmation is still missing. Caveat: treat this as directional until a physical consumption or install event lands.",
+        "Annona estimated-state view: ZED-KIT-1042 looks farthest along, but this is probabilistic traceability rather than exact scan truth. Management status: watch. Estimated state: arrived at site, not confirmed at point of use, with roughly 61 to 79 percent inferred progress. Confidence: medium, because the ETA tightened and the installer booking stayed intact, but point-of-use confirmation is still missing. Caveat: treat this as directional until a physical consumption or install event lands.",
       mustContainAll: [
         "ZED-KIT-1042",
+        "Management status:",
+        "watch",
         "Estimated state:",
         "probabilistic traceability",
         "point-of-use confirmation is still missing",
@@ -599,10 +650,14 @@ export const PROBABILISTIC_TRACEABILITY_SCENARIOS = [
             horizon_hours: 24,
           },
           result: {
+            entity_type: "kit",
             traceability_mode: "probabilistic",
             point_of_use_data_status: "missing",
             entity_id: "ZED-KIT-1042",
+            virtual_mes_mode: "shadow_factory",
+            management_status: "watch",
             estimated_state: "arrived_at_site_not_confirmed_at_point_of_use",
+            primary_constraint: "point_of_use_confirmation_missing",
             inferred_progress_pct: 72,
             progress_pct_low: 61,
             progress_pct_high: 79,
@@ -639,7 +694,7 @@ export const PROBABILISTIC_TRACEABILITY_SCENARIOS = [
     expectedRawBehavior:
       "Raw should say the baseline cannot prove a wobble without confirmed point-of-use data and should avoid naming a false exact reversal.",
     expectedAnnonaBehavior:
-      "Annona should flag the unstable entity as a wobble case, explain the conflicting signals, and downgrade confidence instead of overclaiming certainty.",
+      "Annona should flag the unstable entity as a wobble case, map it to verify_now, explain the conflicting signals, and downgrade confidence instead of overclaiming certainty.",
     correctnessRubric: [
       "Flags ZED-KIT-2088 as the wobble case.",
       "Names the ETA reversal and partial-quantity acknowledgement as the conflicting signals.",
@@ -660,11 +715,13 @@ export const PROBABILISTIC_TRACEABILITY_SCENARIOS = [
     expectedGrounded: {
       answerPath: "annona-probabilistic-wobble-detection",
       rubric:
-        "Annona should flag the wobble case as an unstable estimated state rather than a confirmed reversal and push the operator toward manual verification.",
+        "Annona should flag the wobble case as an unstable estimated state with verify_now status rather than a confirmed reversal and push the operator toward manual verification.",
       canonicalAnswer:
-        "Annona wobble view: ZED-KIT-2088 is the strongest verify-now case. Estimated state: in transit with regression risk, not a confirmed point-of-use reversal. Wobble signal: the ETA moved backward after an earlier forward step and the acknowledgement shifted from a full kit to a partial kit, so confidence should stay low. Next move: verify the kit manually before the team books it as real progress.",
+        "Annona wobble view: ZED-KIT-2088 is the strongest verify-now case. Management status: verify_now. Estimated state: in transit with regression risk, not a confirmed point-of-use reversal. Wobble signal: the ETA moved backward after an earlier forward step and the acknowledgement shifted from a full kit to a partial kit, so confidence should stay low. Next move: verify the kit manually before the team books it as real progress.",
       mustContainAll: [
         "ZED-KIT-2088",
+        "Management status:",
+        "verify_now",
         "Estimated state:",
         "Wobble signal:",
         "verify the kit manually",
@@ -687,10 +744,14 @@ export const PROBABILISTIC_TRACEABILITY_SCENARIOS = [
             entity_id: "ZED-KIT-2088",
           },
           result: {
+            entity_type: "kit",
             traceability_mode: "probabilistic",
             point_of_use_data_status: "missing",
             entity_id: "ZED-KIT-2088",
+            virtual_mes_mode: "shadow_factory",
+            management_status: "verify_now",
             estimated_state: "in_transit_with_regression_risk",
+            primary_constraint: "eta_regression_and_partial_acknowledgement",
             inferred_progress_pct: 58,
             progress_pct_low: 44,
             progress_pct_high: 67,

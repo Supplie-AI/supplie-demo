@@ -641,14 +641,21 @@ export function propagateAnnonaDependencyImpact({
 
 const ZEDER_SHADOW_PROGRESS_FIXTURES = {
   "ZED-KIT-1042": {
+    entity_type: "kit",
     entity_id: "ZED-KIT-1042",
+    management_status: "watch",
     estimated_state: "arrived_at_site_not_confirmed_at_point_of_use",
+    primary_constraint: "point_of_use_confirmation_missing",
+    status_reason:
+      "Directional forward progress is visible, but the kit still lacks physical point-of-use confirmation.",
     inferred_progress_pct: 72,
     progress_pct_low: 61,
     progress_pct_high: 79,
     evidence_coverage_pct: 68,
     wobble_detected: false,
     wobble_score: 0.18,
+    recommended_action:
+      "Keep the kit on watch and confirm physical consumption or install before booking it as complete.",
     supporting_signals: [
       "Carrier ETA tightened by 1.2 days over the last 24 hours",
       "Installer booking remains confirmed for the next shift",
@@ -659,14 +666,21 @@ const ZEDER_SHADOW_PROGRESS_FIXTURES = {
     ],
   },
   "ZED-KIT-2088": {
+    entity_type: "kit",
     entity_id: "ZED-KIT-2088",
+    management_status: "verify_now",
     estimated_state: "in_transit_with_regression_risk",
+    primary_constraint: "eta_regression_and_partial_acknowledgement",
+    status_reason:
+      "Competing shadow signals make the apparent forward progress unsafe to commit without manual verification.",
     inferred_progress_pct: 58,
     progress_pct_low: 44,
     progress_pct_high: 67,
     evidence_coverage_pct: 52,
     wobble_detected: true,
     wobble_score: 0.73,
+    recommended_action:
+      "Verify the kit manually before the team books the progress as real or re-sequences work around it.",
     supporting_signals: [
       "Carrier milestone shows the kit departed the cross-dock",
       "Crew allocation is still present on tomorrow's schedule",
@@ -706,11 +720,16 @@ export function estimateAnnonaShadowProgress({
   return {
     pilot: "zeder_pilot",
     dataset: dataset ?? "zeder_shadow_progress_snapshot.json",
+    entity_type: fixture.entity_type,
     entity_id: fixture.entity_id,
     horizon_hours: horizon_hours ?? 24,
+    virtual_mes_mode: "shadow_factory",
     traceability_mode: "probabilistic",
     point_of_use_data_status: "missing",
+    management_status: fixture.management_status,
     estimated_state: fixture.estimated_state,
+    primary_constraint: fixture.primary_constraint,
+    status_reason: fixture.status_reason,
     inferred_progress_pct: fixture.inferred_progress_pct,
     progress_pct_low: fixture.progress_pct_low,
     progress_pct_high: fixture.progress_pct_high,
@@ -719,6 +738,7 @@ export function estimateAnnonaShadowProgress({
     wobble_score: fixture.wobble_score,
     supporting_signals: fixture.supporting_signals,
     counter_signals: fixture.counter_signals,
+    recommended_action: fixture.recommended_action,
     caveats: [
       "Point-of-use confirmation is missing, so the state is estimated from shadow signals rather than exact scan truth.",
       "The inferred progress band should be treated as directional until a physical consumption or install event arrives.",
@@ -738,17 +758,24 @@ export function detectAnnonaShadowWobble({
   return {
     pilot: "zeder_pilot",
     dataset: dataset ?? "zeder_shadow_progress_snapshot.json",
+    entity_type: fixture.entity_type,
     entity_id: fixture.entity_id,
+    virtual_mes_mode: "shadow_factory",
     traceability_mode: "probabilistic",
     point_of_use_data_status: "missing",
+    management_status: fixture.management_status,
     estimated_state: fixture.estimated_state,
+    primary_constraint: fixture.primary_constraint,
+    status_reason: fixture.status_reason,
     inferred_progress_pct: fixture.inferred_progress_pct,
     progress_pct_low: fixture.progress_pct_low,
     progress_pct_high: fixture.progress_pct_high,
+    evidence_coverage_pct: fixture.evidence_coverage_pct,
     wobble_detected: fixture.wobble_detected,
     wobble_score: fixture.wobble_score,
     wobble_reasons: fixture.counter_signals,
     stabilizing_signals: fixture.supporting_signals,
+    recommended_action: fixture.recommended_action,
     caveats: [
       "Wobble means the inferred progress direction is unstable, not that a confirmed reversal happened at point of use.",
       "Escalate for manual confirmation before treating this entity as completed or irrecoverably delayed.",
@@ -787,6 +814,16 @@ export function evaluateAnnonaRecommendation({
       grounded: true,
       action_oriented: true,
       prioritization_clear: true,
+    };
+  }
+
+  if (normalizedCheck.includes("management status")) {
+    return {
+      check: check ?? "shadow factory management status clarity",
+      grounded: true,
+      management_status_clear: true,
+      caveats_present: true,
+      confidence_downgraded: true,
     };
   }
 

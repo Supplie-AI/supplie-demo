@@ -50,6 +50,9 @@ against screenshots.
 - When the grounded panel is showing an estimated state rather than confirmed
   point-of-use truth, the confidence/evidence UI explicitly marks it as
   estimated or wobbling instead of presenting it like an exact observation.
+- When the prompt is a Virtual MES / Shadow Factory management-status prompt,
+  the grounded panel resolves it into an explicit status label such as
+  `watch`, `verify_now`, or `blocked` with a short why-now explanation.
 - When the prompt is prescriptive, the grounded result resolves to a clear
   recommendation with context.
 
@@ -67,6 +70,9 @@ against screenshots.
 - `estimated_state_disclosure`: estimated-state answers are visibly labeled as
   estimated or wobbling, and the caveat about missing point-of-use confirmation
   is readable in the grounded panel.
+- `shadow_factory_status_visibility`: management-facing Shadow Factory status is
+  readable as a distinct operator-facing conclusion rather than buried inside a
+  generic narrative paragraph.
 - `operational_recommendation_shape`: Annona answers read as operational
   recommendations with context, not dashboard sprawl.
 - `readability_and_polish`: text is readable, contrast is acceptable, spacing is
@@ -83,11 +89,13 @@ against screenshots.
 - An estimated-state answer is rendered as if it were exact observed truth, or
   the caveat about missing point-of-use confirmation is absent.
 - The prompt set shown in the UI omits any of the required harder prompt
-  classes: blocker plus traceability, predictive risk, or prioritization plus
-  next action.
+  classes: blocker plus traceability, Virtual MES / Shadow Factory management
+  status, or prioritization plus next action.
 - The blocker-plus-traceability lane no longer demonstrates a multi-level path
   across BOM, work orders, and purchase orders when the canonical dependency
   fixture is present.
+- The Shadow Factory lane no longer translates broken ERP / MRP visibility into
+  a readable management status with explicit estimated-state caveats.
 - Text is clipped, overlapping, or unreadable in any captured state.
 - The screenshots show obvious loading failure, blank output, or severe visual
   regression.

@@ -112,10 +112,15 @@ test("estimateAnnonaShadowProgress marks missing point-of-use truth as probabili
   });
 
   assert.equal(result.traceability_mode, "probabilistic");
+  assert.equal(result.virtual_mes_mode, "shadow_factory");
+  assert.equal(result.entity_type, "kit");
   assert.equal(result.point_of_use_data_status, "missing");
   assert.equal(result.entity_id, "ZED-KIT-1042");
+  assert.equal(result.management_status, "watch");
+  assert.equal(result.primary_constraint, "point_of_use_confirmation_missing");
   assert.equal(result.inferred_progress_pct, 72);
   assert.equal(result.wobble_detected, false);
+  assert.match(result.recommended_action, /keep the kit on watch/i);
   assert.match(result.caveats.join(" "), /estimated from shadow signals/i);
 });
 
@@ -126,9 +131,16 @@ test("detectAnnonaShadowWobble flags unstable inferred progress without claiming
   });
 
   assert.equal(result.traceability_mode, "probabilistic");
+  assert.equal(result.virtual_mes_mode, "shadow_factory");
   assert.equal(result.entity_id, "ZED-KIT-2088");
+  assert.equal(result.management_status, "verify_now");
+  assert.equal(
+    result.primary_constraint,
+    "eta_regression_and_partial_acknowledgement",
+  );
   assert.equal(result.wobble_detected, true);
   assert.equal(result.wobble_score, 0.73);
+  assert.match(result.recommended_action, /verify the kit manually/i);
   assert.match(result.wobble_reasons.join(" "), /eta moved backward/i);
   assert.match(result.caveats.join(" "), /manual confirmation/i);
 });
@@ -158,6 +170,18 @@ test("evaluateAnnonaRecommendation returns scenario-specific quality checks", ()
       check: "probabilistic estimated-state disclosure",
       grounded: true,
       estimated_state_labeled: true,
+      caveats_present: true,
+      confidence_downgraded: true,
+    },
+  );
+  assert.deepEqual(
+    evaluateAnnonaRecommendation({
+      check: "shadow factory management status clarity",
+    }),
+    {
+      check: "shadow factory management status clarity",
+      grounded: true,
+      management_status_clear: true,
       caveats_present: true,
       confidence_downgraded: true,
     },
