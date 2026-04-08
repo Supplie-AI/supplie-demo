@@ -11,7 +11,6 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  EKS_CLUSTER: supplie-demo
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
   K8S_NAMESPACE: supplie
   PROD_HOST: demo.supplie.ai
@@ -47,6 +46,19 @@ jobs:
 
           echo "::error::Production deploy requires either AWS_DEPLOY_ROLE_ARN or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY."
           exit 1
+
+      - name: Resolve production cluster target
+        id: prod-target
+        env:
+          EKS_CLUSTER_PROD: ${{ secrets.EKS_CLUSTER_PROD }}
+        run: |
+          if [ -z "${EKS_CLUSTER_PROD}" ]; then
+            echo "::error::Production deploy requires EKS_CLUSTER_PROD. The workflow no longer guesses a hardcoded cluster name."
+            exit 1
+          fi
+
+          echo "cluster=${EKS_CLUSTER_PROD}" >> "$GITHUB_OUTPUT"
+          echo "Using production EKS cluster: ${EKS_CLUSTER_PROD}"
 
       - name: Configure AWS credentials (OIDC)
         if: ${{ steps.aws-auth.outputs.mode == 'oidc' }}
@@ -90,7 +102,7 @@ jobs:
         run: |
           aws eks update-kubeconfig \
             --region ${{ env.AWS_REGION }} \
-            --name ${{ env.EKS_CLUSTER }}
+            --name ${{ steps.prod-target.outputs.cluster }}
 
       - name: Cluster snapshot
         run: |

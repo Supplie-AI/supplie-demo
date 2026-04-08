@@ -27,6 +27,7 @@
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_DEPLOY_ROLE_ARN` (optional; if set, the workflow prefers OIDC over static keys)
+- `EKS_CLUSTER_PROD`
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY` (optional)
 - `DEMO_PASSWORD`
@@ -60,6 +61,7 @@ Only these application secrets are injected:
 ## Notes
 
 - The production workflow validates its AWS credential inputs before deploy. It uses `AWS_DEPLOY_ROLE_ARN` when present, otherwise falls back to `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`.
+- The production workflow also requires `EKS_CLUSTER_PROD` and uses it for `aws eks update-kubeconfig` instead of guessing a hardcoded cluster name. The repo’s documented production region remains `us-east-1`.
 - Anthropic is optional at deploy time. The UI exposes Claude models, but the backend returns a clear configuration error if the key is missing.
 - OpenAI-backed dev/prod deploys emit structured JSON logs with request IDs, trace IDs, capability snapshots, tool activity, and model-run summaries. See [`docs/LOGGING.md`](/home/jack/workspace/supplie-demo-issue5/docs/LOGGING.md).
 - On successful deploys, the workflows print recent app logs with `kubectl logs deployment/supplie-demo -n <namespace> --tail=80`.
