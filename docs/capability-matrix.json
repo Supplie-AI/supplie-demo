@@ -17,6 +17,7 @@
       "name": "annona-engine",
       "responsibilities": [
         "dataset intake",
+        "published dataset version consumption",
         "schema interpretation",
         "dataset compilation",
         "capability registry and binding",
@@ -32,6 +33,54 @@
       "optimization jobs",
       "automl jobs"
     ]
+  },
+  "readOnlyOperationalIngestion": {
+    "status": "specified_for_pilot",
+    "sources": [
+      "netsuite",
+      "focus",
+      "s3"
+    ],
+    "guardrails": [
+      "read_only_source_access_only",
+      "no_prompt_time_source_queries",
+      "no_writeback_workflows",
+      "publish_new_dataset_versions_only_after_successful_landing_and_transform"
+    ],
+    "stack": {
+      "extraction": "read_only_source_exports_or_api_reads",
+      "landing": "immutable_object_storage_snapshots",
+      "normalization": "duckdb",
+      "transformation": "dbt_on_duckdb",
+      "orchestration": "prefect",
+      "prompt_time_consumption": "annona_engine_uses_published_compiled_dataset_versions"
+    },
+    "artifacts": [
+      "LandingManifest",
+      "IngestionRun",
+      "TransformationRun",
+      "DatasetManifest",
+      "CompiledDataset",
+      "Trace",
+      "AnswerEnvelope"
+    ],
+    "pilotScenario": {
+      "id": "zeder_shadow_factory_refresh",
+      "flow": [
+        "extract_netsuite_sales_work_purchase_data_read_only",
+        "extract_focus_schedule_dispatch_exception_data_read_only",
+        "register_s3_shadow_signal_drops",
+        "land_raw_snapshots_by_run_id",
+        "normalize_in_duckdb",
+        "transform_in_dbt_to_shadow_factory_marts",
+        "publish_compiled_dataset_for_annona_engine_consumption"
+      ],
+      "answerSurface": [
+        "blocked_kit_detection",
+        "management_priority_queue",
+        "virtual_mes_shadow_factory_status"
+      ]
+    }
   },
   "layerModel": [
     {
@@ -56,7 +105,8 @@
       "uploaded CSV / tabular datasets",
       "canonical bundled fixture used as the upload surrogate in tests",
       "canonical manufacturing dependency bundle with BOM, work-order, and purchase-order tables compiled into a graph trace",
-      "canonical Zeder shadow progress snapshot used to model Virtual MES / Shadow Factory status over broken ERP / MRP data"
+      "canonical Zeder shadow progress snapshot used to model Virtual MES / Shadow Factory status over broken ERP / MRP data",
+      "published read-only operational dataset snapshots produced upstream from NetSuite, Focus, and S3 when that pilot stack is explicitly configured"
     ],
     "nativeProviderTools": [
       "web_search",
@@ -65,6 +115,7 @@
     ],
     "truthConstraints": [
       "No live ERP or warehouse connection is implied unless explicitly configured.",
+      "When operational source refresh is configured, prompt-time answers still use a published read-only dataset snapshot rather than direct source-system queries.",
       "Shared baseline access is the same for both panels.",
       "Web findings must stay distinct from dataset findings."
     ]
@@ -529,10 +580,14 @@
           "name": "Data Pipeline",
           "responsibilities": [
             "versioned source intake",
+            "read-only extraction and immutable landing",
+            "DuckDB normalization and dbt publication",
             "freshness checks",
             "compile-ready bundles"
           ],
           "interfaces": [
+            "LandingManifest",
+            "IngestionRun",
             "DatasetManifest",
             "storage_refs",
             "ingestion_diagnostics"
@@ -671,6 +726,10 @@
   },
   "schemaFamilies": [
     "DatasetManifest",
+    "LandingManifest",
+    "IngestionRun",
+    "TransformationRun",
+    "CompiledDataset",
     "DatasetProfile",
     "SemanticModel",
     "Artifact",
