@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import {
   getDatasetTable,
+  getDemoManufacturingDependencyBundle,
   getDemoOrderMarginBundle,
 } from "./demo-dataset-bundle.ts";
 import { SHARED_OPENAI_NATIVE_FILES } from "./openai-native-bundle.ts";
@@ -18,7 +19,19 @@ test("shared OpenAI-native bundle includes the multi-table bundled order-margin 
       "demo_order_margin_orders.csv",
       "demo_order_margin_order_lines.csv",
       "demo_order_margin_products.csv",
+      "demo_manufacturing_dependency_bundle_manifest.json",
+      "demo_manufacturing_customers.csv",
+      "demo_manufacturing_factories.csv",
+      "demo_manufacturing_machines.csv",
+      "demo_manufacturing_parts.csv",
+      "demo_manufacturing_sales_orders.csv",
+      "demo_manufacturing_sales_order_lines.csv",
+      "demo_manufacturing_bom_components.csv",
+      "demo_manufacturing_work_orders.csv",
+      "demo_manufacturing_purchase_orders.csv",
+      "demo_manufacturing_purchase_order_lines.csv",
       "demo_order_margin_reference.md",
+      "demo_manufacturing_graph_reference.md",
     ],
   );
 
@@ -39,6 +52,19 @@ test("shared bundle manifest declares the expected relationship graph", () => {
   );
   assert.equal(getDatasetTable(bundle, "orders").rows.length, 3);
   assert.equal(getDatasetTable(bundle, "order_lines").rows.length, 6);
+});
+
+test("shared manufacturing bundle declares a deep dependency graph fixture", () => {
+  const bundle = getDemoManufacturingDependencyBundle();
+
+  assert.equal(getDatasetTable(bundle, "sales_orders").rows.length, 2);
+  assert.equal(getDatasetTable(bundle, "work_orders").rows.length, 5);
+  assert.equal(getDatasetTable(bundle, "purchase_order_lines").rows.length, 3);
+  assert.ok(
+    bundle.manifest.relationships.some(
+      (relationship) => relationship.name === "purchase_order_lines_to_work_orders",
+    ),
+  );
 });
 
 test("raw OpenAI-native prompt tells the model to calculate from the shared bundle", () => {

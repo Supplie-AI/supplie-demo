@@ -67,6 +67,150 @@
 /** @type {DemoScenario[]} */
 export const DEMO_SCENARIOS = [
   {
+    id: "deep-dependency-traceability",
+    prompt:
+      "Sales order SO-240501-01 is escalated. What upstream dependency is blocking it, trace the path through BOM, work orders, and purchase orders, and what else gets hit if the shared component slips?",
+    promptClass: "analytical",
+    sharedBundleAnswerable: true,
+    dataPrerequisites: [
+      "Shared manufacturing dependency bundle with sales orders, work orders, BOM edges, purchase orders, customers, machines, and factories",
+      "Ability to follow a multi-hop path from a sales order through child work orders and BOM levels to bought-component supply",
+      "Ability to propagate impact from a shared component or purchase order into other exposed work orders and sales orders",
+    ],
+    expectedRawBehavior:
+      "Raw should use the shared manufacturing dependency bundle to identify the upstream blocker, make the path explicit across BOM and order levels, and name the additional impacted order without implying Annona-only access.",
+    expectedAnnonaBehavior:
+      "Annona should identify the same blocker but frame it as an operational dependency path with explicit impact propagation across the shared component.",
+    correctnessRubric: [
+      "Identifies CAP-STEEL-08 on late PO-7712 as the upstream blocker for SO-240501-01.",
+      "Traces the blocker through SO-240501-01, SOL-240501-01, WO-1001, WO-1002, CAP-STEEL-08, and POL-7712-1 or PO-7712.",
+      "Names SO-240501-02 as the additional exposed order because the same shared component also feeds WO-1005.",
+    ],
+    expectedRaw: {
+      answerPath: "shared-tabular-baseline",
+      rubric:
+        "Raw should use the shared manufacturing dependency bundle tables and reference file, trace the blocker across the multi-level path, and call out the shared-component fan-out without implying Annona-only graph access.",
+      canonicalAnswer:
+        "Raw deep traceability answer: using the shared manufacturing dependency bundle, sales order SO-240501-01 is blocked by shared component CAP-STEEL-08 rather than final-kit capacity. The path is SO-240501-01 -> SOL-240501-01 -> WO-1001 -> WO-1002 -> CAP-STEEL-08 -> POL-7712-1 -> PO-7712, where the purchase order is late into Brisbane Assembly on MC-COIL-01. The same shared component also feeds WO-1005, so SO-240501-02 is exposed if that component slips again.",
+      mustContainAll: [
+        "shared manufacturing dependency bundle",
+        "SO-240501-01",
+        "CAP-STEEL-08",
+        "PO-7712",
+        "SO-240501-02",
+      ],
+      mustContainOneOf: [
+        ["WO-1001", "WO-1002"],
+        ["POL-7712-1", "purchase order line"],
+        ["Brisbane Assembly", "MC-COIL-01", "Coil Cell 01"],
+        ["shared component", "slips again", "exposed"],
+      ],
+      requiredToolOneOf: [["openai_file_search", "openai_code_interpreter"]],
+      mockToolInvocations: [
+        {
+          toolName: "openai_code_interpreter",
+          args: {
+            task: "Use the shared manufacturing dependency bundle to trace the blocker for SO-240501-01 through BOM, work orders, and purchase orders, then identify any other impacted orders from the same shared component.",
+          },
+          result: {
+            outputs: [
+              {
+                type: "logs",
+                content:
+                  "Path=SO-240501-01>SOL-240501-01>WO-1001>WO-1002>CAP-STEEL-08>POL-7712-1>PO-7712, blocker=shared_component_supply, impacted_sales_orders=SO-240501-02, machine=MC-COIL-01, factory=Brisbane Assembly",
+              },
+            ],
+          },
+        },
+      ],
+    },
+    expectedGrounded: {
+      answerPath: "annona-orchestrated-shared-baseline",
+      rubric:
+        "Annona should use graph-backed dependency tools on the same shared manufacturing bundle, make the multi-hop path explicit, and show the impact fan-out to another order.",
+      canonicalAnswer:
+        "Annona dependency view: SO-240501-01 is blocked by shared component CAP-STEEL-08, not by final-kit capacity. Path: SO-240501-01 -> SOL-240501-01 -> WO-1001 -> WO-1002 -> CAP-STEEL-08 -> POL-7712-1 -> PO-7712, with the blockage sitting on MC-COIL-01 at Brisbane Assembly. Impact: the same shared component also feeds WO-1005, so SO-240501-02 is exposed unless PO-7712 is expedited now.",
+      mustContainAll: [
+        "SO-240501-01",
+        "CAP-STEEL-08",
+        "PO-7712",
+        "Path:",
+        "Impact:",
+        "SO-240501-02",
+      ],
+      mustContainOneOf: [
+        ["WO-1001", "WO-1002"],
+        ["POL-7712-1", "purchase order line"],
+        ["MC-COIL-01", "Brisbane Assembly"],
+        ["shared component", "expedited now", "exposed"],
+      ],
+      requiredTools: [
+        "annona_trace_graph_dependencies",
+        "annona_propagate_dependency_impact",
+        "annona_evaluate_recommendation",
+      ],
+      mockToolInvocations: [
+        {
+          toolName: "annona_trace_graph_dependencies",
+          args: {
+            dataset: "demo_manufacturing_dependency_bundle_manifest.json",
+            root_entity_type: "sales_order",
+            root_entity_id: "SO-240501-01",
+            objective:
+              "trace the blocker through BOM, work orders, and purchase orders",
+          },
+          result: {
+            blocker_category: "shared_component_supply",
+            blocker_part_id: "CAP-STEEL-08",
+            blocker_purchase_order_line_id: "POL-7712-1",
+            blocker_purchase_order_id: "PO-7712",
+            machine_id: "MC-COIL-01",
+            factory_name: "Brisbane Assembly",
+            critical_path: [
+              "SO-240501-01",
+              "SOL-240501-01",
+              "WO-1001",
+              "WO-1002",
+              "CAP-STEEL-08",
+              "POL-7712-1",
+              "PO-7712",
+            ],
+          },
+        },
+        {
+          toolName: "annona_propagate_dependency_impact",
+          args: {
+            dataset: "demo_manufacturing_dependency_bundle_manifest.json",
+            source_entity_type: "purchase_order",
+            source_entity_id: "PO-7712",
+          },
+          result: {
+            shared_component_part_id: "CAP-STEEL-08",
+            impacted_sales_orders: [
+              { sales_order_id: "SO-240501-01", status: "blocked" },
+              { sales_order_id: "SO-240501-02", status: "at_risk" },
+            ],
+            impacted_work_orders: [
+              { work_order_id: "WO-1002", status: "blocked" },
+              { work_order_id: "WO-1005", status: "at_risk" },
+            ],
+          },
+        },
+        {
+          toolName: "annona_evaluate_recommendation",
+          args: {
+            check: "traceability and actionability",
+          },
+          result: {
+            grounded: true,
+            action_oriented: true,
+            traceable_to_rows: true,
+          },
+        },
+      ],
+    },
+  },
+  {
     id: "blocker-traceability",
     prompt:
       "What is the main blocker to protecting margin in this bundle, and trace it to the exact rows driving it?",

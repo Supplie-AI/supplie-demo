@@ -1,0 +1,7 @@
+part_id,part_name,part_kind,make_buy,supplier_name,shared_component_group
+KIT-ZED-LIFT,Zeder Hilux Lift Kit,finished_good,make,,
+ASM-COIL-PACK,Coil Pack Assembly,subassembly,make,,
+ASM-HARDWARE-PACK,Hardware Pack Assembly,subassembly,make,,
+SPR-450,450mm Progressive Coil,component,buy,Atlas Springs,spring
+CAP-STEEL-08,8mm Steel Cap,component,buy,North Ridge Steel,steel_cap
+BOLT-M12,M12 Bolt Set,component,buy,FastenRight,bolt

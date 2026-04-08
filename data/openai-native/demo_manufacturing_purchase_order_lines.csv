@@ -1,0 +1,4 @@
+purchase_order_line_id,purchase_order_id,part_id,work_order_id,qty_ordered,qty_received,qty_open,status
+POL-7712-1,PO-7712,CAP-STEEL-08,WO-1002,4,0,4,late
+POL-7712-2,PO-7712,CAP-STEEL-08,WO-1005,2,0,2,late
+POL-7713-1,PO-7713,BOLT-M12,WO-1003,8,8,0,received

@@ -85,6 +85,9 @@ against screenshots.
 - The prompt set shown in the UI omits any of the required harder prompt
   classes: blocker plus traceability, predictive risk, or prioritization plus
   next action.
+- The blocker-plus-traceability lane no longer demonstrates a multi-level path
+  across BOM, work orders, and purchase orders when the canonical dependency
+  fixture is present.
 - Text is clipped, overlapping, or unreadable in any captured state.
 - The screenshots show obvious loading failure, blank output, or severe visual
   regression.

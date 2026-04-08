@@ -1,0 +1,3 @@
+sales_order_line_id,sales_order_id,part_id,qty_ordered,root_work_order_id
+SOL-240501-01,SO-240501-01,KIT-ZED-LIFT,2,WO-1001
+SOL-240501-02,SO-240501-02,KIT-ZED-LIFT,1,WO-1004

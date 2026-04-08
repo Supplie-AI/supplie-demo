@@ -4,8 +4,10 @@ import {
   detectAnnonaShadowWobble,
   estimateAnnonaShadowProgress,
   evaluateAnnonaRecommendation,
+  propagateAnnonaDependencyImpact,
   prioritizeAnnonaNextAction,
   rankAnnonaServiceRisk,
+  traceAnnonaGraphDependencies,
   traceAnnonaMarginBlocker,
 } from "./annona-grounded-tools.ts";
 
@@ -53,6 +55,52 @@ test("prioritizeAnnonaNextAction keeps the next-24-hours decision on the margin 
   assert.match(
     result.next_action,
     /freight pass-through and rebate approval/i,
+  );
+});
+
+test("traceAnnonaGraphDependencies returns the deep manufacturing blocker path", () => {
+  const result = traceAnnonaGraphDependencies({
+    dataset: "demo_manufacturing_dependency_bundle_manifest.json",
+    root_entity_type: "sales_order",
+    root_entity_id: "SO-240501-01",
+  });
+
+  assert.equal(result.traceability_mode, "exact");
+  assert.equal(result.blocker_category, "shared_component_supply");
+  assert.equal(result.blocker_part_id, "CAP-STEEL-08");
+  assert.equal(result.blocker_purchase_order_id, "PO-7712");
+  assert.equal(result.machine_id, "MC-COIL-01");
+  assert.equal(result.factory_name, "Brisbane Assembly");
+  assert.deepEqual(
+    result.critical_path.map((step) => step.entity_id),
+    [
+      "SO-240501-01",
+      "SOL-240501-01",
+      "WO-1001",
+      "WO-1002",
+      "CAP-STEEL-08",
+      "POL-7712-1",
+      "PO-7712",
+    ],
+  );
+});
+
+test("propagateAnnonaDependencyImpact fans a shared-component blocker into other orders", () => {
+  const result = propagateAnnonaDependencyImpact({
+    dataset: "demo_manufacturing_dependency_bundle_manifest.json",
+    source_entity_type: "purchase_order",
+    source_entity_id: "PO-7712",
+  });
+
+  assert.equal(result.traceability_mode, "exact");
+  assert.equal(result.shared_component_part_id, "CAP-STEEL-08");
+  assert.deepEqual(
+    result.impacted_sales_orders.map((order) => order.sales_order_id),
+    ["SO-240501-01", "SO-240501-02"],
+  );
+  assert.deepEqual(
+    result.impacted_work_orders.map((workOrder) => workOrder.work_order_id),
+    ["WO-1001", "WO-1002", "WO-1004", "WO-1005"],
   );
 });
 

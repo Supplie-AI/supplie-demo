@@ -1,0 +1,3 @@
+sales_order_id,customer_id,factory_id,status,requested_ship_date,promise_date
+SO-240501-01,CUST-ZEDER,FCT-BNE,blocked,2026-05-08,2026-05-09
+SO-240501-02,CUST-OUTBACK,FCT-BNE,at_risk,2026-05-10,2026-05-11

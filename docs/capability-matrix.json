@@ -54,7 +54,8 @@
     "description": "Both panels begin from the same tabular-data baseline and the same native web and code surface.",
     "data": [
       "uploaded CSV / tabular datasets",
-      "canonical bundled fixture used as the upload surrogate in tests"
+      "canonical bundled fixture used as the upload surrogate in tests",
+      "canonical manufacturing dependency bundle with BOM, work-order, and purchase-order tables compiled into a graph trace"
     ],
     "nativeProviderTools": [
       "web_search",
@@ -160,6 +161,9 @@
       "variance ranking",
       "service-risk ranking",
       "future-state risk framing",
+      "dependency graph compilation",
+      "multi-hop dependency tracing",
+      "impact propagation across shared components",
       "inferred progress heuristics",
       "probabilistic traceability",
       "wobble detection",
@@ -185,6 +189,42 @@
         "quantity_reversal",
         "stall_after_forward_progress",
         "conflicting_adjacent_system_signals"
+      ]
+    },
+    "dependencyGraphModel": {
+      "entities": [
+        "parts",
+        "assemblies",
+        "bom_levels",
+        "sales_orders",
+        "sales_order_lines",
+        "work_orders",
+        "purchase_orders",
+        "purchase_order_lines",
+        "customers",
+        "machines",
+        "factories"
+      ],
+      "edgeTypes": [
+        "sales_order_to_line",
+        "line_to_root_work_order",
+        "work_order_to_child_work_order",
+        "work_order_to_bom_component",
+        "component_to_purchase_order_line",
+        "purchase_order_line_to_purchase_order",
+        "work_order_to_machine",
+        "work_order_to_factory",
+        "sales_order_to_customer"
+      ],
+      "requiredOutputs": [
+        "root_entity_type",
+        "root_entity_id",
+        "critical_path",
+        "path_hops",
+        "blocker_part_id",
+        "blocker_purchase_order_id",
+        "impacted_sales_orders",
+        "impacted_work_orders"
       ]
     }
   },
