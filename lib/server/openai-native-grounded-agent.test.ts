@@ -6,22 +6,25 @@ import {
   getAnnonaToolsForPrompt,
 } from "./openai-native-grounded-agent.ts";
 
-const predictivePrompt =
-  "Which freight lane is the strongest predictive service risk next month, and what signal makes it risky before failure shows up?";
+const shadowFactoryManagementPrompt =
+  "Zeder's ERP statuses are unreliable. In the Virtual MES / Shadow Factory view, which kit needs management attention first, what status should leadership see, and why before the floor reports a confirmed miss?";
 const deepTraceabilityPrompt =
   "Sales order SO-240501-01 is escalated. What upstream dependency is blocking it, trace the path through BOM, work orders, and purchase orders, and what else gets hit if the shared component slips?";
-const prioritizationPrompt =
-  "If the team can only act on one thing in the next 24 hours, what should they prioritize first, and what is the next action?";
+const shadowFactoryNextActionPrompt =
+  "If the team can only act on one Shadow Factory case in the next 24 hours, what should they prioritize first, and what is the next action?";
 
 test("detectGroundedScenario recognizes the harder prompt-pack scenarios", () => {
   assert.equal(
     detectGroundedScenario(deepTraceabilityPrompt),
     "deep-dependency-traceability",
   );
-  assert.equal(detectGroundedScenario(predictivePrompt), "predictive-service-risk");
   assert.equal(
-    detectGroundedScenario(prioritizationPrompt),
-    "prioritization-next-action",
+    detectGroundedScenario(shadowFactoryManagementPrompt),
+    "shadow-factory-management-status",
+  );
+  assert.equal(
+    detectGroundedScenario(shadowFactoryNextActionPrompt),
+    "shadow-factory-next-action",
   );
 });
 
@@ -39,33 +42,45 @@ test("deep dependency prompt routing exposes only the graph-trace Annona tools",
   );
 });
 
-test("predictive prompt routing exposes only the service-risk Annona tools", () => {
-  const { scenarioId, tools } = getAnnonaToolsForPrompt(predictivePrompt);
+test("shadow factory management prompt routing exposes the shadow-status Annona tools", () => {
+  const { scenarioId, tools } = getAnnonaToolsForPrompt(
+    shadowFactoryManagementPrompt,
+  );
 
-  assert.equal(scenarioId, "predictive-service-risk");
+  assert.equal(scenarioId, "shadow-factory-management-status");
   assert.deepEqual(
     tools.map((tool) => tool.name),
-    ["annona_rank_service_risk", "annona_evaluate_recommendation"],
+    [
+      "annona_detect_shadow_wobble",
+      "annona_estimate_shadow_progress",
+      "annona_evaluate_recommendation",
+    ],
   );
 });
 
-test("prioritization prompt routing exposes only the next-action Annona tools", () => {
-  const { scenarioId, tools } = getAnnonaToolsForPrompt(prioritizationPrompt);
+test("shadow factory prioritization prompt routing exposes the shadow-status Annona tools", () => {
+  const { scenarioId, tools } = getAnnonaToolsForPrompt(
+    shadowFactoryNextActionPrompt,
+  );
 
-  assert.equal(scenarioId, "prioritization-next-action");
+  assert.equal(scenarioId, "shadow-factory-next-action");
   assert.deepEqual(
     tools.map((tool) => tool.name),
-    ["annona_prioritize_next_action", "annona_evaluate_recommendation"],
+    [
+      "annona_detect_shadow_wobble",
+      "annona_estimate_shadow_progress",
+      "annona_evaluate_recommendation",
+    ],
   );
 });
 
-test("grounded system prompt injects scenario-specific steering for predictive and prioritization prompts", () => {
+test("grounded system prompt injects scenario-specific steering for shadow factory and prioritization prompts", () => {
   const deepTraceabilitySystemPrompt =
     buildOpenAINativeGroundedSystemPrompt(deepTraceabilityPrompt);
-  const predictiveSystemPrompt =
-    buildOpenAINativeGroundedSystemPrompt(predictivePrompt);
+  const shadowFactoryManagementSystemPrompt =
+    buildOpenAINativeGroundedSystemPrompt(shadowFactoryManagementPrompt);
   const prioritizationSystemPrompt =
-    buildOpenAINativeGroundedSystemPrompt(prioritizationPrompt);
+    buildOpenAINativeGroundedSystemPrompt(shadowFactoryNextActionPrompt);
 
   assert.match(
     deepTraceabilitySystemPrompt,
@@ -73,8 +88,25 @@ test("grounded system prompt injects scenario-specific steering for predictive a
   );
   assert.match(deepTraceabilitySystemPrompt, /Path:/);
   assert.match(deepTraceabilitySystemPrompt, /SO-240501-02 is also exposed/i);
-  assert.match(predictiveSystemPrompt, /Current prompt pack scenario: predictive service risk\./);
-  assert.match(predictiveSystemPrompt, /Do not answer with stockout-risk, supplier-leakage, or margin-blocker framing/i);
+  assert.match(
+    shadowFactoryManagementSystemPrompt,
+    /Current prompt pack scenario: Virtual MES \/ Shadow Factory management status\./,
+  );
+  assert.match(
+    shadowFactoryManagementSystemPrompt,
+    /Management status:/,
+  );
+  assert.match(
+    shadowFactoryManagementSystemPrompt,
+    /ZED-KIT-2088 as the first management-attention case/i,
+  );
   assert.match(prioritizationSystemPrompt, /Priority now:/);
-  assert.match(prioritizationSystemPrompt, /Do not substitute a stockout-risk or supplier-leakage answer/i);
+  assert.match(
+    prioritizationSystemPrompt,
+    /Virtual MES \/ Shadow Factory status model/i,
+  );
+  assert.match(
+    prioritizationSystemPrompt,
+    /Do not substitute a freight-risk, stockout-risk, or generic margin answer/i,
+  );
 });

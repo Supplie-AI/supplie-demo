@@ -21,6 +21,8 @@ This spec defines:
 - planner / orchestrator rules for selecting, composing, and evaluating work
 - the pilot autonomous data-team architecture that operates the engine,
   evolves the scaffold, and owns delivery handoffs per dataset
+- the Virtual MES / Shadow Factory pilot model for manufacturing visibility
+  over broken ERP / MRP data
 - token and latency optimization requirements
 - wire-safe, versioned, polymorphic schemas used across the system
 
@@ -50,6 +52,10 @@ remain portable to TypeScript, Rust, or Go services.
   pilot such as Zeder's lacks perfect scan-level confirmation, Annona should
   emit estimated state with explicit caveats rather than pretending exact
   completion telemetry exists.
+- Virtual MES / Shadow Factory is a visibility layer, not a hardware-first MES
+  replacement. In the pilot, Annona reconstructs management-facing factory
+  status from imperfect ERP / MRP records and adjacent shadow signals before it
+  tries to act like a system-of-record execution ledger.
 - Contracts are explicit and portable. Every cross-service payload must be
   versioned, discriminated, and safe to serialize over HTTP, queues, or storage.
 - The system must preserve explainability. Recommendations require evidence,
@@ -224,6 +230,134 @@ The engine must remain deployable independently from the UI so that:
 For the demo, the backend may run as a single container image with modular
 packages. The architectural boundary still applies even if deployed in one
 cluster namespace.
+
+## Virtual MES / Shadow Factory Pilot Model
+
+For Zeder-like pilots, Annona should be understood as a Virtual MES / Shadow
+Factory layer sitting over broken ERP / MRP data. It does not claim to replace
+a traditional scan-heavy MES during the pilot. It reconstructs enough
+directionally correct operational state for management and pilot operators to
+see blockers, progress, and verify-now cases earlier than the source systems
+can.
+
+### Product Definition
+
+In product terms, Virtual MES / Shadow Factory means:
+
+- management gets one operational status model even when source-system status
+  codes are stale, contradictory, or incomplete
+- the answer contract favors visibility and intervention timing over false
+  exactness
+- Annona can say `on_track`, `watch`, `verify_now`, or `blocked` with explicit
+  evidence and caveats even when it cannot say `completed` with scan-level
+  certainty
+- the differentiator is earlier, clearer operational visibility over the same
+  imperfect pilot data, not hidden live-system access
+
+### System Definition
+
+In system terms, the Virtual MES / Shadow Factory layer is a compiled view that:
+
+1. normalizes broken ERP / MRP extracts, purchase and work-order data, and
+   adjacent shadow signals into a shared semantic model
+2. links demand, execution, supply, resource, and exception entities into a
+   traceable factory graph
+3. infers directional execution state when point-of-use truth is missing
+4. maps those inferred states into management-facing status labels with
+   calibrated confidence and next-action posture
+5. preserves exact-vs-probabilistic traceability all the way to the final
+   answer and trace objects
+
+### Core Pilot Entities
+
+The pilot model must support at least these entity classes:
+
+- demand entities
+  - `customer`
+  - `sales_order`
+  - `sales_order_line`
+- execution entities
+  - `factory`
+  - `work_center`
+  - `machine`
+  - `work_order`
+  - `operation_step`
+  - `kit` or other install / build unit tracked through the pilot
+- supply entities
+  - `part`
+  - `assembly`
+  - `bom_edge`
+  - `purchase_order`
+  - `purchase_order_line`
+  - `inventory_position`
+- shadow-signal entities
+  - `erp_or_mrp_status_snapshot`
+  - `dispatch_or_handoff_event`
+  - `carrier_eta_event`
+  - `booking_or_schedule_commitment`
+  - `quantity_acknowledgement`
+  - `exception_reopen_or_rework_event`
+
+Zeder's pilot may begin with `kit` as the primary management entity even when
+the deeper execution graph also includes work orders, operations, or purchase
+dependencies behind that kit.
+
+### Inferred Execution States
+
+The Virtual MES / Shadow Factory layer must separate granular inferred state
+from management-facing status. The pilot should support states equivalent to:
+
+- `queued_not_started`
+- `material_constrained`
+- `ready_to_build`
+- `in_build`
+- `built_pending_handoff`
+- `in_transit`
+- `arrived_at_site_not_confirmed_at_point_of_use`
+- `installed_not_confirmed`
+- `blocked_on_dependency`
+- `exception_or_rework`
+
+These are estimated execution states unless exact point-of-use confirmation is
+present. The engine must not silently translate them into confirmed completion.
+
+### Management-Facing Status Model
+
+The pilot must also expose a simpler management status layer derived from the
+execution state, blocker graph, wobble signals, and evidence coverage:
+
+| Management status | Meaning | Typical trigger |
+| --- | --- | --- |
+| `on_track` | Forward motion is visible and no material blocker or wobble is active. | Positive shadow-signal trend, acceptable evidence coverage, no active blocker. |
+| `watch` | The unit is directionally advancing but confidence or slack is thinning. | Estimated progress exists, but point-of-use truth is still missing or evidence coverage is thin. |
+| `verify_now` | Signals conflict enough that leadership should not commit to the apparent progress without checking. | Wobble, ETA regression, quantity reversals, or conflicting adjacent-system signals. |
+| `blocked` | A dependency or execution constraint is preventing the next operational step. | Known component, purchase-order, capacity, or exception blocker on the critical path. |
+
+This management-facing status is the primary answer surface for pilot
+leadership. Detailed inferred execution state remains available underneath it.
+
+### Canonical Shadow Factory Status Object
+
+Externally visible status outputs for this pilot should preserve fields
+equivalent to:
+
+- `entityType`
+- `entityId`
+- `virtualMesMode`
+- `traceabilityMode`
+- `managementStatus`
+- `estimatedState`
+- `primaryConstraint`
+- `statusReason`
+- `inferredProgressPct`
+- `progressPctLow`
+- `progressPctHigh`
+- `evidenceCoveragePct`
+- `wobbleDetected`
+- `supportingSignals`
+- `counterSignals`
+- `recommendedAction`
+- `caveats`
 
 ## Pilot Autonomous Data-Team Architecture
 
@@ -570,6 +704,9 @@ The planner must prefer this order:
 - When a prompt explicitly asks for blocker or traceability reasoning across
   BOM levels, work orders, or purchase orders, prefer compiled dependency-graph
   path queries over ad hoc first-level joins.
+- When a prompt asks for factory visibility over broken ERP / MRP data, prefer
+  the Virtual MES / Shadow Factory path: infer directional state, map it into a
+  management status, and keep exact-vs-probabilistic truth explicit.
 - Escalate from descriptive to predictive or prescriptive only when the prompt
   or data justifies it.
 - Attach explicit assumptions when the prompt requires unavailable fields or
@@ -624,6 +761,7 @@ The inferred-progress model must:
 - mark the trace as `probabilistic`, not exact
 - distinguish observed facts from inferred state
 - emit an `estimatedState` label rather than a confirmed completion label
+- emit a `managementStatus` label for leadership-facing visibility
 - emit a bounded progress range such as `progressPctLow`, `inferredProgressPct`,
   and `progressPctHigh`
 - emit `evidenceCoveragePct` or an equivalent measure of shadow-signal coverage
@@ -658,6 +796,7 @@ probabilistic-traceability output should include fields equivalent to:
 
 - `traceabilityMode`
 - `pointOfUseDataStatus`
+- `managementStatus`
 - `estimatedState`
 - `progressPctLow`
 - `inferredProgressPct`
@@ -775,6 +914,11 @@ All system objects must be:
    - compiled graph nodes, edges, path semantics, and blocker-impact traversal
      rules for datasets that support multi-level dependency reasoning
 
+15. `ShadowFactoryStatus`
+   - pilot-facing Virtual MES status object linking entity identity, estimated
+     execution state, management status, blocker or wobble posture, signal
+     coverage, and recommended next action
+
 ### Canonical Envelope Pattern
 
 Every externally visible object should follow a shape equivalent to:
@@ -809,6 +953,7 @@ contain:
 - `assumptions`
 - `confidence`
 - `traceabilityMode`
+- `managementStatus`
 - `estimatedState`
 - `caveats`
 - `traceId`
@@ -870,6 +1015,9 @@ The implementation is only aligned with the canonical spec when:
   mandatory pipeline
 - graph-backed dependency tracing and impact propagation are available for
   manufacturing datasets with BOM, work-order, and purchase-order semantics
+- the Virtual MES / Shadow Factory pilot model is explicit about core entities,
+  inferred execution state, and management-facing status over broken ERP / MRP
+  data
 - the pilot autonomous data-team roles, interfaces, and pilot-vs-later
   boundaries are explicitly documented
 - the agent-team eval loop iterates on top of the substrate per dataset

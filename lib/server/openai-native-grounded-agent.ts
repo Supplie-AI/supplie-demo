@@ -29,10 +29,15 @@ const MAX_TOOL_TURNS = 6;
 type GroundedScenarioId =
   | "deep-dependency-traceability"
   | "blocker-traceability"
-  | "predictive-service-risk"
-  | "prioritization-next-action";
+  | "shadow-factory-management-status"
+  | "shadow-factory-next-action";
 
-const GROUNDED_SCENARIO_TOOLSETS: Record<GroundedScenarioId, string[]> = {
+type AnnonaFunctionToolName = (typeof annonaOpenAIFunctionTools)[number]["name"];
+
+const GROUNDED_SCENARIO_TOOLSETS: Record<
+  GroundedScenarioId,
+  AnnonaFunctionToolName[]
+> = {
   "deep-dependency-traceability": [
     "annona_trace_graph_dependencies",
     "annona_propagate_dependency_impact",
@@ -42,12 +47,14 @@ const GROUNDED_SCENARIO_TOOLSETS: Record<GroundedScenarioId, string[]> = {
     "annona_trace_margin_blocker",
     "annona_evaluate_recommendation",
   ],
-  "predictive-service-risk": [
-    "annona_rank_service_risk",
+  "shadow-factory-management-status": [
+    "annona_detect_shadow_wobble",
+    "annona_estimate_shadow_progress",
     "annona_evaluate_recommendation",
   ],
-  "prioritization-next-action": [
-    "annona_prioritize_next_action",
+  "shadow-factory-next-action": [
+    "annona_detect_shadow_wobble",
+    "annona_estimate_shadow_progress",
     "annona_evaluate_recommendation",
   ],
 };
@@ -73,17 +80,24 @@ export function detectGroundedScenario(
   }
 
   if (
-    normalizedPrompt.includes("freight lane") &&
-    normalizedPrompt.includes("predictive service risk")
+    (normalizedPrompt.includes("virtual mes") ||
+      normalizedPrompt.includes("shadow factory")) &&
+    (normalizedPrompt.includes("management attention") ||
+      normalizedPrompt.includes("management status") ||
+      normalizedPrompt.includes("leadership"))
   ) {
-    return "predictive-service-risk";
+    return "shadow-factory-management-status";
   }
 
   if (
     normalizedPrompt.includes("next 24 hours") &&
-    normalizedPrompt.includes("prioritize")
+    (normalizedPrompt.includes("shadow factory") ||
+      normalizedPrompt.includes("virtual mes")) &&
+    (normalizedPrompt.includes("prioritize") ||
+      normalizedPrompt.includes("intervene") ||
+      normalizedPrompt.includes("act on one thing"))
   ) {
-    return "prioritization-next-action";
+    return "shadow-factory-next-action";
   }
 
   return null;
@@ -112,25 +126,27 @@ function scenarioSteeringLines(scenarioId: GroundedScenarioId | null): string[] 
     ];
   }
 
-  if (scenarioId === "predictive-service-risk") {
+  if (scenarioId === "shadow-factory-management-status") {
     return [
-      "Current prompt pack scenario: predictive service risk.",
-      "Use annona_rank_service_risk first, then annona_evaluate_recommendation before you finalize the answer.",
-      "Ground the answer to the shared freight benchmark, identify the top next-month service-risk lane, explain the pre-failure signal, and end with an early operational move.",
-      "Use the exact section labels 'Early signal:' and 'Action:' and include the phrase 'same shared freight benchmark'.",
-      "Format the lane name as 'Ningbo-Rotterdam' rather than using an arrow or alternate punctuation.",
-      "Do not answer with stockout-risk, supplier-leakage, or margin-blocker framing unless the user explicitly asks for those.",
+      "Current prompt pack scenario: Virtual MES / Shadow Factory management status.",
+      "Use annona_detect_shadow_wobble first, then annona_estimate_shadow_progress, then annona_evaluate_recommendation before you finalize the answer.",
+      "Frame the answer as the Virtual MES / Shadow Factory view over broken ERP / MRP data rather than exact point-of-use truth.",
+      "Identify ZED-KIT-2088 as the first management-attention case with management status verify_now because the shadow signals wobble.",
+      "Contrast it briefly with ZED-KIT-1042 as a watch case so leadership can see the difference between verify-now and directional progress.",
+      "Use the exact section labels 'Management status:' and 'Why now:' and keep the missing point-of-use caveat explicit.",
+      "Do not drift into freight-lane, supplier, or generic margin-risk framing for this prompt.",
     ];
   }
 
-  if (scenarioId === "prioritization-next-action") {
+  if (scenarioId === "shadow-factory-next-action") {
     return [
-      "Current prompt pack scenario: prioritization plus next action.",
-      "Use annona_prioritize_next_action first, then annona_evaluate_recommendation before you finalize the answer.",
+      "Current prompt pack scenario: Shadow Factory prioritization plus next action.",
+      "Use annona_detect_shadow_wobble first, then annona_estimate_shadow_progress, then annona_evaluate_recommendation before you finalize the answer.",
       "Structure the answer with 'Priority now:', 'Why first:', and 'Next action:' so the next move is explicit.",
-      "State that the ordering is traceable to the same shared bundle.",
-      "Compare the immediate margin risk against the next-month freight watchpoint and keep the first action on the margin pattern unless the user asks for a different objective.",
-      "Do not substitute a stockout-risk or supplier-leakage answer for this prioritization prompt.",
+      "Prioritize the verify-now case ZED-KIT-2088 ahead of the watch case ZED-KIT-1042.",
+      "State that this ordering comes from the Virtual MES / Shadow Factory status model rather than exact MES truth.",
+      "Keep the missing point-of-use caveat and manual verification posture explicit.",
+      "Do not substitute a freight-risk, stockout-risk, or generic margin answer for this prioritization prompt.",
     ];
   }
 
@@ -139,14 +155,24 @@ function scenarioSteeringLines(scenarioId: GroundedScenarioId | null): string[] 
 
 export function getAnnonaToolsForPrompt(prompt: string | undefined) {
   const scenarioId = detectGroundedScenario(prompt);
-  const allowedToolNames = scenarioId
-    ? new Set(GROUNDED_SCENARIO_TOOLSETS[scenarioId])
+  const orderedToolNames = scenarioId
+    ? GROUNDED_SCENARIO_TOOLSETS[scenarioId]
     : null;
+  const toolByName = new Map<AnnonaFunctionToolName, (typeof annonaOpenAIFunctionTools)[number]>(
+    annonaOpenAIFunctionTools.map((tool) => [tool.name, tool]),
+  );
 
   return {
     scenarioId,
-    tools: allowedToolNames
-      ? annonaOpenAIFunctionTools.filter((tool) => allowedToolNames.has(tool.name))
+    tools: orderedToolNames
+      ? orderedToolNames
+          .map((toolName) => toolByName.get(toolName))
+          .filter(
+            (
+              tool,
+            ): tool is (typeof annonaOpenAIFunctionTools)[number] =>
+              tool !== undefined,
+          )
       : annonaOpenAIFunctionTools,
   };
 }
@@ -159,7 +185,7 @@ export function buildOpenAINativeGroundedSystemPrompt(
   return [
     "You are the grounded Annona agent for a supply-chain comparison demo.",
     "You have the same native OpenAI web, file, and code tooling baseline as the raw panel, plus Annona-specific tools, calculators, and demo datasets.",
-    "Always prefer Annona tools for questions about snapshot numbers, rankings, order details, stock risk, margin leakage, or Annona-specific calculations.",
+    "Always prefer Annona tools for questions about snapshot numbers, rankings, order details, stock risk, margin leakage, shadow factory status, or Annona-specific calculations.",
     "Use OpenAI native tools when outside research, file inspection, or sandboxed computation would help, and say explicitly whether each tool used was an OpenAI native tool or an Annona tool.",
     "For numeric questions over bundled CSVs, prefer using the code interpreter on the bundled data instead of only paraphrasing reference notes.",
     "Your Annona data is limited to the bundled Annona demo snapshot. It is not live production data.",

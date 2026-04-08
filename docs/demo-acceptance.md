@@ -70,6 +70,7 @@ For heuristic scenarios where point-of-use truth is missing, the fixture must
 also declare:
 
 - whether the grounded answer is exact or probabilistic traceability
+- the expected Virtual MES / Shadow Factory management status
 - the expected inferred-progress or wobble signal path
 - the expected confidence and caveat posture for estimated state
 
@@ -86,8 +87,10 @@ The accepted prompt pack must include all of the following:
 
 - one blocker plus traceability prompt, including a multi-level manufacturing
   dependency case when the canonical fixture requires it
-- one predictive-risk prompt
-- one prioritization plus next-action prompt
+- one Virtual MES / Shadow Factory management-status prompt over broken ERP /
+  MRP visibility
+- one prioritization plus next-action prompt grounded in the same Shadow
+  Factory status model
 
 In addition to the live prompt pack, the repo must carry example heuristic eval
 scenarios covering:
@@ -96,6 +99,8 @@ scenarios covering:
 - wobble detection when estimated progress becomes unstable
 - deep dependency traceability across sales orders, work orders, purchase
   orders, and BOM levels
+- management-status mapping from inferred shadow state into `on_track`,
+  `watch`, `verify_now`, or `blocked`
 
 The prompt set is not accepted if it collapses into simple descriptive or
 retrospective lookups.
@@ -109,6 +114,9 @@ For every canonical scenario:
 - the Annona panel should compile or reuse compiled dataset context, use bound
   capabilities and stable analysis primitives, and return a recommendation with
   context
+- for Zeder-like factory prompts, the grounded panel should translate broken
+  ERP / MRP and shadow signals into a clear Virtual MES / Shadow Factory
+  management status rather than leaving the user with raw heuristic fragments
 - both panels must stay explainable and honest about what came from the dataset
   versus the web
 - if the grounded answer is estimated rather than observed, the UI and fixture
