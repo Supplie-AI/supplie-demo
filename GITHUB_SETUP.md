@@ -19,6 +19,7 @@ The repo now targets AWS EKS workflows instead of Vercel.
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_DEPLOY_ROLE_ARN` (optional; enables prod OIDC instead of static prod keys)
 - `EKS_CLUSTER_DEV`
+- `EKS_CLUSTER_PROD`
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY`
 - `DEMO_PASSWORD_DEV`
