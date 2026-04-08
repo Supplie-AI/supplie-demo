@@ -68,7 +68,7 @@ kubectl logs deployment/supplie-demo -n supplie-dev | jq 'select(.traceId=="<tra
 
 ## Deploy Diagnostics
 
-Both GitHub Actions deploy workflows now:
+The active dev deploy workflow, and the parked manual-only production workflow once it is intentionally armed, both:
 
 - print a small cluster snapshot after kubeconfig setup
 - print recent application logs after a successful rollout

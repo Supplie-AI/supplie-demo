@@ -1,9 +1,13 @@
-name: Deploy to EKS
+name: Production Deploy to EKS (manual only)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      confirm_production_deploy:
+        description: Arm the production deploy only after a real production environment exists
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   id-token: write
@@ -16,8 +20,22 @@ env:
   PROD_HOST: demo.supplie.ai
 
 jobs:
+  production-not-active:
+    name: Production deploy not active
+    if: ${{ !inputs.confirm_production_deploy }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Explain disabled state
+        run: |
+          echo "## Production deploy not active" >> "$GITHUB_STEP_SUMMARY"
+          echo "- This repository currently operates a dev-only EKS environment." >> "$GITHUB_STEP_SUMMARY"
+          echo "- The production deploy lane is manual-only and disabled by default until a real production cluster, credentials, and rollout path exist." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Re-run this workflow with \`confirm_production_deploy=true\` only after production is intentionally provisioned." >> "$GITHUB_STEP_SUMMARY"
+
   build-and-deploy:
     name: Build → ECR → Deploy
+    if: ${{ inputs.confirm_production_deploy }}
     runs-on: ubuntu-latest
     environment: production
 
