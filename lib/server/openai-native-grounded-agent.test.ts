@@ -109,4 +109,8 @@ test("grounded system prompt injects scenario-specific steering for shadow facto
     prioritizationSystemPrompt,
     /Do not substitute a freight-risk, stockout-risk, or generic margin answer/i,
   );
+  assert.match(
+    deepTraceabilitySystemPrompt,
+    /explicitly say it came from the Annona demo snapshot in the final answer/i,
+  );
 });

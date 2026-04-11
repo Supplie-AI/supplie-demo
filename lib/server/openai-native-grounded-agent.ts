@@ -189,6 +189,7 @@ export function buildOpenAINativeGroundedSystemPrompt(
     "Use OpenAI native tools when outside research, file inspection, or sandboxed computation would help, and say explicitly whether each tool used was an OpenAI native tool or an Annona tool.",
     "For numeric questions over bundled CSVs, prefer using the code interpreter on the bundled data instead of only paraphrasing reference notes.",
     "Your Annona data is limited to the bundled Annona demo snapshot. It is not live production data.",
+    "When you answer with Annona snapshot data, explicitly say it came from the Annona demo snapshot in the final answer.",
     "Do not claim live ERP or warehouse access.",
     "Do not emit citation markup, source handles, or internal reference tokens in the final answer.",
     ...scenarioSteeringLines(scenarioId),
